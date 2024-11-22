@@ -1,0 +1,224 @@
+/* Estilos globales */
+@page { 
+    margin: 190px 50px; 
+}
+
+/*p, label, span, table {
+    font-family: 'Helvetica';
+    font-size: 10pt;
+}*/
+
+body {
+    background: url('../img/fondo_pagina.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%;
+    height: auto;
+    margin: auto;
+    padding: 0;
+    height: auto;
+    background-color: #ffffff;
+}
+
+/* Estilos del contenido */
+.content-container {
+    margin-top: 10px;
+    padding: 10px;
+}
+
+/* Estilos del header */
+#header { 
+    position: fixed; 
+    left: 0px; 
+    top: -155px; 
+    right: 3px; 
+    height: 185px; 
+    text-align: center; 
+    clear: both;
+}
+
+.logo_factura {    
+    width: 20%;
+    display: block;
+    margin: auto;            
+}
+
+.logo_factura img {
+    width: 250px;
+    height: 75px;            
+}
+
+.title {            
+    font-size: 13px;
+    font-family: 'Helvetica';
+    font-weight: bold;
+    padding-left: 10px;
+    padding-top: 5px;   
+    padding-bottom: 10px;
+    text-align: center;
+    width: 97%;
+    word-wrap: break-word;
+    clear: both;
+}
+
+.title1 {
+    border: 1px solid #99cccc;            
+    font-size: 13px;
+    font-family: 'Helvetica';
+    font-weight: bold;
+    padding-left: 2px;
+    padding-top: 2px;   
+    padding-bottom: 10px;
+    text-align: center;
+    width: 30%;
+    word-wrap: break-word;
+    background-color: #DCDCDC;
+    border-radius: 2px;
+    clear: both;
+    text-align: center;
+}   
+
+hr {
+    height: 1px;
+    width: 100%;
+    border: 1px solid #99cccc;
+    background-color: black;
+    margin-top: 1px;
+}
+
+/* Estilos del contenedor de los grupos */
+.left-right-group {
+    display: flex;
+    width: 100%;
+    padding-top: .2px;
+}
+
+/* Estilos del contenido de los grupos */
+.left-group {
+    float: left;
+    width: 50%;
+    font-size: 9pt;
+    background-color: #F5F5F5;
+    border: steelblue solid 1px;
+    margin-right: 2px;
+    height: auto;
+}
+
+.right-group {
+    float: left;
+    width: 50%; 
+    background-color: #F5F5F5;
+    border: steelblue solid 1px;
+    margin-left: 2px;
+    height: auto;
+}
+
+.left-group, .right-group p, label, span, table{
+    font-family: 'Helvetica';
+    font-size: 10px;
+}
+
+.signature-group {
+    padding-top: 20%;
+}
+
+.signature-group .div_left,
+.signature-group .div_right {
+    flex: 1;
+}
+
+.imagen-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.imagenes {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 30px;
+}
+
+.imagen-row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 10px;
+    /*margin-bottom: 10px;
+    margin-top: 20px;*/
+}
+
+.imagen-item1,
+.imagen-item2 {
+    flex-basis: calc(50% - 5px);
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+.imagen-item1{
+    float: left;
+}
+
+.imagen-item2{
+    float: right;
+}
+
+.imagen-item1 img,
+.imagen-item2 img {
+    max-width: 100%;
+    height: auto;
+    max-height: 150px;
+}
+
+.item {
+    width: 170px;
+    text-align: center;
+    display: block;
+    background-color: transparent;
+    border: 1px solid transparent;
+    float: left;
+}
+
+.item img {
+    width: 40px;
+    height: 40px;
+    background-color: grey;
+}
+
+#index-gallery {
+    width: 200px;
+}
+
+.diagnostico-group{
+    padding-top: 8px;
+    margin-bottom: 10px; /* Agrega espacio entre grupos de contenido */
+}
+
+.diagnostico-group p, label, span, table {
+    font-family: 'Helvetica';
+    font-size: 10pt; 
+}
+
+.titulo-diagnostico {
+    text-align: left;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* Estilos del footer */
+#footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+#footer .page:after { 
+    content: counter(page, upper-roman);
+}
+
+.clearfix{
+    clear: both;
+}
