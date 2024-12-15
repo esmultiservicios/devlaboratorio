@@ -497,7 +497,39 @@ var listar_reporte_facturacion = function(){
 						'</div>' +
 					'</div>'
 			}
-		],		
+		],	
+		"footerCallback": function(row, data, start, end, display) {
+            var api = this.api();
+
+            // Función para sumar los valores de una columna
+            var sumaColumna = function(index) {
+                return api
+                    .column(index, { page: 'current' }) // Cambia a 'all' para sumar todos los datos
+                    .data()
+                    .reduce(function(a, b) {
+                        return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+                    }, 0);
+            };
+
+            // Calcular totales
+            var totalImporte = sumaColumna(7); // Índice de "Importe"
+            var totalISV = sumaColumna(8); // Índice de "ISV"
+            var totalDescuento = sumaColumna(9); // Índice de "Descuento"
+            var totalNeto = sumaColumna(10); // Índice de "Neto"
+
+            // Formatear como moneda local
+            var formatter = new Intl.NumberFormat('es-HN', {
+                style: 'currency',
+                currency: 'HNL',
+                minimumFractionDigits: 2,
+            });
+
+            // Actualizar footer
+            $(api.column(7).footer()).html(formatter.format(totalImporte));
+            $(api.column(8).footer()).html(formatter.format(totalISV));
+            $(api.column(9).footer()).html(formatter.format(totalDescuento));
+            $(api.column(10).footer()).html(formatter.format(totalNeto));
+        },			
         "lengthMenu": lengthMenu20,
 		"stateSave": true,
 		"bDestroy": true,		
@@ -524,6 +556,7 @@ var listar_reporte_facturacion = function(){
 				extend:    'excelHtml5',
 				text:      '<i class="fas fa-file-excel fa-lg"></i> Excel',
 				titleAttr: 'Excel',
+				footer: true,
 				title: 'Reporte Facturación',
 				className: 'btn btn-success',
 				exportOptions: {
@@ -535,6 +568,7 @@ var listar_reporte_facturacion = function(){
 				orientation: 'landscape',
 				text: '<i class="fas fa-file-pdf fa-lg"></i> PDF',
 				titleAttr: 'PDF',
+				footer: true,
 				title: 'Reporte Facturación',
 				className: 'btn btn-danger',
 				exportOptions: {
@@ -558,6 +592,7 @@ var listar_reporte_facturacion = function(){
 				extend: 'print',
 				text: '<i class="fas fa-print fa-lg"></i> Imprimir',  // Correcta colocación del icono
 				titleAttr: 'Imprimir',
+				footer: true,
 				title: 'Reporte Facturación',
 				className: 'btn btn-secondary',
 				exportOptions: {

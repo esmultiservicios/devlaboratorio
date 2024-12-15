@@ -276,30 +276,6 @@ function pagination(partida){
 }
 //FIN PAGINACION DE REGISTROS
 
-$('#form_main_grupal #reporte').on('click', function(e){
-    e.preventDefault();
-    reporteEXCEL();
-});
-
-//INICIO REPORTE DE FACTURACION
-function reporteEXCEL(){
-	var colaborador = '';
-	var desde = $('#form_main_grupal #fecha_b').val();
-	var hasta = $('#form_main_grupal #fecha_f').val();
-	var url = '';
-
-    if($('#form_main_grupal #profesional').val() == "" || $('#form_main_grupal #profesional').val() == null){
-		colaborador = '';
-	}else{
-		colaborador = $('#form_main_grupal #profesional').val();
-	}
-
-	url = '<?php echo SERVERURL; ?>php/reporte_facturacion_grupal/reporte.php?desde='+desde+'&hasta='+hasta+'&colaborador='+colaborador;
-
-	window.open(url);
-}
-//FIN REPORTE DE FACTURACION
-
 //INICIO DETALLES DE FACTURA
 function invoicesDetails(facturas_id){
 	var url = '<?php echo SERVERURL; ?>php/reporte_facturacion_grupal/detallesFactura.php';

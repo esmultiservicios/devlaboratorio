@@ -289,24 +289,34 @@ function nombre_mes_corto($mes){
   return $dia_nombre;	  
 }
 
-
 function connect(){
-	$conexion = mysql_connect(SERVER, USER, PASS);
-	mysql_select_db(DB, $conexion);
-	mysql_query("SET NAMES 'utf8'");			
+    // Prefijo "p:" para habilitar conexiones persistentes (opcional)
+    $mysqli = mysqli_connect('p:' . SERVER, USER, PASS, DB);
+
+    if ($mysqli->connect_errno) {
+        // Manejamos errores de conexión con una excepción
+        throw new Exception("Fallo al conectar a MySQL: " . $mysqli->connect_error);
+    }
+
+    // Configuramos el juego de caracteres
+    $mysqli->set_charset("utf8mb4"); // Mejor que utf8 para caracteres especiales y emojis
+
+    return $mysqli; // Retornamos el objeto MySQLi	
 }
 
 function connect_mysqli(){
-	$mysqli=mysqli_connect(SERVER,USER,PASS,DB);
-	
-	$mysqli->set_charset("utf8");
-	
-	if ($mysqli->connect_errno) {
-	   echo "Fallo al conectar a MySQL: " . $mysqli->connect_error;
-	   exit;
-	}
-	
-	return $mysqli;
+    // Prefijo "p:" para habilitar persistencia (opcional)
+    $mysqli = mysqli_connect('p:' . SERVER, USER, PASS, DB);
+
+    if ($mysqli->connect_errno) {
+        // Manejamos errores de conexión con una excepción
+        throw new Exception("Fallo al conectar a MySQL: " . $mysqli->connect_error);
+    }
+
+    // Configuramos el juego de caracteres
+    $mysqli->set_charset("utf8mb4"); // utf8mb4 es mejor que utf8 para caracteres especiales como emojis
+
+    return $mysqli;
 }
 	
 //FUNCION QUE PERMITE GENERAR LA CONTRASEÑA DE FORMA AUTOMATICA

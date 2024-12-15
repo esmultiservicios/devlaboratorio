@@ -329,7 +329,34 @@ var listar_reporte_pagos = function(){
 						'</div>' +
 					'</div>'
 			}
-		],		
+		],	
+        "footerCallback": function(row, data, start, end, display) {
+            var api = this.api();
+
+            // Función para sumar las columnas específicas
+            var sumaColumna = function(index) {
+                return api.column(index, { page: 'current' }).data().reduce(function(a, b) {
+                    return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+                }, 0);
+            };
+
+            // Calcular los totales
+            var totalImporte = sumaColumna(4);
+            var totalEfectivo = sumaColumna(5);
+            var totalTarjeta = sumaColumna(6);
+
+            // Formatear los totales
+            var formatter = new Intl.NumberFormat('es-HN', {
+                style: 'currency',
+                currency: 'HNL',
+                minimumFractionDigits: 2
+            });
+
+            // Actualizar el contenido del footer
+            $('#footerImporte').html(formatter.format(totalImporte));
+            $('#footerEfectivo').html(formatter.format(totalEfectivo));
+            $('#footerTarjeta').html(formatter.format(totalTarjeta));
+        },	
         "lengthMenu": lengthMenu20,
 		"stateSave": true,
 		"bDestroy": true,		
@@ -348,6 +375,7 @@ var listar_reporte_pagos = function(){
 				extend:    'excelHtml5',
 				text:      '<i class="fas fa-file-excel fa-lg"></i> Excel',
 				titleAttr: 'Excel',
+				footer: true,
 				title: 'Reporte Pago',
 				className: 'btn btn-success',
 				exportOptions: {
@@ -359,6 +387,7 @@ var listar_reporte_pagos = function(){
 				orientation: 'landscape',
 				text: '<i class="fas fa-file-pdf fa-lg"></i> PDF',
 				titleAttr: 'PDF',
+				footer: true,
 				title: 'Reporte Pago',
 				className: 'btn btn-danger',
 				exportOptions: {
@@ -383,6 +412,7 @@ var listar_reporte_pagos = function(){
 				text: '<i class="fas fa-print fa-lg"></i> Imprimir',  // Correcta colocación del icono
 				titleAttr: 'Imprimir',
 				title: 'Reporte Pago',
+				footer: true,
 				className: 'btn btn-secondary',
 				exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]

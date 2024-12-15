@@ -218,9 +218,6 @@ $mysqli->close();//CERRAR CONEXIÓN
     					<input type="text" placeholder="Buscar por: Expediente, Paciente, Identidad o Factura" data-toggle="tooltip" data-placement="top" title="Buscar por: Expediente, Nombre, Apellido, Identidad o Número de Factura" id="bs_regis" autofocus class="form-control" size="48"/>
     			</div>
         </div>
-        <div class="form-group">
-            <button class="btn btn-success mt-2" type="submit" id="reporte"><div class="sb-nav-link-icon"></div><i class="fas fa-user-plus fa-lg"></i> Exportar</button>
-        </div>
       </form>
     </div>
     <div class="card-footer small text-muted">

@@ -247,6 +247,18 @@ echo $fecha_inicial;
                   <th>Acciones</th>
                 </tr>
               </thead>
+              <tfoot>
+                <tr>
+                    <th colspan="6"></th>
+                    <th colspan="1">Totales:</th>
+                    <th id="totalImporte"></th>
+                    <th id="totalISV"></th>
+                    <th id="totalDescuento"></th>
+                    <th id="totalNeto"></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>              
             </table>
           </div>
         </form>
