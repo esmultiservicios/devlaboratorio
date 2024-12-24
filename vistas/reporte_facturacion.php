@@ -248,16 +248,24 @@ echo $fecha_inicial;
                 </tr>
               </thead>
               <tfoot>
-                <tr>
-                    <th colspan="6"></th>
-                    <th colspan="1">Totales:</th>
-                    <th id="totalImporte"></th>
-                    <th id="totalISV"></th>
-                    <th id="totalDescuento"></th>
-                    <th id="totalNeto"></th>
-                    <th></th>
-                    <th></th>
+               <tr>
+                    <th colspan="4"></th>
+                    <th colspan="1">Total:</th>
+                    <th id="footer-importe"></th>
+                    <th id="footer-isv"></th>
+                    <th id="footer-descuento"></th>
+                    <th id="footer-neto"></th>
+                    <th colspan="4"></th>
                 </tr>
+                <tr>
+                  <th colspan="2">Detalles de pago</th>    
+                  <th colspan="11"></th>
+                </tr>
+                <tr>
+                  <th id="tipo_pago"></th>
+                  <th id="total_pago"></th>
+                  <th colspan="11"></th>
+                </tr>                
             </tfoot>              
             </table>
           </div>

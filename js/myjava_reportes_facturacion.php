@@ -447,10 +447,11 @@ var listar_reporte_facturacion = function(){
 	var pacientesIDGrupo = $('#form_main_facturacion_reportes #pacientesIDGrupo').val()
 	var estado = '';
 
-	if($('#form_main_facturacion_reportes #estado').val() == ""){
+	var estadoValor = $('#form_main_facturacion_reportes #estado').val();
+	if (estadoValor === "" || estadoValor === null || estadoValor === undefined) {
 		estado = 1;
-	}else{
-		estado = $('#form_main_facturacion_reportes #estado').val();
+	} else {
+		estado = estadoValor;
 	}	
 	
 	var table_reporte_facturacion  = $("#dataTableReporteFacturacionMain").DataTable({
@@ -501,35 +502,72 @@ var listar_reporte_facturacion = function(){
 		"footerCallback": function(row, data, start, end, display) {
             var api = this.api();
 
-            // Función para sumar los valores de una columna
+            // Limpiar el contenido del footer
+            $('#footer-importe').html('');
+            $('#footer-isv').html('');
+            $('#footer-descuento').html('');
+            $('#footer-neto').html('');
+            $('#tipo_pago').html('');
+            $('#total_pago').html('');
+
+            // Función para calcular la suma de una columna específica
             var sumaColumna = function(index) {
-                return api
-                    .column(index, { page: 'current' }) // Cambia a 'all' para sumar todos los datos
+                return api.column(index, { page: 'current' })
                     .data()
                     .reduce(function(a, b) {
                         return (parseFloat(a) || 0) + (parseFloat(b) || 0);
                     }, 0);
             };
 
-            // Calcular totales
-            var totalImporte = sumaColumna(7); // Índice de "Importe"
-            var totalISV = sumaColumna(8); // Índice de "ISV"
-            var totalDescuento = sumaColumna(9); // Índice de "Descuento"
-            var totalNeto = sumaColumna(10); // Índice de "Neto"
+            // Calcular totales para las columnas específicas
+            var totalImporte = sumaColumna(7);
+            var totalISV = sumaColumna(8);
+            var totalDescuento = sumaColumna(9);
+            var totalNeto = sumaColumna(10);
 
-            // Formatear como moneda local
             var formatter = new Intl.NumberFormat('es-HN', {
                 style: 'currency',
                 currency: 'HNL',
                 minimumFractionDigits: 2,
             });
 
-            // Actualizar footer
-            $(api.column(7).footer()).html(formatter.format(totalImporte));
-            $(api.column(8).footer()).html(formatter.format(totalISV));
-            $(api.column(9).footer()).html(formatter.format(totalDescuento));
-            $(api.column(10).footer()).html(formatter.format(totalNeto));
-        },			
+            // Mostrar totales de las columnas
+            $('#footer-importe').html(formatter.format(totalImporte));
+            $('#footer-isv').html(formatter.format(totalISV));
+            $('#footer-descuento').html(formatter.format(totalDescuento));
+            $('#footer-neto').html(formatter.format(totalNeto));
+
+            // Acceder a `tipos_de_pago` desde el JSON recibido
+            var json = api.ajax.json();
+            console.log("JSON recibido:", json);
+
+            if (json && json.tipos_de_pago) {
+                var tipos_de_pago = json.tipos_de_pago;
+                var tipo_pago_html = '';
+                var total_pago_html = '';
+
+                // Mostrar en consola para depuración
+                console.log("Tipos de pago recibidos:", tipos_de_pago);
+
+                // Recorrer los tipos de pago y mostrarlos
+                for (var tipo_pago in tipos_de_pago) {
+                    if (tipos_de_pago.hasOwnProperty(tipo_pago)) {
+                        var total_pago = parseFloat(tipos_de_pago[tipo_pago]) || 0;
+                        tipo_pago_html += '<div>' + tipo_pago + '</div>';
+                        total_pago_html += '<div>' + formatter.format(total_pago) + '</div>';
+                    }
+                }
+
+                // Actualizar la vista con los tipos de pago
+                $('#tipo_pago').html(tipo_pago_html);
+                $('#total_pago').html(total_pago_html);
+            } else {
+                console.log("No se encontraron tipos de pago en los datos.");
+                // Si no hay tipos de pago, mostramos un mensaje alternativo
+                $('#tipo_pago').html('<div>No se encontraron tipos de pago.</div>');
+                $('#total_pago').html('');
+            }
+        },		
         "lengthMenu": lengthMenu20,
 		"stateSave": true,
 		"bDestroy": true,		

@@ -301,15 +301,6 @@ while($registro2 = $result->fetch_assoc()){
 			$fila++;
 }
 
-/*
-			<td>
-			  '.$send_mail.'
-			  '.$pay_credit.'
-			  '.$pay.''.$factura.'
-			  '.$eliminar.'
-			</td>
-*/
-
 if($nroProductos == 0){
 	$tabla = $tabla.'<tr>
 	   <td colspan="15" style="color:#C7030D">No se encontraron resultados, seleccione un profesional para verificar si hay registros almacenados</td>
