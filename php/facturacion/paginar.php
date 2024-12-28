@@ -31,6 +31,7 @@ if($pacientesIDGrupo != ""){
 	$busqueda_pacientesIDGrupo = "AND p.pacientes_id = '$pacientesIDGrupo'";
 }
 
+/*
 if($estado == 2 || $estado == 4){
 	if($tipo_paciente_grupo == "" && $pacientesIDGrupo == ""){
 		$where = "WHERE f.fecha BETWEEN '$fechai' AND '$fechaf' AND f.estado = '$estado' AND f.usuario = '$colaborador_id' ";
@@ -51,30 +52,11 @@ if($estado == 2 || $estado == 4){
 	}else{
 		$where = "WHERE f.fecha BETWEEN '$fechai' AND '$fechaf' AND f.estado = '$estado' AND (p.expediente LIKE '$dato%' OR p.nombre LIKE '$dato%' OR p.apellido LIKE '$dato%' OR CONCAT(p.apellido,' ',p.nombre) LIKE '%$dato%' OR f.number LIKE '$dato%')";
 	}
-}
+}*/
 
-$query = "SELECT f.facturas_id AS facturas_id, DATE_FORMAT(f.fecha, '%d/%m/%Y') AS 'fecha', CONCAT(p.nombre,' ',p.apellido) AS 'empresa', p.identidad AS 'identidad', CONCAT(c.nombre,' ',c.apellido) AS 'profesional', f.estado AS 'estado', s.nombre AS 'consultorio', sc.prefijo AS 'prefijo', f.number AS 'numero', sc.relleno AS 'relleno', CONCAT(p1.nombre,' ',p1.apellido) AS 'paciente', p1.pacientes_id AS 'codigoPacienteEmpresa', f.muestras_id AS 'muestras_id', c.colaborador_id AS 'colaborador_id', m.number AS 'muestra'
+$query = "SELECT * 
 	FROM facturas AS f
-	INNER JOIN pacientes AS p
-	ON f.pacientes_id = p.pacientes_id
-	INNER JOIN secuencia_facturacion AS sc
-	ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
-	INNER JOIN servicios AS s
-	ON f.servicio_id = s.servicio_id
-	INNER JOIN colaboradores AS c
-	ON f.colaborador_id = c.colaborador_id
-	LEFT JOIN muestras_hospitales AS mh
-	ON f.muestras_id = mh.muestras_id
-	LEFT JOIN pacientes As p1
-	ON mh.pacientes_id = p1.pacientes_id
-	INNER JOIN muestras AS m
-    ON f.muestras_id = m.muestras_id
-	WHERE f.estado = '$estado'
-	$busqueda_tipo_paciente_grupo
-	$busqueda_pacientesIDGrupo
-	$consulta_datos
-	GROUP BY m.muestras_id
-	ORDER BY f.pacientes_id ASC";
+	WHERE f.estado = '$estado' AND f.fecha BETWEEN '$fechai' AND '$fechaf'";
 
 $result = $mysqli->query($query) or die($mysqli->error);
 
@@ -122,11 +104,10 @@ $registro = "SELECT f.facturas_id AS facturas_id, DATE_FORMAT(f.fecha, '%d/%m/%Y
 	ON mh.pacientes_id = p1.pacientes_id
 	INNER JOIN muestras AS m
     ON f.muestras_id = m.muestras_id
-	WHERE f.estado = '$estado'
+	WHERE f.estado = '$estado' AND f.fecha BETWEEN '$fechai' AND '$fechaf'
 	$busqueda_tipo_paciente_grupo
 	$busqueda_pacientesIDGrupo
 	$consulta_datos	
-	GROUP BY m.muestras_id
 	ORDER BY f.pacientes_id ASC
 	LIMIT $limit, $nroLotes";
 	
@@ -145,7 +126,7 @@ if($estado == 1){
 	$texto1 = "Enviar";
 	$texto2 = "Imprimir";
 }else if($estado == 4){
-	$estado_ = "Crédito";
+	$estado_ = "CrÃ©dito";
 	$texto1 = "Imprimir";
 	$texto2 = "Cobrar";
 }else{
@@ -207,7 +188,7 @@ while($registro2 = $result->fetch_assoc()){
 	$total = ($neto_antes_isv + $isv_neto) - $descuento;
 
 	if($registro2['numero'] == 0){
-		$numero = "Aún no se ha generado";
+		$numero = "AÃºn no se ha generado";
 	}else{
 		$numero = $registro2['prefijo'].''.rellenarDigitos($registro2['numero'], $registro2['relleno']);
 	}
@@ -318,4 +299,4 @@ $array = array(0 => $tabla,
 echo json_encode($array);
 
 $result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
+$mysqli->close();//CERRAR CONEXIÃ“N
