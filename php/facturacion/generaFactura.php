@@ -7,9 +7,18 @@ header('Content-Type: text/html;charset=utf-8');
 require_once '../../dompdf/vendor/autoload.php';
 
 use Dompdf\Dompdf;
+use Dompdf\Options;
 
 // CONEXION A DB
 $mysqli = connect_mysqli();
+
+// Configurar Dompdf
+$options = new Options();
+$options->set('isHtml5ParserEnabled', true);
+$options->set('isRemoteEnabled', true);
+
+$dompdf = new Dompdf($options);
+
 
 date_default_timezone_set('America/Tegucigalpa');
 
@@ -28,15 +37,16 @@ $query = "SELECT CONCAT(p.nombre, ' ', p.apellido) AS 'paciente', p.identidad AS
 	ON f.colaborador_id = c.colaborador_id
 	INNER JOIN servicios AS s
 	ON f.servicio_id = s.servicio_id
- \tINNER JOIN puesto_colaboradores AS pc
-  \tON c.puesto_id = pc.puesto_id
-  \tLEFT JOIN atenciones_medicas AS am
-  \tON f.pacientes_id = am.pacientes_id
+ 	INNER JOIN puesto_colaboradores AS pc
+  	ON c.puesto_id = pc.puesto_id
+  	LEFT JOIN atenciones_medicas AS am
+  	ON f.pacientes_id = am.pacientes_id
 	LEFT JOIN muestras AS m
 	ON f.muestras_id = m.muestras_id
 	LEFT JOIN documento AS d
 	ON sf.documento_id = d.documento_id
-  \tWHERE f.facturas_id = '$noFactura'";
+  	WHERE f.facturas_id = '$noFactura'";
+
 $result = $mysqli->query($query) or die($mysqli->error);
 
 // OBTENER DETALLE DE FACTURA
@@ -75,30 +85,20 @@ if ($result->num_rows > 0) {
 	$no_factura = str_pad($consulta_registro['numero_factura'], $consulta_registro['relleno'], '0', STR_PAD_LEFT);
 
 	if ($consulta_registro['estado'] == 3) {
-		$anulada = '<img class="anulada" src="../../img/anulado.png" alt="Anulada">';
+		$anulada = '<img class="anulada" src="' . SERVERURL . 'img/anulado.png" alt="Anulada">';
 	}
 
 	ob_start();
 	include (dirname('__FILE__') . '/factura.php');
 	$html = ob_get_clean();
 
-	// instantiate and use the dompdf class
-	$dompdf = new Dompdf();
-
-	$dompdf->set_option('isRemoteEnabled', true);
-
-	$html = mb_convert_encoding($html, 'UTF-8', 'auto');  // Converts $html to UTF-8 encoding
-	$dompdf->loadHtml($html);  // Now load the UTF-8 encoded HTML
-
-	// (Optional) Setup the paper size and orientation
+	// Generar el PDF
+	$dompdf->loadHtml($html);
 	$dompdf->setPaper('letter', 'portrait');
-	// Render the HTML as PDF
 	$dompdf->render();
 
+	// Descargar o mostrar el PDF
+	$dompdf->stream("factura_$no_factura.pdf", ["Attachment" => false]);
+
 	file_put_contents(dirname('__FILE__') . '/Facturas/factura_' . $no_factura . '.pdf', $dompdf->output());
-
-	// Output the generated PDF to Browser
-	$dompdf->stream('factura_' . $no_factura . '.pdf', array('Attachment' => 0));
-
-	exit;
 }
