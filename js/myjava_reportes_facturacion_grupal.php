@@ -44,8 +44,8 @@ $(document).ready(function() {
 			swal({
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 	        return false;
           }
@@ -62,8 +62,8 @@ $(document).ready(function() {
 			swal({
 				title: "Error",
 				text: "Hay registros en blanco, por favor corregir",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 			return false;
 		 }
@@ -104,8 +104,8 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 4){
 		swal({
 			title: "Error",
 			text: "Hay registros en blanco, por favor corregir",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
 	}
@@ -113,8 +113,8 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 4){
 	swal({
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
-		type: "error",
-		confirmButtonClass: 'btn-danger'
+		icon: "error",
+		dangerMode: true
 	});
 }
 });
@@ -124,8 +124,8 @@ function funciones(){
 	getColaborador();
 	getEstado();
 	pagination(1);
-  getTipoPacienteGrupo();
-  getPacienteGrupo(2);
+	getTipoPacienteGrupo();
+	getPacienteGrupo(2);
 }
 //FIN AGRUPAR FUNCIONES DE PACIENTES
 
@@ -208,7 +208,7 @@ function agregarCobros(){
 				swal({
 					title: "Success",
 					text: "Valores generados correctamente",
-					type: "success",
+					icon: "success",
 				});
 				$('#formCobros #comentario').val("");
 				$("#formCobros #generar").attr('disabled', true);
@@ -218,24 +218,24 @@ function agregarCobros(){
 				swal({
 					title: "Error",
 					text: "Error, no se puedieron generar los valores, por favor corregir",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 				return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "Error, este registro ya existe",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 				return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 				return false;
 			}
@@ -302,29 +302,36 @@ function invoicesDetails(facturas_id){
 function modal_rollback(facturas_id, pacientes_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 3){
 		swal({
-		  title: "¿Esta seguro?",
-		  text: "¿Desea cancelar la factura para este registro: Paciente: " + consultarNombre(pacientes_id) + ". Factura N°:  " + getNumeroFactura(facturas_id) + "?",
-		  type: "input",
-		  showCancelButton: true,
-		  closeOnConfirm: false,
-		  inputPlaceholder: "Comentario",
-		  cancelButtonText: "Cancelar",
-		  confirmButtonText: "¡Sí, cancelar la factura!",
-		  confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-		  if (inputValue === false) return false;
-		  if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
-		  }
-			rollback(facturas_id, inputValue);
+			title: "¿Esta seguro?",
+			text: "¿Desea anular la factura para este registro: Paciente: " + consultarNombre(pacientes_id) + ". Factura N°:  " + getNumeroFactura(facturas_id) + "?",
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, anular la factura!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
+			}
+			rollback(facturas_id, value);
 		});
 	}else{
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
 	}
@@ -348,23 +355,23 @@ function rollback(facturas_id,comentario){
 				swal({
 					title: "Success",
 					text: "Factura cancelada correctamente",
-					type: "success",
+					icon: "success",
 				});
 			    return false;
 			  }else if(registro == 2){
 				swal({
 					title: "Error",
 					text: "Error al cancelar la factura",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			    return false;
 			  }else{
 				swal({
 					title: "Error",
 					text: "Error al ejecutar esta acción",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			  }
 		  }
@@ -374,8 +381,8 @@ function rollback(facturas_id,comentario){
 		swal({
 			title: "Error",
 			text: "No se puede ejecutar esta acción fuera de esta fecha",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }
@@ -462,17 +469,23 @@ function printBillGroup(facturas_id){
 
 function mailBillGroup(facturas_id){
 	swal({
-	  title: "¿Estas seguro?",
-	  text: "¿Desea enviar este numero de factura: # " + getNumeroFacturaGroup(facturas_id) + "?",
-	  type: "info",
-	  showCancelButton: true,
-	  confirmButtonClass: "btn-primary",
-	  confirmButtonText: "¡Sí, enviar la factura!",
-	  cancelButtonText: "Cancelar",
-	  closeOnConfirm: false
-	},
-	function(){
-		sendMailGroup(facturas_id);
+		title: "¿Estas seguro?",
+		text: "¿Desea enviar este numero de factura: # " + getNumeroFacturaGroup(facturas_id) + "?",
+		icon: "warning",
+		buttons: {
+			cancel: {
+				text: "Cancelar",
+				visible: true
+			},
+			confirm: {
+				text: "¡Sí, enviar la factura!",
+			}
+		},
+		closeOnClickOutside: false
+	}).then((willConfirm) => {
+		if (willConfirm === true) {
+			sendMailGroup(facturas_id);
+		}
 	});
 }
 
@@ -491,7 +504,7 @@ function sendMailGroup(facturas_id){
 				swal({
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
-					type: "success",
+					icon: "success",
 				});
 		  }
 	  }

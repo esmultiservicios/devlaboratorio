@@ -29,8 +29,8 @@ $(document).ready(function(){
 			swal({
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 		}
 	});
@@ -54,8 +54,8 @@ $(document).ready(function(){
 			swal({
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 		}
 	});
@@ -166,8 +166,8 @@ $('#reg_manual').on('click', function(e){ // delete event clicked // We don't wa
 		swal({
 			title: "Error",
 			text: "Hay registros en blanco, por favor corregir",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	   return false;
    }
@@ -181,8 +181,8 @@ $('#convertir_manual').on('click', function(e){ // add event submit We don't wan
 		  swal({
 				title: 'Acceso Denegado',
 				text: 'No tiene permisos para ejecutar esta acción',
-				type: 'error',
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 		  });
 	}
 });
@@ -245,8 +245,8 @@ function showExpediente(pacientes_id){
 				swal({
 					title: "Error",
 					text: "Por favor intentelo de nuevo más tarde",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			}else{
   	           $('#mensaje_show').modal({
@@ -265,24 +265,30 @@ function showExpediente(pacientes_id){
 function modal_eliminarProfesional(profesional_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 		swal({
-		  title: "¿Estas seguro?",
-		  text: "¿Desea eliminar este registro?",
-		  type: "warning",
-		  showCancelButton: true,
-		  confirmButtonClass: "btn-warning",
-		  confirmButtonText: "¡Sí, eliminar el registro!",
-		  cancelButtonText: "Cancelar",
-		  closeOnConfirm: false
-		},
-		function(){
-			eliminarProfesional(profesional_id);
+			title: "¿Estas seguro?",
+			text: "¿Desea eliminar este registro?",
+			icon: "warning",
+			buttons: {
+				cancel: {
+					text: "Cancelar",
+					visible: true
+				},
+				confirm: {
+					text: "¡Sí, eliminar el registro!",
+				}
+			},
+			closeOnClickOutside: false
+		}).then((willConfirm) => {
+			if (willConfirm === true) {
+				eliminarProfesional(profesional_id);
+			}
 		});
 	}else{
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }
@@ -302,20 +308,27 @@ function modal_eliminar(pacientes_id){
 		swal({
 			title: "¿Estas seguro?",
 			text: "¿Desea eliminar este cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, eliminar el cliente!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, eliminar el cliente!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			eliminarRegistro(pacientes_id, inputValue);
+			eliminarRegistro(pacientes_id, value);
 		});
   }else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
 		var nombre_usuario = consultarNombre(pacientes_id);
@@ -331,27 +344,34 @@ function modal_eliminar(pacientes_id){
 		swal({
 			title: "¿Estas seguro?",
 			text: "¿Desea eliminar este cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, eliminar el cliente!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, eliminar el cliente!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			eliminarRegistro(pacientes_id, inputValue);
-		});
+			eliminarRegistro(pacientes_id, value);
+		});		
   }else{
 	  swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 	  });
 	 return false;
   }
@@ -414,8 +434,8 @@ function editarRegistro(pacientes_id){
 		swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
 	}
@@ -432,7 +452,7 @@ function eliminarProfesional(id){
 				swal({
 					title: "Success",
 					text: "Registro eliminado correctamente",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-clos
 				});
 				paginationPorfesionales(1);
@@ -442,24 +462,24 @@ function eliminarProfesional(id){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al completar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}
@@ -479,7 +499,7 @@ function eliminarRegistro(pacientes_id, comentario){
 				swal({
 					title: "Success",
 					text: "Registro eliminado correctamente",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-clos
 				});
 				pagination(1);
@@ -488,24 +508,24 @@ function eliminarRegistro(pacientes_id, comentario){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al completar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}
@@ -528,7 +548,7 @@ function convertirExpedientetoTemporal(){
 				swal({
 					title: "Usuario convertido",
 					text: "El usuario se ha convertido a temporal",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-close
 				});
 				$('#agregar_expediente_manual').modal('hide');
@@ -542,8 +562,8 @@ function convertirExpedientetoTemporal(){
 				swal({
 					title: "Error",
 					text: "No se puede procesar su solicitud",
-					type: "error",
-					confirmButtonClass: "btn-danger"
+					icon: "error",
+					dangerMode: true
 				});
                 return false;
 			}
@@ -564,7 +584,7 @@ function registrarExpedienteManual(){
 				swal({
 					title: "Success",
 					text: "Registro completado correctamente",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-clos
 				});
 				$('#agregar_expediente_manual').modal('hide');
@@ -573,29 +593,29 @@ function registrarExpedienteManual(){
 				swal({
 					title: "Error",
 					text: "No se pudo guardar el registro, por favor verifique la información",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 		   }else if(registro==3){
 				swal({
 					title: "Error",
 					text: "Error al ejecutar esta acción",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 		   }else if(registro==4){
 				swal({
 					title: "Error",
 					text: "Error en los datos",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 		   }else{
 				swal({
 					title: "Error",
 					text: "Error al guardar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 		   }
 		}
@@ -617,8 +637,8 @@ function busquedaUsuarioManualIdentidad(){
 			swal({
 				title: "Error",
 				text: "Este numero de Identidad ya existe, por favor corriga el numero e intente nuevamente",
-				type: "error",
-				confirmButtonClass: "btn-danger"
+				icon: "error",
+				dangerMode: true
 			});
 			 $("#formulario_agregar_expediente_manual #reg").attr('disabled', true);
 			 return false;
@@ -643,8 +663,8 @@ function busquedaUsuarioManualExpediente(){
 			swal({
 				title: "Error",
 				text: "Este numero de Expediente ya existe, por favor corriga el numero e intente nuevamente",
-				type: "error",
-				confirmButtonClass: "btn-danger"
+				icon: "error",
+				dangerMode: true
 			});
 			$("#formulario_agregar_expediente_manual #reg").attr('disabled', true);
 			return false;
@@ -740,8 +760,8 @@ function modal_muestras(pacientes_id){
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }
@@ -790,8 +810,8 @@ function modal_agregar_expediente_manual(id, expediente){
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
  }
@@ -809,19 +829,25 @@ function modal_agregar_expediente(pacientes_id, expediente){
 
     if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 	     if (expediente == "" || expediente == 0){
-				swal({
-				  title: "¿Estas seguro?",
-				  text: "¿Desea asignarle un número de expediente a este usuario:" + dato + "?",
-				  type: "warning",
-				  showCancelButton: true,
-				  confirmButtonClass: "btn-warning",
-				  confirmButtonText: "¡Sí, Asignar el expediente!",
-				  cancelButtonText: "Cancelar",
-				  closeOnConfirm: false
+			swal({
+				title: "¿Estas seguro?",
+				text: "¿Desea asignarle un número de expediente a este usuario:" + dato + "?",
+				icon: "warning",
+				buttons: {
+					cancel: {
+						text: "Cancelar",
+						visible: true
+					},
+					confirm: {
+						text:  "¡Sí, Asignar el expediente!",
+					}
 				},
-				function(){
+				closeOnClickOutside: false
+			}).then((willConfirm) => {
+				if (willConfirm === true) {
 					asignarExpedienteaRegistro(pacientes_id);
-				});
+				}
+			});
 	     }else{
 			swal({
 				title: "Error",
@@ -834,8 +860,8 @@ function modal_agregar_expediente(pacientes_id, expediente){
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
     }

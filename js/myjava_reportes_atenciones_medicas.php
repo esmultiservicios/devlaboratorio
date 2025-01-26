@@ -185,9 +185,9 @@ $('#form_main #reporte_excel').on('click', function(e){
  }else{
 	swal({
 		title: "Acceso Denegado", 
-		text: "No tiene permisos para ejecutar esta acción",
+		icon: "No tiene permisos para ejecutar esta acción",
 		type: "error", 
-		confirmButtonClass: 'btn-danger'
+		dangerMode: true
 	});					 
  }
 });
@@ -200,8 +200,8 @@ $('#form_main #reporte_diario').on('click', function(e){ // add event submit We 
 	swal({
 		title: "Acceso Denegado", 
 		text: "No tiene permisos para ejecutar esta acción",
-		type: "error", 
-		confirmButtonClass: 'btn-danger'
+		icon: "error", 
+		dangerMode: true
 	});					 
  }		 
 });
@@ -234,8 +234,8 @@ function addAdendum(atencion_id, muestras_id){
 		swal({
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error", 
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});					 
 	}
 }
@@ -325,18 +325,24 @@ function consultarAdendum(atencion_id){
 //INICIO ENVIAR REPORTE DE LABORATORIO POR CORREO ELECTRONICO
 function mailAtencion(atencion_id){
 	swal({
-	  title: "¿Estas seguro?",
-	  text: "¿Desea enviar este reporte de laboratorio con número de muestra: # " + getNumeroMuestra(atencion_id) + "?",
-	  type: "info",
-	  showCancelButton: true,
-	  confirmButtonClass: "btn-primary",
-	  confirmButtonText: "¡Sí, enviar el reporte!",
-	  cancelButtonText: "Cancelar",
-	  closeOnConfirm: false
-	},
-	function(){
-		sendMailAtencion(atencion_id);
-	});				
+		title: "¿Estas seguro?",
+		text: "¿Desea enviar este reporte de laboratorio con número de muestra: # " + getNumeroMuestra(atencion_id) + "?",
+		icon: "warning",
+		buttons: {
+			cancel: {
+				text: "Cancelar",
+				visible: true
+			},
+			confirm: {
+				text: "¡Sí, enviar el reporte!",
+			}
+		},
+		closeOnClickOutside: false
+	}).then((willConfirm) => {
+		if (willConfirm === true) {
+			sendMailAtencion(atencion_id);
+		}
+	});			
 }
 
 function sendMailAtencion(atencion_id){
@@ -354,7 +360,7 @@ function sendMailAtencion(atencion_id){
 				swal({
 					title: "Success", 
 					text: "El reporte de laboratorio ha sido enviada por correo satisfactoriamente",
-					type: "success", 
+					icon: "success", 
 				});	
 		  }
 	  }

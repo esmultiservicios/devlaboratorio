@@ -42,219 +42,209 @@ $('.FormularioAjax').submit(function (e) {
 	swal({
 		title: "¿Estás seguro?",
 		text: textoAlerta,
-		type: type,
-		showCancelButton: true,
-		confirmButtonClass: classButtom,
-		confirmButtonText: "Aceptar",
-		cancelButtonText: "Cancelar",
-		closeOnConfirm: false,
-		allowEscapeKey: false,
-		allowOutsideClick: false
-	},
-		function (isConfirm) {
-			if (isConfirm) {
-				// Dentro de la función del swal, deshabilita el botón "Aceptar" del swal
-				swal.disableButtons();
-
-				$.ajax({
-					type: method,
-					url: action,
-					data: formdata ? formdata : form.serialize(),
-					cache: false,
-					contentType: false,
-					processData: false,
-					xhr: function () {
-						var xhr = new window.XMLHttpRequest();
-						xhr.upload.addEventListener("progress", function (evt) {
-							if (evt.lengthComputable) {
-								var percentComplete = evt.loaded / evt.total;
-								percentComplete = parseInt(percentComplete * 100);
-								if (percentComplete < 100) {
-									respuesta.html('<p class="text-center">Procesado... (' + percentComplete + '%)</p><div class="progress progress-striped active"><div class="progress-bar progress-bar-info" style="width: ' + percentComplete + '%;"></div></div>');
-								} else {
-									respuesta.html('<p class="text-center"></p>');
-								}
-							}
-						}, false);
-						return xhr;
-					},
-					success: function (data) {
-						var datos = eval(data);
-
-						if (datos[0] == "Error") {
-							swal({
-								title: datos[0],
-								text: datos[1],
-								type: datos[2],
-								confirmButtonClass: datos[3]
-							});
-						} else if (datos[0] == "Guardar") {
-							swal({
-								title: datos[0],
-								text: datos[1],
-								type: datos[2],
-								confirmButtonClass: datos[3],
-							});
-						} else {
-							swal({
-								title: datos[0],
-								text: datos[1],
-								type: datos[2],
-								timer: 3000,
-								confirmButtonClass: datos[3]
-							});
-						}
-
-						if (datos[4] != "") {
-							$('#' + datos[4])[0].reset();
-							$('#' + datos[4] + ' #pro').val(datos[5]);
-						}
-
-						llenarTabla(datos[6]);
-
-						if (datos[6] == "formEmpresas") {
-							pagination(1);
-							getEmpresa();
-						}
-
-						if (datos[6] == "formPacientesAdmisionEditar") {
-							getGenero();
-							pagination(1);
-						}
-
-						if (datos[6] == "formPacientesAdmision") {
-							getGenero();
-							getTipo();
-							getTipoMuestra();
-							getEmpresa();
-							getRemitente();
-							getHospitales();
-							getCategorias();
-							getServicio();
-							getClientes();
-							pagination(1);
-							$('#formulario_admision #producto').html("");
-							$('#formulario_admision #producto').selectpicker('refresh');
-						}
-
-						if (datos[6] == "AtencionMedica") {
-							printReport(datos[8]);//LLAMAMOS A LA FUNCION IMPRIMIR REPORTE DE LABORATORIO .-Función se encuentra en myjava_atencion_medica.js
-							setTimeout(sendMailAtencion(datos[8]), 5000);
-						}
-
-						if (datos[6] == "Adendum") {
-							printReport(datos[8]);//LLAMAMOS A LA FUNCION IMPRIMIR REPORTE DE LABORATORIO .-Función se encuentra en myjava_atencion_medica.js
-						}
-
-						if (datos[6] == "Facturacion") {
-							pago(datos[8]); //LLAMAMOS LA FUNCION PARA REALIZAR EL PAGO .-Función se encuentra en myjava_facturacion.js
-						}
-
-						if (datos[6] == "FacturacionCredito") {
-							printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							//pagination(1);
-						}
-
-						if (datos[6] == "facturacionGrupal") {
-							pagoGrupal(datos[8]); //LLAMAMOS LA FUNCION PARA REALIZAR EL PAGO .-Función se encuentra en myjava_facturacion.js
-						}
-
-						if (datos[6] == "facturacionGrupalCredito") {
-							printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							//pagination(1);
-						}
-
-						if (datos[6] == "Pagos") {
-							printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-							pagination(1);
-							volver();
-							setTimeout(sendMail(datos[8]), 5000);
-							$('#' + datos[7]).modal('hide');
-						}
-
-						if (datos[6] == "PagosGrupal") {
-							printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-							pagination(1);
-							volver();
-							setTimeout(sendMail(datos[8]), 5000);
-							$('#' + datos[7]).modal('hide');
-						}
-
-						if (datos[6] == "PagosGrupalCredito") {
-							printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-							pagination(1);
-							volver();
-							setTimeout(sendMail(datos[8]), 5000);
-							$('#' + datos[7]).modal('hide');
-							listar_cuentas_por_cobrar_clientes();
-						}						
-
-						if (datos[6] == "PagosCredito") {
-							printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-						    pagination(1);
-							volver();
-							$('#' + datos[7]).modal('hide');
-							listar_cuentas_por_cobrar_clientes();
-						}
-
-						if (datos[6] == "PagosCXC") {
-							printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-							pagination(1);
-							volver();
-							$('#' + datos[7]).modal('hide');
-							listar_cuentas_por_cobrar_clientes();
-						}
-
-						if (datos[6] == "PagosCXCGrupal") {
-							printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_facturacion.js
-							limpiarTabla();
-							pagination(1);
-							volver();
-							setTimeout(sendMail(datos[8]), 5000);
-							$('#' + datos[7]).modal('hide');
-							listar_cuentas_por_cobrar_clientes();
-						}
-
-						if (datos[6] == "Muestras") {
-							//printMuestra(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_muestras.js
-							createBill(datos[8]);//LLAMAMOS LA FACTURA .-Función se encuentra en myjava_atencioN_medica.js
-						}
-
-						if (datos[6] == "formPacientesAdmision") {
-							//printMuestra(datos[10]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA .-Función se encuentra en myjava_muestras.js
-							createBill(datos[10], datos[11], datos[12], datos[13], datos[14]);//LLAMAMOS LA FACTURA .-Función se encuentra en myjava_atencioN_medica.js
-						}
-
-						if (datos[9] == "Eliminar") {
-							$('#' + datos[7]).modal('hide');
-						}
-
-						if (datos[9] == "Guardar") {
-							$('#' + datos[7]).modal('hide');
-						}
-
-						if (datos[6] == "formCita") {
-							reportePDF(datos[8]);
-							sendEmailReprogramación(datos[8]);
-						}
-
-						// Habilitar el botón después de completar la transacción
-						form.find('button[type="submit"]').prop('disabled', false);
-					},
-					error: function () {
-						respuesta.html(msjError);
-					}
-				});
-			} else {
-				// Si el usuario hizo clic en "Cancelar", habilita el botón del formulario
-				form.find('button[type="submit"]').prop('disabled', false);
+		icon: type,
+		buttons: {
+			cancel: {
+				text: "Cancelar",
+				visible: true,
+				closeModal: true
+			},
+			confirm: {
+				text: "Aceptar",
+				className: classButtom,
+				closeModal: false
 			}
-		});
+		},
+		dangerMode: false
+	}).then(function (isConfirm) {
+		if (isConfirm) {
+			$.ajax({
+				type: method,
+				url: action,
+				data: formdata ? formdata : form.serialize(),
+				cache: false,
+				contentType: false,
+				processData: false,
+				xhr: function () {
+					var xhr = new window.XMLHttpRequest();
+					xhr.upload.addEventListener("progress", function (evt) {
+						if (evt.lengthComputable) {
+							var percentComplete = evt.loaded / evt.total;
+							percentComplete = parseInt(percentComplete * 100);
+							if (percentComplete < 100) {
+								respuesta.html('<p class="text-center">Procesado... (' + percentComplete + '%)</p><div class="progress progress-striped active"><div class="progress-bar progress-bar-info" style="width: ' + percentComplete + '%;"></div></div>');
+							} else {
+								respuesta.html('<p class="text-center"></p>');
+							}
+						}
+					}, false);
+					return xhr;
+				},
+				success: function (data) {
+					var datos = eval(data);
+
+					if (datos[0] == "Error") {
+						swal({
+							title: datos[0],
+							text: datos[1],
+							icon: datos[2],
+							confirmButtonClass: datos[3]
+						});
+					} else if (datos[0] == "Guardar") {
+						swal({
+							title: datos[0],
+							text: datos[1],
+							icon: datos[2],
+							confirmButtonClass: datos[3],
+						});
+					} else {
+						swal({
+							title: datos[0],
+							text: datos[1],
+							icon: datos[2],
+							timer: 3000,
+							confirmButtonClass: datos[3]
+						});
+					}
+
+					if (datos[4] != "") {
+						$('#' + datos[4])[0].reset();
+						$('#' + datos[4] + ' #pro').val(datos[5]);
+					}
+
+					llenarTabla(datos[6]);
+
+					if (datos[6] == "formEmpresas") {
+						pagination(1);
+						getEmpresa();
+					}
+
+					if (datos[6] == "formPacientesAdmisionEditar") {
+						getGenero();
+						pagination(1);
+					}
+
+					if (datos[6] == "formPacientesAdmision") {
+						getGenero();
+						getTipo();
+						getTipoMuestra();
+						getEmpresa();
+						getRemitente();
+						getHospitales();
+						getCategorias();
+						getServicio();
+						getClientes();
+						pagination(1);
+						$('#formulario_admision #producto').html("");
+						$('#formulario_admision #producto').selectpicker('refresh');
+					}
+
+					if (datos[6] == "AtencionMedica") {
+						printReport(datos[8]);//LLAMAMOS A LA FUNCION IMPRIMIR REPORTE DE LABORATORIO
+						setTimeout(sendMailAtencion(datos[8]), 5000);
+					}
+
+					if (datos[6] == "Adendum") {
+						printReport(datos[8]);//LLAMAMOS A LA FUNCION IMPRIMIR REPORTE DE LABORATORIO
+					}
+
+					if (datos[6] == "Facturacion") {
+						pago(datos[8]); //LLAMAMOS LA FUNCION PARA REALIZAR EL PAGO
+					}
+
+					if (datos[6] == "FacturacionCredito") {
+						printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+					}
+
+					if (datos[6] == "facturacionGrupal") {
+						pagoGrupal(datos[8]); //LLAMAMOS LA FUNCION PARA REALIZAR EL PAGO
+					}
+
+					if (datos[6] == "facturacionGrupalCredito") {
+						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+					}
+
+					if (datos[6] == "Pagos") {
+						printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						setTimeout(sendMail(datos[8]), 5000);
+						$('#' + datos[7]).modal('hide');
+					}
+
+					if (datos[6] == "PagosGrupal") {
+						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						setTimeout(sendMail(datos[8]), 5000);
+						$('#' + datos[7]).modal('hide');
+					}
+
+					if (datos[6] == "PagosGrupalCredito") {
+						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						setTimeout(sendMail(datos[8]), 5000);
+						$('#' + datos[7]).modal('hide');
+						listar_cuentas_por_cobrar_clientes();
+					}
+
+					if (datos[6] == "PagosCredito") {
+						printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						$('#' + datos[7]).modal('hide');
+						listar_cuentas_por_cobrar_clientes();
+					}
+
+					if (datos[6] == "PagosCXC") {
+						printBill(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						$('#' + datos[7]).modal('hide');
+						listar_cuentas_por_cobrar_clientes();
+					}
+
+					if (datos[6] == "PagosCXCGrupal") {
+						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						limpiarTabla();
+						pagination(1);
+						volver();
+						setTimeout(sendMail(datos[8]), 5000);
+						$('#' + datos[7]).modal('hide');
+						listar_cuentas_por_cobrar_clientes();
+					}
+
+					if (datos[6] == "Muestras") {
+						createBill(datos[8]);//LLAMAMOS LA FACTURA
+					}
+
+					if (datos[6] == "formPacientesAdmision") {
+						createBill(datos[10], datos[11], datos[12], datos[13], datos[14]);//LLAMAMOS LA FACTURA
+					}
+
+					if (datos[9] == "Eliminar") {
+						$('#' + datos[7]).modal('hide');
+					}
+
+					if (datos[9] == "Guardar") {
+						$('#' + datos[7]).modal('hide');
+					}
+				},
+				error: function () {
+					respuesta.html(msjError);
+				}
+			});
+		} else {
+			// Si el usuario hace clic en "Cancelar", habilita el botón del formulario
+			form.find('button[type="submit"]').prop('disabled', false);
+		}
+	});
 });
 
 

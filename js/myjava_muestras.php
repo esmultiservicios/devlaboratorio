@@ -148,8 +148,8 @@ function agregarMuestras(){
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }
@@ -678,24 +678,30 @@ $('#ancla_volver').on('click', function(e){
 	 e.preventDefault();
 	 if($('#formulario_facturacion #cliente_nombre').val() != "" || $('#formulario_facturacion #colaborador_nombre').val() != ""){
 		swal({
-		  title: "Tiene datos en la factura",
-		  text: "¿Esta seguro que desea volver, recuerde que tiene información en la factura la perderá?",
-		  type: "warning",
-		  showCancelButton: true,
-		  confirmButtonClass: "btn-warning",
-		  confirmButtonText: "¡Si, deseo volver!",
-		  closeOnConfirm: false
-		},
-		function(){
-			$('#main_facturacion').show();
-			$('#label_acciones_factura').html("");
-			$('#facturacion').hide();
-			$('#acciones_atras').addClass("breadcrumb-item active");
-			$('#acciones_factura').removeClass("active");
-			$('#formulario_facturacion')[0].reset();
-			swal.close();
-			$('.footer').show();
-    		$('.footer1').hide();			
+			title: "Tiene datos en la factura",
+			text: "¿Esta seguro que desea volver, recuerde que tiene información en la factura la perderá?",
+			icon: "warning",
+			buttons: {
+				cancel: {
+					text: "Cancelar",
+					visible: true
+				},
+				confirm: {
+					text: "¡Si, deseo volver!",
+				}
+			},
+			closeOnClickOutside: false
+		}).then((willConfirm) => {
+			if (willConfirm === true) {
+				$('#main_facturacion').show();
+				$('#label_acciones_factura').html("");
+				$('#facturacion').hide();
+				$('#acciones_atras').addClass("breadcrumb-item active");
+				$('#acciones_factura').removeClass("active");
+				$('#formulario_facturacion')[0].reset();
+				$('.footer').show();
+				$('.footer1').hide();
+			}
 		});
 	 }else{
 		 $('#main_facturacion').show();
@@ -798,16 +804,16 @@ function createBill(muestras_id){
 			swal({
 				title: "Error",
 				text: "Lo sentimos esta factura ya ha sido generada, por favor diríjase al módulo de facturación y realice le cobro de esta",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 		}
 	}else{
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }
@@ -936,7 +942,7 @@ function sendMail(facturas_id){
 				swal({
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
-					type: "success",
+					icon: "success",
 				});
 		  }
 	  }
@@ -1476,8 +1482,8 @@ function modal_clientes(){
 		swal({
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error", 
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});					 
 	}	
 }
@@ -1506,8 +1512,8 @@ function modal_colaboradores(){
 		swal({
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error", 
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});	
 	}
 }
@@ -1534,8 +1540,8 @@ function modal_hospitales(){
 		swal({
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error", 
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});				
 	} 	
 }

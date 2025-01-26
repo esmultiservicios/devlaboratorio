@@ -7,20 +7,35 @@ function nologoneado(usuario){
 }
 
 $('#salir_sistema').on('click',function(){
-	swal({
-	  title: "¿Esta seguro?",
-	  text: "¿Realmente desesa salir del sistema?",
-	  type: "info",
-	  showCancelButton: true,
-	  closeOnConfirm: false,
-	  showLoaderOnConfirm: true,
-	  confirmButtonText: "¡Sí, deseo salir del sistema!",
-	  cancelButtonText: "Cancelar",
-	}, function () {
-	  setTimeout(function () {
-		redireccionarsalida();
-	  }, 2000);
-	});	
+   swal({
+      title: "¿Está seguro?",
+      text: "¿Realmente desea salir del sistema?",
+      icon: "info",  // Cambié 'type' por 'icon'
+      buttons: {
+         cancel: {
+            text: "Cancelar",
+            value: null,
+            visible: true,
+            className: "btn btn-secondary",
+            closeModal: true
+         },
+         confirm: {
+            text: "¡Sí, deseo salir del sistema!",
+            value: true,
+            visible: true,
+            className: "btn btn-primary",
+            closeModal: true
+         }
+      },
+      closeOnConfirm: false,
+      showLoaderOnConfirm: true
+      }).then((willExit) => {
+         if (willExit) {
+            setTimeout(function () {
+               redireccionarsalida();  // Realiza la redirección
+            }, 1000);
+         }
+      });
 });
 
 function redireccionarsalida(){
@@ -84,20 +99,28 @@ function getSaludoSistema(){
 		async: false,
 		success:function(data){	
 		  if(data == "Error"){
-			swal({
-			  title: "Sesión Finalizada",
-			  text: "Lo sentimos su sesión ha vencido, por favor inicie su sesión nuevamente",
-			  type: "info",
-			  showCancelButton: false,
-			  confirmButtonText: "¡Está bien, llévame al Inicio!",
-			  cancelButtonText: "Cancelar",
-			  closeOnConfirm: false,
-			  showLoaderOnConfirm: true
-			}, function () {
-			setTimeout(function () {
-				redireccionarsalida();
-			}, 2000);
-			});			  
+
+         swal({
+            title: "Sesión Finalizada",
+            text: "Lo sentimos su sesión ha vencido, por favor inicie su sesión nuevamente",
+            icon: "warning",
+            buttons: {
+               cancel: {
+                  text: "Cancelar",
+                  visible: true
+               },
+               confirm: {
+                  text:"¡Está bien, llévame al Inicio!",
+               }
+            },
+            closeOnClickOutside: false
+         }).then((willConfirm) => {
+            if (willConfirm === true) {
+               setTimeout(function () {
+                  redireccionarsalida();
+               }, 2000);
+            }
+         });			  
 		  }else{
 			 $('#saludo_sistema').html(data); 
 		  }	  
@@ -634,9 +657,36 @@ function confirmar(agenda_id, colaborador_id, servicio_id){
 		swal({
 			title: "Error", 
 			text: "Lo sentimos esta opción no esta disponible",
-			type: "error", 
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});		  
 	}
+}
+
+// Función general para mostrar alertas SweetAlert
+function mostrarAlerta(tipo, titulo, mensaje) {
+    swal({
+        title: titulo,
+        text: mensaje,
+        icon: tipo,  // "success", "error", "warning", "info"
+        button: "Aceptar",
+    });
+}
+
+// Funciones específicas para cada tipo de alerta
+function mostrarInfo(titulo, mensaje) {
+    mostrarAlerta("info", titulo, mensaje);
+}
+
+function mostrarSuccess(titulo, mensaje) {
+    mostrarAlerta("success", titulo, mensaje);
+}
+
+function mostrarWarning(titulo, mensaje) {
+    mostrarAlerta("warning", titulo, mensaje);
+}
+
+function mostrarError(titulo, mensaje) {
+    mostrarAlerta("error", titulo, mensaje);
 }
 </script>

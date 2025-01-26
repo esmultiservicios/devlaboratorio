@@ -6,8 +6,8 @@ function reportePDF(agenda_id){
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
         return false;
     }
@@ -288,8 +288,8 @@ var editar_productos_busqueda_dataTable = function(tbody, table){
 			swal({
 				title: "Error",
 				text: "Lo sentimos no se puede seleccionar un producto, por favor seleccione un cliente antes de poder continuar",
-				type: "error",
-				confirmButtonClass: "btn-danger"
+				icon: "error",
+				dangerMode: true
 			});
 		}
 	});
@@ -419,8 +419,8 @@ $("#formulario_facturacion #invoiceItem").on('click', '.producto', function() {
 			swal({
 				title: "Error",
 				text: "Lo sentimos no se puede efectuar la búsqueda, por favor seleccione un cliente antes de poder continuar",
-				type: "error",
-				confirmButtonClass: "btn-danger"
+				icon: "error",
+				dangerMode: true
 			});
 	   }
 	 });
@@ -506,8 +506,8 @@ $("#formulario_facturacion #invoiceItem").on('click', '.producto', function() {
 			swal({
 				title: "Error",
 				text: "Lo sentimos no se puede efectuar la búsqueda, por favor seleccione un cliente antes de poder continuar",
-				type: "error",
-				confirmButtonClass: "btn-danger"
+				icon: "error",
+				dangerMode: true
 			});
 	   }
 	});
@@ -872,8 +872,8 @@ $('#formulario_pacientes #buscar_municipio_pacientes').on('click', function(e){
 		swal({
 			title: "Error",
 			text: "Lo sentimos el departamento no debe estar vacío, antes de seleccionar esta opción por favor seleccione un departamento, por favor corregir",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}else{
 		listar_municipios_buscar();
@@ -1930,7 +1930,7 @@ function sendMail(facturas_id) {
 			if (bill == 1) {
 				swal({
 					title: "Success",
-					text: "La factura ha sido enviada por correo satisfactoriamente",
+					icon: "La factura ha sido enviada por correo satisfactoriamente",
 					type: "success",
 				});
 			}
@@ -1954,7 +1954,7 @@ function sendMailGroup(facturas_id) {
 				swal({
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
-					type: "success",
+					icon: "success",
 				});
 			}
 		}

@@ -410,8 +410,8 @@ function paginationMuestras(partida){
 			swal({
 				title: 'Error',
 				text: 'No se enviaron los datos, favor corregir',
-				type: 'error',
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 		}
 	});
@@ -522,7 +522,7 @@ function anularRegistroMuestra(muestras_id, pacientes_id, comentario){
 				swal({
 					title: "Success",
 					text: "Registro anulado correctamente",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-clos
 				});
 				paginationMuestras(1);
@@ -531,24 +531,24 @@ function anularRegistroMuestra(muestras_id, pacientes_id, comentario){
 				swal({
 					title: "Error",
 					text: "No se puede anular este registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "Lo sentimos ya existe una factura para esta muestra, por favor anule la factrua antes de proceder.",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al completar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}
@@ -568,7 +568,7 @@ function eliminarRegistroMuestra(muestras_id, pacientes_id, comentario){
 				swal({
 					title: "Success",
 					text: "Registro eliminado correctamente",
-					type: "success",
+					icon: "success",
 					timer: 3000, //timeOut for auto-clos
 				});
 				paginationMuestras(1);
@@ -577,24 +577,24 @@ function eliminarRegistroMuestra(muestras_id, pacientes_id, comentario){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al completar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}
@@ -623,24 +623,24 @@ function eliminarRegistro(pacientes_id, comentario){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else if(registro == 3){
 				swal({
 					title: "Error",
 					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}else{
 				swal({
 					title: "Error",
 					text: "Error al completar el registro",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 	           return false;
 			}
@@ -663,21 +663,28 @@ function modal_eliminar(pacientes_id){
 
 		swal({
 			title: "¿Estas seguro?",
-		  text: "¿Desea eliminar este cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, eliminar el cliente!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+		 	text: "¿Desea eliminar este cliente: " + dato + "?",
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, eliminar el cliente!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			eliminarRegistro(pacientes_id, inputValue);
+			eliminarRegistro(pacientes_id, value);
 		});
   }else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
 		var nombre_usuario = consultarNombre(pacientes_id);
@@ -692,28 +699,35 @@ function modal_eliminar(pacientes_id){
 
 		swal({
 			title: "¿Estas seguro?",
-			text: "¿Desea eliminar este cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, eliminar el cliente!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+		 	text: "¿Desea eliminar este cliente: " + dato + "?",
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, eliminar el cliente!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			eliminarRegistro(pacientes_id, inputValue);
+			eliminarRegistro(pacientes_id, value);
 		});
   }else{
 	  swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 	  });
 	 return false;
   }
@@ -734,20 +748,27 @@ function modal_eliminarMuestras(pacientes_id, muestras_id){
 		swal({
 			title: "¿Estas seguro?",
 			text: "¿Desea eliminar esta muestra para el cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, anular la muestra!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, anular la muestra!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			eliminarRegistroMuestra(muestras_id, pacientes_id, inputValue);
+			eliminarRegistroMuestra(muestras_id, pacientes_id, value);
 		});
   }else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
 			var nombre_usuario = consultarNombre(pacientes_id);
@@ -763,27 +784,33 @@ function modal_eliminarMuestras(pacientes_id, muestras_id){
 			swal({
 				title: "¿Estas seguro?",
 				text: "¿Desea eliminar esta muestra para el cliente: " + dato + "?",
-				type: "input",
-				showCancelButton: true,
-				closeOnConfirm: false,
-				inputPlaceholder: "Comentario",
-				cancelButtonText: "Cancelar",
-				confirmButtonText: "¡Sí, anular la muestra!",
-				confirmButtonClass: "btn-warning"
-			}, function (inputValue) {
-				if (inputValue === false) return false;
-				if (inputValue === "") {
-				swal.showInputError("¡Necesita escribir algo!");
-				return false
+				content: {
+					element: "input",
+					attributes: {
+						placeholder: "Comentario",
+						type: "text",
+					},
+				},
+				icon: "warning",
+				buttons: {
+					cancel: "Cancelar",
+					confirm: {
+						text: "¡Sí, anular la muestra!",
+						closeModal: false,
+					},
+				},
+			}).then((value) => {
+				if (value === null || value.trim() === "") {
+					swal("¡Necesita escribir algo!", { icon: "error" });
+					return false;
 				}
-				eliminarRegistroMuestra(muestras_id, pacientes_id, inputValue);
+				eliminarRegistroMuestra(muestras_id, pacientes_id, value);
 			});
-  }else{
 	  swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 	  });
 	 return false;
   }
@@ -802,22 +829,29 @@ function modalAnularMuestras(pacientes_id, muestras_id){
 		}
 
 		swal({
-			title: "¿Estas seguro?",
+				title: "¿Estas seguro?",
 			text: "¿Desea anular esta muestra para el cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, anular la muestra!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, anular la muestra!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			anularRegistroMuestra(muestras_id, pacientes_id, inputValue);
+			anularRegistroMuestra(muestras_id, pacientes_id, value);
 		});
   }else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
 		var nombre_usuario = consultarNombre(pacientes_id);
@@ -831,29 +865,36 @@ function modalAnularMuestras(pacientes_id, muestras_id){
 		}
 
 		swal({
-			title: "¿Estas seguro?",
-			text: "¿Desea anular esta muestra para para el cliente: " + dato + "?",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: false,
-			inputPlaceholder: "Comentario",
-			cancelButtonText: "Cancelar",
-			confirmButtonText: "¡Sí, anular la muestra!",
-			confirmButtonClass: "btn-warning"
-		}, function (inputValue) {
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-			swal.showInputError("¡Necesita escribir algo!");
-			return false
+				title: "¿Estas seguro?",
+			text: "¿Desea anular esta muestra para el cliente: " + dato + "?",
+			content: {
+				element: "input",
+				attributes: {
+					placeholder: "Comentario",
+					type: "text",
+				},
+			},
+			icon: "warning",
+			buttons: {
+				cancel: "Cancelar",
+				confirm: {
+					text: "¡Sí, anular la muestra!",
+					closeModal: false,
+				},
+			},
+		}).then((value) => {
+			if (value === null || value.trim() === "") {
+				swal("¡Necesita escribir algo!", { icon: "error" });
+				return false;
 			}
-			anularRegistroMuestra(muestras_id, pacientes_id, inputValue);
+			anularRegistroMuestra(muestras_id, pacientes_id, value);
 		});
 	}else{
 		swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
   }
@@ -941,8 +982,8 @@ function editarRegistro(pacientes_id){
 		swal({
 			title: 'Acceso Denegado',
 			text: 'No tiene permisos para ejecutar esta acción',
-			type: 'error',
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 		return false;
 	}
@@ -1018,8 +1059,8 @@ function showModalhistoriaMuestrasEmpresas(pacientes_id){
 	 swal({
 		 title: "Acceso Denegado",
 		 text: "No tiene permisos para ejecutar esta acción",
-		 type: "error",
-		 confirmButtonClass: 'btn-danger'
+		 icon: "error",
+		 dangerMode: true
 	 });
 	}
 }
@@ -1132,8 +1173,7 @@ $('#form_main_admision #ver_muestras').on('click', function(e){
 	/*swal({
 		title: "Opción en desarrollo",
 		text: "Opción en desarrollo",
-		type: "warning",
-		confirmButtonClass: 'btn-warning'
+		icon: "warning",
 	});*/
 
 	$('#main_facturacion').hide();
@@ -1285,8 +1325,8 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
 				swal({
 					title: "Error",
 					text: "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al módulo de facturación y realice le cobro de esta.",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			}
 		}else if($('#form_main_admision_muestras #estado').val() == 1){
@@ -1296,16 +1336,16 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
 				swal({
 					title: "Error",
 					text: "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al reporte de facturación para buscarla, puede usar el numero de muestra como referencia.",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			}
 		}else{
 			swal({
 				title: "Error",
 				text: "Lo sentimos no puede generar factura a una muestra anulada.",
-				type: "error",
-				confirmButtonClass: 'btn-danger'
+				icon: "error",
+				dangerMode: true
 			});
 		}
 }
@@ -1409,16 +1449,16 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
 				swal({
 					title: "Error",
 					text: "Lo sentimos esta factura ya ha sido generada, por favor diríjase al módulo de facturación y realice le cobro de esta",
-					type: "error",
-					confirmButtonClass: 'btn-danger'
+					icon: "error",
+					dangerMode: true
 				});
 			}
 	}else{
 		swal({
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
-			type: "error",
-			confirmButtonClass: 'btn-danger'
+			icon: "error",
+			dangerMode: true
 		});
 	}
 }

@@ -155,8 +155,8 @@ $('#form_main #reporte_excel').on('click', function(e){
 	swal({
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
-		type: "error",
-		confirmButtonClass: 'btn-danger'
+		icon: "error",
+		dangerMode: true
 	});
  }
 });
@@ -169,8 +169,8 @@ $('#form_main #reporte_diario').on('click', function(e){ // add event submit We 
 	swal({
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
-		type: "error",
-		confirmButtonClass: 'btn-danger'
+		icon: "error",
+		dangerMode: true
 	});
  }
 });
