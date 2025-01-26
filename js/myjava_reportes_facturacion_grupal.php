@@ -562,5 +562,60 @@ function getPacienteGrupo(tipo_paciente){
 $('#form_main_grupal #tipo_paciente_grupo').on('change',function(){
 	getPacienteGrupo($('#form_main_grupal #tipo_paciente_grupo').val());
 });
+
+function reporteFacturacion() {
+    var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
+    var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();  
+    var clientes = $('#form_main_facturacion_reportes #clientes').val();
+    var profesional = $('#form_main_facturacion_reportes #profesional').val();
+    var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
+	
+    // Asignar un valor vacío si SERVERURLWINDOWS no está definido
+    var url = "<?php echo defined('SERVERURLWINDOWS') ? SERVERURLWINDOWS : ''; ?>";
+
+    // Verificar si la URL está vacía o no definida
+    if (!url || url.trim() === "") {
+        swal({
+            title: "Error",
+            text: "La URL de destino no está definida.",
+            icon: "error",
+            button: "Cerrar",
+        });
+        return;  // Salir de la función si la URL no está definida
+    }
+
+    // Crear un formulario dinámico
+    var form = document.createElement("form");
+    form.method = "POST";
+    form.action = url;
+
+    // Añadir los parámetros al formulario
+    var params = {
+        "estado": estado,
+        "type": "Reporte_facturas",
+        "fechai": fechai,
+        "fechaf": fechaf,
+        "clientes": clientes,
+        "profesional": profesional,
+        "db": "<?php echo DB; ?>"
+    };
+
+    for (var key in params) {
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = params[key];
+        form.appendChild(input);
+    }
+
+    // Abrir una nueva ventana
+    var newWindow = window.open("", "_blank");
+
+    // Asegurarse de que la nueva ventana esté lista
+    newWindow.document.body.appendChild(form);
+    
+    // Enviar el formulario a la nueva ventana
+    form.submit();
+}
 /******************************************************************************************************************************************************************************/
 </script>

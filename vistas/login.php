@@ -25,7 +25,7 @@ require_once "../php/conf/configAPP.php";
             <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Iniciar Sesión</h1>
 
             <div style="text-align: center;">
-                <img src="<?php echo SERVERURL; ?>img/cami.svg" width="90%" height="90%">
+                <img src="<?php echo SERVERURL; ?>img/cami_logo.svg" width="90%" height="90%">
             </div>
 
             <br>            
@@ -74,7 +74,7 @@ require_once "../php/conf/configAPP.php";
         <form class="form-reset" id="forgot_form">
 
             <div style="text-align: center;">
-                <img src="<?php echo SERVERURL; ?>img/cami.svg" width="90%" height="90%">
+                <img src="<?php echo SERVERURL; ?>img/cami_logo.svg" width="90%" height="90%">
             </div>
 
             <br>          
@@ -101,7 +101,7 @@ require_once "../php/conf/configAPP.php";
             <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Formulario de Registro</h1>
 
             <div style="text-align: center;">
-                <img src="<?php echo SERVERURL; ?>img/cami.svg" width="90%" height="90%">
+                <img src="<?php echo SERVERURL; ?>img/cami_logo.svg" width="90%" height="90%">
             </div>
 
             <br>              

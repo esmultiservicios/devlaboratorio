@@ -451,15 +451,8 @@ $('#form_main_facturacion_reportes #tipo_paciente_grupo').on('change',function()
 var listar_reporte_facturacion = function(){
 	var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
 	var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();
-	var pacientesIDGrupo = $('#form_main_facturacion_reportes #pacientesIDGrupo').val()
-	var estado = '';
-
-	var estadoValor = $('#form_main_facturacion_reportes #estado').val();
-	if (estadoValor === "" || estadoValor === null || estadoValor === undefined) {
-		estado = 1;
-	} else {
-		estado = estadoValor;
-	}	
+	var pacientesIDGrupo = $('#form_main_facturacion_reportes #pacientesIDGrupo').val() || '';
+	var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
 	
 	var table_reporte_facturacion  = $("#dataTableReporteFacturacionMain").DataTable({
 		"destroy":true,	
@@ -543,37 +536,6 @@ var listar_reporte_facturacion = function(){
             $('#footer-isv').html(formatter.format(totalISV));
             $('#footer-descuento').html(formatter.format(totalDescuento));
             $('#footer-neto').html(formatter.format(totalNeto));
-
-            // Acceder a `tipos_de_pago` desde el JSON recibido
-            var json = api.ajax.json();
-            console.log("JSON recibido:", json);
-
-            if (json && json.tipos_de_pago) {
-                var tipos_de_pago = json.tipos_de_pago;
-                var tipo_pago_html = '';
-                var total_pago_html = '';
-
-                // Mostrar en consola para depuración
-                console.log("Tipos de pago recibidos:", tipos_de_pago);
-
-                // Recorrer los tipos de pago y mostrarlos
-                for (var tipo_pago in tipos_de_pago) {
-                    if (tipos_de_pago.hasOwnProperty(tipo_pago)) {
-                        var total_pago = parseFloat(tipos_de_pago[tipo_pago]) || 0;
-                        tipo_pago_html += '<div>' + tipo_pago + '</div>';
-                        total_pago_html += '<div>' + formatter.format(total_pago) + '</div>';
-                    }
-                }
-
-                // Actualizar la vista con los tipos de pago
-                $('#tipo_pago').html(tipo_pago_html);
-                $('#total_pago').html(total_pago_html);
-            } else {
-                console.log("No se encontraron tipos de pago en los datos.");
-                // Si no hay tipos de pago, mostramos un mensaje alternativo
-                $('#tipo_pago').html('<div>No se encontraron tipos de pago.</div>');
-                $('#total_pago').html('');
-            }
         },		
         "lengthMenu": lengthMenu20,
 		"stateSave": true,
@@ -583,7 +545,7 @@ var listar_reporte_facturacion = function(){
 		"buttons":[		
 			{
 				text:      '<i class="fas fa-sync-alt fa-lg"></i> Actualizar',
-				titleAttr: 'Actualizar Pacientes',
+				titleAttr: 'Actualizar Facturas',
 				className: 'btn btn-info',
 				action: 	function(){
 					listar_reporte_facturacion();
@@ -591,58 +553,19 @@ var listar_reporte_facturacion = function(){
 			},		
 			{
 				text:      '<i class="fas fa-calculator fa-lg"></i> Cierre',
-				titleAttr: 'Agregar Pacientes',
+				titleAttr: 'Cierre de Caja',
 				className: 'btn btn-primary',
 				action: 	function(){
 					cierreBill();
 				}
 			},		
 			{
-				extend:    'excelHtml5',
-				text:      '<i class="fas fa-file-excel fa-lg"></i> Excel',
-				titleAttr: 'Excel',
-				footer: true,
-				title: 'Reporte Facturación',
-				className: 'btn btn-success',
-				exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6,7,8,9,10,11]
-                },				
-			},
-			{
-				extend: 'pdf',
-				orientation: 'landscape',
-				text: '<i class="fas fa-file-pdf fa-lg"></i> PDF',
-				titleAttr: 'PDF',
-				footer: true,
-				title: 'Reporte Facturación',
+				text:      '<i class="fa-solid fa-file-pdf fa-lg"></i> Reporte',
+				titleAttr: 'Reporte de Facturación',
 				className: 'btn btn-danger',
-				exportOptions: {
-					modifier: {
-						page: 'current' // Solo exporta las filas visibles en la página actual
-					},
-					columns: [0, 1, 2, 3, 4, 5, 6,7,8,9,10,11] // Define las columnas a exportar
-				},
-				customize: function(doc) {
-					// Asegúrate de que `imagen` contenga la cadena base64 de la imagen
-					doc.content.splice(1, 0, {
-						margin: [0, 0, 0, 12],
-						alignment: 'left',
-						image: imagen, // Usando la variable que ya tiene la imagen base64
-						width: 170, // Ajusta el tamaño si es necesario
-						height: 45 // Ajusta el tamaño si es necesario
-					});
+				action: 	function(){
+					reporteFacturacion();
 				}
-			},
-			{
-				extend: 'print',
-				text: '<i class="fas fa-print fa-lg"></i> Imprimir',  // Correcta colocación del icono
-				titleAttr: 'Imprimir',
-				footer: true,
-				title: 'Reporte Facturación',
-				className: 'btn btn-secondary',
-				exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6,7,8,9,10,11]
-                },
 			}
 		]		
 	});	 
@@ -702,5 +625,60 @@ var delete_bill_dataTable = function(tbody, table){
 		
 		modal_rollback(data.facturas_id, data.pacientes_id)
 	});
+}
+
+function reporteFacturacion() {
+    var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
+    var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();  
+    var clientes = $('#form_main_facturacion_reportes #clientes').val();
+    var profesional = $('#form_main_facturacion_reportes #profesional').val();
+    var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
+	
+    // Asignar un valor vacío si SERVERURLWINDOWS no está definido
+    var url = "<?php echo defined('SERVERURLWINDOWS') ? SERVERURLWINDOWS : ''; ?>";
+
+    // Verificar si la URL está vacía o no definida
+    if (!url || url.trim() === "") {
+        swal({
+            title: "Error",
+            text: "La URL de destino no está definida.",
+            icon: "error",
+            button: "Cerrar",
+        });
+        return;  // Salir de la función si la URL no está definida
+    }
+
+    // Crear un formulario dinámico
+    var form = document.createElement("form");
+    form.method = "POST";
+    form.action = url;
+
+    // Añadir los parámetros al formulario
+    var params = {
+        "estado": estado,
+        "type": "Reporte_facturas",
+        "fechai": fechai,
+        "fechaf": fechaf,
+        "clientes": clientes,
+        "profesional": profesional,
+        "db": "<?php echo DB; ?>"
+    };
+
+    for (var key in params) {
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = params[key];
+        form.appendChild(input);
+    }
+
+    // Abrir una nueva ventana
+    var newWindow = window.open("", "_blank");
+
+    // Asegurarse de que la nueva ventana esté lista
+    newWindow.document.body.appendChild(form);
+    
+    // Enviar el formulario a la nueva ventana
+    form.submit();
 }
 </script>
