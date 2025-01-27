@@ -19,7 +19,6 @@ $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 
-
 date_default_timezone_set('America/Tegucigalpa');
 
 $noFactura = $_GET['facturas_id'];
@@ -99,6 +98,4 @@ if ($result->num_rows > 0) {
 
 	// Descargar o mostrar el PDF
 	$dompdf->stream("factura_$no_factura.pdf", ["Attachment" => false]);
-
-	file_put_contents(dirname('__FILE__') . '/Facturas/factura_' . $no_factura . '.pdf', $dompdf->output());
 }

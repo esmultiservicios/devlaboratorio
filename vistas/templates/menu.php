@@ -38,7 +38,7 @@
         <div class="dropdown-menu" aria-labelledby="dropdown05">
         <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion.php">Reporte de Facturación</a>
 		     <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_pagos.php">Reporte de Pagos</a>
-         <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion_grupal.php">Reporte de Facturación Grupal</a>
+<!--          <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion_grupal.php">Reporte de Facturación Grupal</a> -->
 		     <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reportes_muestras.php">Reporte de Muestras</a>
         </div>
       </li>
@@ -114,7 +114,7 @@
           <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reportes_atenciones_medicas.php">Reporte de Atenciones</a>
           <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reportes_muestras.php">Reporte de Muestras</a>
           <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion.php">Reporte de Facturación</a>
-		      <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion_grupal.php">Reporte de Facturación Grupal</a>
+		      <!-- <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_facturacion_grupal.php">Reporte de Facturación Grupal</a> -->
 		      <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reporte_pagos.php">Reporte de Pagos</a>
           <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reportes_sms.php">Reporte SMS</a>
           <a class="dropdown-item" href="<?php echo SERVERURL; ?>vistas/reportes_transito.php">Reporte Tránsito</a>

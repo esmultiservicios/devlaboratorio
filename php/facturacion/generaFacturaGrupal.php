@@ -7,9 +7,16 @@ header("Content-Type: text/html;charset=utf-8");
 require_once '../../dompdf/vendor/autoload.php';
 
 use Dompdf\Dompdf;
+use Dompdf\Options;
 
 //CONEXION A DB
 $mysqli = connect_mysqli();
+
+$options = new Options();
+$options->set('isHtml5ParserEnabled', true);
+$options->set('isRemoteEnabled', true);
+
+$dompdf = new Dompdf($options);
 
 date_default_timezone_set('America/Tegucigalpa');
 
@@ -34,7 +41,7 @@ $query = "SELECT CONCAT(p.nombre, ' ', p.apellido) AS 'paciente', p.identidad AS
     ON f.pacientes_id = am.pacientes_id
 	LEFT JOIN documento AS d
 	ON sf.documento_id = d.documento_id
-	WHERE f.facturas_grupal_id = '$noFactura'";
+	WHERE f.number = '$noFactura'";
 $result = $mysqli->query($query) or die($mysqli->error);
 
 //OBTENER DETALLE DE FACTURA
@@ -46,7 +53,7 @@ $query_factura_detalle = "SELECT CONCAT(p.nombre, ' ', p.apellido) As 'cliente',
 	ON fd.pacientes_id = p.pacientes_id
 	INNER JOIN muestras AS m
 	ON fd.muestras_id = m.muestras_id
-	WHERE fd.facturas_grupal_id = '$noFactura'
+	WHERE fg.number = '$noFactura'
 	ORDER BY fd.facturas_id";
 $result_factura_detalle = $mysqli->query($query_factura_detalle) or die($mysqli->error);
 
@@ -77,23 +84,11 @@ if($result->num_rows>0){
 	include(dirname('__FILE__').'/facturaGrupal.php');
 	$html = ob_get_clean();
 
-	// instantiate and use the dompdf class
-	$dompdf = new Dompdf();
-
-	$dompdf->set_option('isRemoteEnabled', true);
-
-	$html = mb_convert_encoding($html, 'UTF-8', 'auto');  // Converts $html to UTF-8 encoding
-	$dompdf->loadHtml($html);  // Now load the UTF-8 encoded HTML
-	
-	// (Optional) Setup the paper size and orientation
+	// Generar el PDF
+	$dompdf->loadHtml($html);
 	$dompdf->setPaper('letter', 'portrait');
-	// Render the HTML as PDF
 	$dompdf->render();
 
-	file_put_contents(dirname('__FILE__').'/Facturas/facturaGrupal_'.$no_factura.'.pdf', $dompdf->output());
-
-	// Output the generated PDF to Browser
-	$dompdf->stream('factura_'.$no_factura.'.pdf',array('Attachment'=>0));
-
-	exit;
+	// Descargar o mostrar el PDF
+	$dompdf->stream("facturaGrupal_$no_factura.pdf", ["Attachment" => false]);
 }

@@ -462,10 +462,6 @@ function getEstado(){
 }
 //FIN FUNCION PARA OBTENER LOS BANCOS DISPONIBLES
 
-function printBillGroup(facturas_id){
-	var url = '<?php echo SERVERURL; ?>php/facturacion/generaFacturaGrupal.php?facturas_id='+facturas_id;
-    window.open(url);
-}
 
 function mailBillGroup(facturas_id){
 	swal({

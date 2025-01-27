@@ -393,11 +393,6 @@ function convertDate(inputFormat) {
   var d = new Date(inputFormat);
   return [d.getFullYear(), pad(d.getMonth()+1), pad(d.getDate())].join('-');
 }
-
-function printBill(facturas_id){
-	var url = '<?php echo SERVERURL; ?>php/facturacion/generaFactura.php?facturas_id='+facturas_id;
-    window.open(url);
-}
 /******************************************************************************************************************************************************************************/
 function getEstado(){
     var url = '<?php echo SERVERURL; ?>php/reporte_facturacion/getEstado.php';
@@ -473,7 +468,13 @@ var listar_reporte_facturacion = function(){
 					return '<a href="#" class="showInvoiceDetail">' + data + '</a>';
 				}
 			},									
-			{"data": "TipoPago"},
+			{
+				"data": "tipo_documento",
+				"render": function(data, type, row) {
+					var color = data === 'Contado' ? '#FFA500' : '#9b59b6'; // Naranja para "Contado" y morado para "Crédito"
+					return '<span class="tipo-documento" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
+				}
+			},
 			{"data": "muestra"},
 			{"data": "factura"},
 			{"data": "paciente"},
@@ -483,7 +484,14 @@ var listar_reporte_facturacion = function(){
 			{"data": "isv_neto"},	
 			{"data": "descuento"},
 			{"data": "total"},
-			{"data": "servicio"},								
+			{"data": "servicio"},						
+            {
+                "data": "tipo_factura_agrupada",
+                "render": function(data, type, row) {
+                    var color = data === 'Grupal' ? 'green' : 'blue'; // Cambiar a los colores deseados
+                    return '<span class="tipo-factura" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
+                }
+            },
 			{
 				"data": null,
 				"defaultContent": 
@@ -599,7 +607,13 @@ var print_bill_dataTable = function(tbody, table){
 		e.preventDefault();
 		var data = table.row( $(this).parents("tr") ).data();
 		
-		printBill(data.facturas_id);
+		if(data.tipo_factura_agrupada === "Individual") {
+			printBill(data.facturas_id);
+
+			return;
+		}	
+		
+		printBillGroup(data.numero);
 	});
 }
 
@@ -656,7 +670,7 @@ function reporteFacturacion() {
     // Añadir los parámetros al formulario
     var params = {
         "estado": estado,
-        "type": "Reporte_facturas",
+        "type": "Reporte_facturas_laboratorio",
         "fechai": fechai,
         "fechaf": fechaf,
         "clientes": clientes,

@@ -1961,4 +1961,14 @@ function sendMailGroup(facturas_id) {
 	});
 	return bill;
 }
+
+function printBillGroup(facturas_id){
+	var url = '<?php echo SERVERURL; ?>php/facturacion/generaFacturaGrupal.php?facturas_id='+facturas_id;
+    window.open(url);
+}
+
+function printBill(facturas_id){
+	var url = '<?php echo SERVERURL; ?>php/facturacion/generaFactura.php?facturas_id='+facturas_id;
+    window.open(url);
+}
 </script>

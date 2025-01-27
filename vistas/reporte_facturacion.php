@@ -243,7 +243,8 @@ echo $fecha_inicial;
                   <th>ISV</th>
                   <th>Descuento</th>
                   <th>Neto</th>
-                  <th>Servicio</th>                 
+                  <th>Servicio</th>  
+                  <th>Tipo</th>               
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -255,17 +256,8 @@ echo $fecha_inicial;
                     <th id="footer-isv"></th>
                     <th id="footer-descuento"></th>
                     <th id="footer-neto"></th>
-                    <th colspan="4"></th>
-                </tr>
-                <tr>
-                  <th colspan="2">Detalles de pago</th>    
-                  <th colspan="11"></th>
-                </tr>
-                <tr>
-                  <th id="tipo_pago"></th>
-                  <th id="total_pago"></th>
-                  <th colspan="11"></th>
-                </tr>                
+                    <th colspan="5"></th>
+                </tr>               
             </tfoot>              
             </table>
           </div>
