@@ -647,30 +647,11 @@ function reporteFacturacion() {
     var clientes = $('#form_main_facturacion_reportes #clientes').val();
     var profesional = $('#form_main_facturacion_reportes #profesional').val();
     var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
-	
-    // Asignar un valor vacío si SERVERURLWINDOWS no está definido
-    var url = "<?php echo defined('SERVERURLWINDOWS') ? SERVERURLWINDOWS : ''; ?>";
-
-    // Verificar si la URL está vacía o no definida
-    if (!url || url.trim() === "") {
-        swal({
-            title: "Error",
-            text: "La URL de destino no está definida.",
-            icon: "error",
-            button: "Cerrar",
-        });
-        return;  // Salir de la función si la URL no está definida
-    }
-
-    // Crear un formulario dinámico
-    var form = document.createElement("form");
-    form.method = "POST";
-    form.action = url;
 
     // Añadir los parámetros al formulario
     var params = {
         "estado": estado,
-        "type": "Reporte_facturas_laboratorio",
+        "type": "Reporte_facturas_laboratorio_cami",
         "fechai": fechai,
         "fechaf": fechaf,
         "clientes": clientes,
@@ -678,21 +659,6 @@ function reporteFacturacion() {
         "db": "<?php echo DB; ?>"
     };
 
-    for (var key in params) {
-        var input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = params[key];
-        form.appendChild(input);
-    }
-
-    // Abrir una nueva ventana
-    var newWindow = window.open("", "_blank");
-
-    // Asegurarse de que la nueva ventana esté lista
-    newWindow.document.body.appendChild(form);
-    
-    // Enviar el formulario a la nueva ventana
-    form.submit();
+    viewReport(params);
 }
 </script>
