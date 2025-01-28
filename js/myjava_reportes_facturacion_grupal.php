@@ -45,7 +45,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	        return false;
           }
@@ -63,7 +65,9 @@ $(document).ready(function() {
 				title: "Error",
 				text: "Hay registros en blanco, por favor corregir",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 			return false;
 		 }
@@ -105,7 +109,9 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 4){
 			title: "Error",
 			text: "Hay registros en blanco, por favor corregir",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
 	}
@@ -114,7 +120,9 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 4){
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 }
 });
@@ -209,6 +217,8 @@ function agregarCobros(){
 					title: "Success",
 					text: "Valores generados correctamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				$('#formCobros #comentario').val("");
 				$("#formCobros #generar").attr('disabled', true);
@@ -219,7 +229,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error, no se puedieron generar los valores, por favor corregir",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}else if(registro == 3){
@@ -227,7 +239,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error, este registro ya existe",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}else{
@@ -235,7 +249,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}
@@ -319,6 +335,9 @@ function modal_rollback(facturas_id, pacientes_id){
 					closeModal: false,
 				},
 			},
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
 				swal("¡Necesita escribir algo!", { icon: "error" });
@@ -331,7 +350,9 @@ function modal_rollback(facturas_id, pacientes_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
 	}
@@ -356,6 +377,8 @@ function rollback(facturas_id,comentario){
 					title: "Success",
 					text: "Factura cancelada correctamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 			    return false;
 			  }else if(registro == 2){
@@ -363,7 +386,9 @@ function rollback(facturas_id,comentario){
 					title: "Error",
 					text: "Error al cancelar la factura",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			  }else{
@@ -371,7 +396,9 @@ function rollback(facturas_id,comentario){
 					title: "Error",
 					text: "Error al ejecutar esta acción",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			  }
 		  }
@@ -382,7 +409,9 @@ function rollback(facturas_id,comentario){
 			title: "Error",
 			text: "No se puede ejecutar esta acción fuera de esta fecha",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }
@@ -477,7 +506,9 @@ function mailBillGroup(facturas_id){
 				text: "¡Sí, enviar la factura!",
 			}
 		},
-		closeOnClickOutside: false
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	}).then((willConfirm) => {
 		if (willConfirm === true) {
 			sendMailGroup(facturas_id);
@@ -501,6 +532,8 @@ function sendMailGroup(facturas_id){
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 		  }
 	  }
@@ -565,25 +598,6 @@ function reporteFacturacion() {
     var clientes = $('#form_main_facturacion_reportes #clientes').val();
     var profesional = $('#form_main_facturacion_reportes #profesional').val();
     var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
-	
-    // Asignar un valor vacío si SERVERURLWINDOWS no está definido
-    var url = "<?php echo defined('SERVERURLWINDOWS') ? SERVERURLWINDOWS : ''; ?>";
-
-    // Verificar si la URL está vacía o no definida
-    if (!url || url.trim() === "") {
-        swal({
-            title: "Error",
-            text: "La URL de destino no está definida.",
-            icon: "error",
-            button: "Cerrar",
-        });
-        return;  // Salir de la función si la URL no está definida
-    }
-
-    // Crear un formulario dinámico
-    var form = document.createElement("form");
-    form.method = "POST";
-    form.action = url;
 
     // Añadir los parámetros al formulario
     var params = {
@@ -596,22 +610,7 @@ function reporteFacturacion() {
         "db": "<?php echo DB; ?>"
     };
 
-    for (var key in params) {
-        var input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = params[key];
-        form.appendChild(input);
-    }
-
-    // Abrir una nueva ventana
-    var newWindow = window.open("", "_blank");
-
-    // Asegurarse de que la nueva ventana esté lista
-    newWindow.document.body.appendChild(form);
-    
-    // Enviar el formulario a la nueva ventana
-    form.submit();
+    viewReport(params);	
 }
 /******************************************************************************************************************************************************************************/
 </script>

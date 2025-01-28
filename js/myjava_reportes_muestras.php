@@ -156,7 +156,9 @@ $('#form_main #reporte_excel').on('click', function(e){
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		type: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
  }
 });
@@ -170,7 +172,9 @@ $('#form_main #reporte_diario').on('click', function(e){ // add event submit We 
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		type: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
  }
 });

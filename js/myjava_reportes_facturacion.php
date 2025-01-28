@@ -45,7 +45,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	        return false;
           }
@@ -63,7 +65,9 @@ $(document).ready(function() {
 				title: "Error",
 				text: "Hay registros en blanco, por favor corregir",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 			return false;
 		 }
@@ -101,7 +105,9 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() 
 			title: "Error",
 			text: "Hay registros en blanco, por favor corregir",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
 	}
@@ -110,7 +116,9 @@ if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() 
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 }
 });
@@ -189,6 +197,8 @@ function agregarCobros(){
 					title: "Success",
 					text: "Valores generados correctamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				$('#formCobros #comentario').val("");
 				$("#formCobros #generar").attr('disabled', true);
@@ -199,7 +209,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error, no se puedieron generar los valores, por favor corregir",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}else if(registro == 3){
@@ -207,7 +219,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error, este registro ya existe",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}else{
@@ -215,7 +229,9 @@ function agregarCobros(){
 					title: "Error",
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 			}
@@ -268,6 +284,9 @@ function modal_rollback(facturas_id, pacientes_id){
 					closeModal: false,
 				},
 			},
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
 				swal("¡Necesita escribir algo!", { icon: "error" });
@@ -280,7 +299,9 @@ function modal_rollback(facturas_id, pacientes_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
 	}
@@ -305,6 +326,8 @@ function rollback(facturas_id,comentario){
 					title: "Success",
 					text: "Factura cancelada correctamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 			    return false;
 			  }else if(registro == 2){
@@ -312,7 +335,9 @@ function rollback(facturas_id,comentario){
 					title: "Error",
 					text: "Error al cancelar la factura",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			  }else{
@@ -320,7 +345,9 @@ function rollback(facturas_id,comentario){
 					title: "Error",
 					text: "Error al ejecutar esta acción",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			  }
 		  }
@@ -331,7 +358,9 @@ function rollback(facturas_id,comentario){
 			title: "Error",
 			text: "No se puede ejecutar esta acción fuera de esta fecha",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }
@@ -595,7 +624,10 @@ var show_invoice_detail_dataTable = function(tbody, table){
 		swal({
 			title: "Información",
 			text: "Esta opción se encuentra en desarrollo",
-			icon: "warning"
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
 		});		
 		//invoicesDetails(data.pacientes_id)
 	});
@@ -626,7 +658,10 @@ var close_bill_dataTable = function(tbody, table){
 		swal({
 			title: "Información",
 			text: "Esta opción se encuentra en desarrollo",
-			icon: "warning"
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
 		});
 	});
 }

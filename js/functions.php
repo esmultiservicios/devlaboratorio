@@ -123,7 +123,9 @@ function getSaludoSistema(){
                   text:"¡Está bien, llévame al Inicio!",
                }
             },
-            closeOnClickOutside: false
+            dangerMode: true,
+            closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+            closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
          }).then((willConfirm) => {
             if (willConfirm === true) {
                setTimeout(function () {
@@ -668,7 +670,9 @@ function confirmar(agenda_id, colaborador_id, servicio_id){
 			title: "Error", 
 			text: "Lo sentimos esta opción no esta disponible",
 			icon: "error",
-			dangerMode: true
+         dangerMode: true,
+         closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+         closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});		  
 	}
 }

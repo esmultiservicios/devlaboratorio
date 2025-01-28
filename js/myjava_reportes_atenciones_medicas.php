@@ -187,7 +187,9 @@ $('#form_main #reporte_excel').on('click', function(e){
 		title: "Acceso Denegado", 
 		icon: "No tiene permisos para ejecutar esta acción",
 		type: "error", 
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});					 
  }
 });
@@ -201,7 +203,9 @@ $('#form_main #reporte_diario').on('click', function(e){ // add event submit We 
 		title: "Acceso Denegado", 
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error", 
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});					 
  }		 
 });
@@ -235,7 +239,9 @@ function addAdendum(atencion_id, muestras_id){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});					 
 	}
 }
@@ -337,7 +343,9 @@ function mailAtencion(atencion_id){
 				text: "¡Sí, enviar el reporte!",
 			}
 		},
-		closeOnClickOutside: false
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	}).then((willConfirm) => {
 		if (willConfirm === true) {
 			sendMailAtencion(atencion_id);
@@ -361,6 +369,8 @@ function sendMailAtencion(atencion_id){
 					title: "Success", 
 					text: "El reporte de laboratorio ha sido enviada por correo satisfactoriamente",
 					icon: "success", 
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});	
 		  }
 	  }

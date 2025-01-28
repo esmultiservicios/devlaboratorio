@@ -149,7 +149,9 @@ function agregarMuestras(){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		});
 	}
 }
@@ -690,7 +692,9 @@ $('#ancla_volver').on('click', function(e){
 					text: "¡Si, deseo volver!",
 				}
 			},
-			closeOnClickOutside: false
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		}).then((willConfirm) => {
 			if (willConfirm === true) {
 				$('#main_facturacion').show();
@@ -805,7 +809,9 @@ function createBill(muestras_id){
 				title: "Error",
 				text: "Lo sentimos esta factura ya ha sido generada, por favor diríjase al módulo de facturación y realice le cobro de esta",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 			});
 		}
 	}else{
@@ -813,7 +819,9 @@ function createBill(muestras_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		});
 	}
 }
@@ -943,6 +951,8 @@ function sendMail(facturas_id){
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera						
 				});
 		  }
 	  }
@@ -1483,7 +1493,9 @@ function modal_clientes(){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		});					 
 	}	
 }
@@ -1513,7 +1525,9 @@ function modal_colaboradores(){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		});	
 	}
 }
@@ -1541,7 +1555,9 @@ function modal_hospitales(){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 		});				
 	} 	
 }

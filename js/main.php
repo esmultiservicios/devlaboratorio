@@ -2012,6 +2012,7 @@ function viewReport(params) {
             text: "La URL de destino no está definida.",
             icon: "error",
             button: "Cerrar",
+			dangerMode: true,
         });
         return; // Salir de la función si la URL no está definida
     }
@@ -2028,6 +2029,7 @@ function viewReport(params) {
             text: "Los parámetros enviados no son válidos.",
             icon: "error",
             button: "Cerrar",
+			dangerMode: true,
         });
         return;
     }

@@ -31,7 +31,9 @@ $(document).ready(function() {
 							text: "¡Sí, deseo enviar!",
 						}
 					},
-					closeOnClickOutside: false
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				}).then((willConfirm) => {
 					if (willConfirm) {
 						sendMultipleSMSUnDiaAntes($('#form_agenda_main #fecha').val(), $('#form_agenda_main #servicio').val());
@@ -58,7 +60,9 @@ $(document).ready(function() {
 							text: "¡Sí, enviar los SMS!",
 						}
 					},
-					closeOnClickOutside: false
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				}).then((willConfirm) => {
 					if (willConfirm) {
 						sendMultipleSMSDiasDespues($('#form_agenda_main #fecha').val(), $('#form_agenda_main #servicio').val());
@@ -69,14 +73,18 @@ $(document).ready(function() {
 					title: "Error", 
 					text: "No se puede enviar SMS a los usuarios el dia actual de la consulta",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		     }else{
 				swal({
 					title: "Error", 
 					text: "No se puede ejecutar esta acción, por favor verifique los datos e intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});					
 		     }
 	    }else{
@@ -84,7 +92,9 @@ $(document).ready(function() {
 				title: "Error", 
 				text: "Lo sentimos las fechas seleccionadas no son correctas, por favor corregir",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});			
 	    }		 
       }else{
@@ -92,7 +102,9 @@ $(document).ready(function() {
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});	
       }
    });				
@@ -122,7 +134,9 @@ $('#formulario_enviar_sms #sms_send').on('click', function(e){
 			title: "Error", 
 			text: "Lo sentimos el mensaje no puede quedar en blanco",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});	
 	}
 });
@@ -163,7 +177,9 @@ function sendOneSMS(pacientes_id, agenda_id){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});	
 	}
 }
@@ -200,41 +216,53 @@ function sendMultipleSMSUnDiaAntes(fecha, servicio){
 				text: "Mensaje enviado correctamente",
 				icon: "success", 
 				timer: 3000, //timeOut for auto-close
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera				
 			});				 
 		  }else if(data == 2){
 				swal({
 					title: "Error", 
 					text: "Verifique su conexión a Internet",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
 				});
 		  }else if(data == 3){
 				swal({
 					title: "Error", 
 					text: "No existen SMS que enviar, por favor seleccione un Servicio o verifique la información",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		  }else if(data == 4){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos ya había enviado los SMS para esta fecha",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				}); 
 		  }else if(data == 5){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos no hay suficiente balance para enviar los SMS",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		  }else{
 				swal({
 					title: "Error", 
 					text: "Lo sentimos no se puede procesar su solicitud, por favor intentelo de nuevo más tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});	
 		  }  		  		  			  
 		},complete:function(){
@@ -264,41 +292,53 @@ function sendMultipleSMSDiasDespues(fecha, servicio){
 					text: "Mensaje enviado correctamente",
 					icon: "success",
 					timer: 3000, //timeOut for auto-close
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});				 
 		  }else if(data == 2){
 				swal({
 					title: "Error", 
 					text: "Verifique su conexión a Internet",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		  }else if(data == 3){
 				swal({
 					title: "Error", 
 					text: "No existen SMS que enviar, por favor seleccione un Servicio o verifique la información",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		  }else if(data == 4){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos ya había enviado los SMS para esta fecha",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				}); 
 		  }else if(data == 5){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos no hay suficiente balance para enviar los SMS",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});  
 		  }else{
 				swal({
 					title: "Error", 
 					text: "Lo sentimos no se puede procesar su solicitud, por favor intentelo de nuevo más tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		  }	 	  		  		  			  
 		},complete:function(){
@@ -323,34 +363,44 @@ function sendSMS(){
 					text: "Mensaje enviado correctamente",
 					icon: "success",
 					timer: 3000, //timeOut for auto-close
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});	  
 		  }else if(data == 2){
 				swal({
 					title: "Error", 
 					text: "Verifique su conexión a Internet",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});			 
 		  }else if(data == 3){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos ya había enviado este SMS para esta registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});;			 
 		  }else if(data == 4){
 				swal({
 					title: "Error", 
 					text: "Lo sentimos no hay suficiente balance para enviar los SMS",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});			 
 		  }else{
 				swal({
 					title: "Error", 
 					text: "El Mensaje no se pudo enviar, por favor verifique la información",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});			  
 		  }  		  		  			  
 		}

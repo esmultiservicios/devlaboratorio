@@ -32,7 +32,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado", 
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});			 
 		}			
 	});
@@ -48,7 +50,9 @@ $(document).ready(function() {
 				title: "Error", 
 				text: "Hay registros en blanco, por favor corregir",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});			   
 			return false;
 		 } 		 
@@ -65,7 +69,9 @@ $(document).ready(function() {
 				title: "Error", 
 				text: "Hay registros en blanco, por favor corregir",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});			   
 			return false;
 		 } 		 
@@ -107,6 +113,8 @@ function agregar(){
 					text: "Registro almacenado correctamente",
 					ImageBitmapRenderingContext: "success",
 					timer: 3000, //timeOut for auto-close
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});	
 				$('#modalEmpresa').modal('hide');
 				pagination(1);
@@ -118,7 +126,9 @@ function agregar(){
 					title: "Error", 
 					text: "Error, no se puede almacenar este registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});	
 			    return false;				
 			}else if(registro == 3){
@@ -126,7 +136,9 @@ function agregar(){
 					title: "Error", 
 					text: "Lo sentimos este registro ya existe",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;				
 			}else{
@@ -134,7 +146,9 @@ function agregar(){
 					title: "Error", 
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;	
 			}
@@ -157,6 +171,8 @@ function agregarRegistro(){
 					text: "Registro almacenado correctamente",
 					icon: "success",
 					timer: 3000, //timeOut for auto-close
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				$('#modalEmpresa').modal('hide');
 				pagination(1);
@@ -168,7 +184,9 @@ function agregarRegistro(){
 					title: "Error", 
 					text: "Error, no se puede modifciar este registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;				
 			}else{
@@ -176,7 +194,9 @@ function agregarRegistro(){
 					title: "Error", 
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;	
 			}
@@ -199,6 +219,8 @@ function eliminarRegistro(empresa_id, inputValue){
 					text: "Registro eliminado correctamente",
 					type: "success",
 					timer: 3000, //timeOut for auto-close
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				pagination(1);
 				getEmpresa();
@@ -208,7 +230,9 @@ function eliminarRegistro(empresa_id, inputValue){
 					title: "Error", 
 					text: "Error, no se puede eliminar este registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;				
 			}else if(registro == 3){
@@ -216,7 +240,9 @@ function eliminarRegistro(empresa_id, inputValue){
 					title: "Error", 
 					text: "Lo sentimos este registro cuenta con información almacenada, no se puede eliminar",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;				
 			}else if(registro == 4){
@@ -224,7 +250,9 @@ function eliminarRegistro(empresa_id, inputValue){
 					title: "Error", 
 					text: "No se puede eliminar esta empresa, ya que su usuario pertenece a ella",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;				
 			}else{
@@ -232,7 +260,9 @@ function eliminarRegistro(empresa_id, inputValue){
 					title: "Error", 
 					text: "Error al procesar su solicitud, por favor intentelo de nuevo mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;	
 			}
@@ -283,7 +313,9 @@ function editarRegistro(empresa_id){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});						 
 	}		
 }
@@ -325,6 +357,9 @@ function modal_eliminar(empresa_id){
 					closeModal: false,
 				},
 			},
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
 				swal("¡Necesita escribir algo!", { icon: "error" });
@@ -337,7 +372,9 @@ function modal_eliminar(empresa_id){
 			title: "Acceso Denegado", 
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});				 
 	}		
 }

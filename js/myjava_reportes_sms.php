@@ -52,7 +52,9 @@ $('#form_main #reportes_exportar').on('click', function(e){
 			title: "Error",
 			text: "Error al exportar, debe seleccionar el servicio",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }else{
@@ -60,7 +62,9 @@ $('#form_main #reportes_exportar').on('click', function(e){
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 }
 });
@@ -75,7 +79,9 @@ $('#form_main #reportes_exportar_diario').on('click', function(e){
 			title: "Error",
 			text: "Error al exportar, debe seleccionar el servicio",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }else{
@@ -83,7 +89,9 @@ $('#form_main #reportes_exportar_diario').on('click', function(e){
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 }
 });
@@ -98,7 +106,9 @@ $('#form_main #reportes_exportar_diario_colaboradores').on('click', function(e){
 			title: "Error",
 			text: "Error al exportar, debe seleccionar el servicio",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }else{
@@ -106,7 +116,9 @@ $('#form_main #reportes_exportar_diario_colaboradores').on('click', function(e){
 		title: "Acceso Denegado",
 		text: "No tiene permisos para ejecutar esta acción",
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 }
 });
