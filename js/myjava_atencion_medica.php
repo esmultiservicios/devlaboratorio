@@ -54,7 +54,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 		}
 	});
@@ -76,7 +78,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 		}
 	});
@@ -100,7 +104,9 @@ $(document).ready(function() {
 				title: "Acceso Denegado",
 				text: "No tiene permisos para ejecutar esta acción",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 		}
 	});
@@ -219,7 +225,9 @@ function editarRegistro(pacientes_id, muestras_id){
 				title: "Error",
 				text: "Lo sentimos, este registro ya existe, no se puede agregar nuevamente su atención",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	   }
 	}else{
@@ -227,7 +235,9 @@ function editarRegistro(pacientes_id, muestras_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 }
@@ -264,6 +274,9 @@ function nosePresentoRegistro(pacientes_id, muestras_id){
 						closeModal: false,
 					},
 				},
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			}).then((value) => {
 				if (value === null || value.trim() === "") {
 					swal("¡Necesita escribir algo!", { icon: "error" });
@@ -276,7 +289,9 @@ function nosePresentoRegistro(pacientes_id, muestras_id){
 				title: "Error",
 				text: "Error al ejecutar esta acción, el usuario debe estar en estatus pendiente",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	   }
 	 }else{
@@ -284,7 +299,9 @@ function nosePresentoRegistro(pacientes_id, muestras_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	  }
 }
@@ -306,6 +323,8 @@ function eliminarRegistro(muestras_id, comentario){
 				text: "Ausencia almacenada correctamente",
 				icon: "success",
 				timer: 3000, //timeOut for auto-close
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera				
 			});
 			pagination(1);
 			return false;
@@ -314,7 +333,9 @@ function eliminarRegistro(muestras_id, comentario){
 					title: "Error",
 					text: "Error al remover este registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 		  }else if(registro == 3){
@@ -322,7 +343,9 @@ function eliminarRegistro(muestras_id, comentario){
 					title: "Error",
 					text: "Este registro ya tiene almacenada una ausencia",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 				return false;
 		  }else{
@@ -330,7 +353,9 @@ function eliminarRegistro(muestras_id, comentario){
 					title: "Error",
 					text: "Error al ejecutar esta acción",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		  }
 	  }
@@ -582,7 +607,9 @@ $('#reg_transitoe').on('click', function(e){ // add event submit We don't want t
 				title: 'Error',
 				text: 'No se pueden enviar los datos, los campos estan vacíos',
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 			return false;
 		 }else{
@@ -594,7 +621,9 @@ $('#reg_transitoe').on('click', function(e){ // add event submit We don't want t
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 });
@@ -607,7 +636,9 @@ $('#reg_transitor').on('click', function(e){ // add event submit We don't want t
 				title: 'Error',
 				text: 'No se pueden enviar los datos, los campos estan vacíos',
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 			return false;
 		 }else{
@@ -619,7 +650,9 @@ $('#reg_transitor').on('click', function(e){ // add event submit We don't want t
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}
 });
@@ -735,7 +768,9 @@ function agregarTransitoEnviadas(){
 		title: 'Error',
 		text: 'No se puede agregar/modificar registros fuera de este periodo',
 		icon: "error",
-		dangerMode: true
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	});
 	return false;
    }else{
@@ -753,6 +788,8 @@ function agregarTransitoEnviadas(){
 					text: 'Registro almacenado correctamente',
 					icon: 'success',
 					timer: 3000,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				limpiarTE();
 				$('#registro_transito_eviada').modal('hide');
@@ -762,7 +799,9 @@ function agregarTransitoEnviadas(){
 					title: 'Error',
 					text: 'Error al intentar almacenar este registro',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;
 			}else if(registro == 3){
@@ -770,7 +809,9 @@ function agregarTransitoEnviadas(){
 					title: "Error",
 					text: "Este registro no cuenta con atencion almacenada",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;
 			}else if(registro == 4){
@@ -778,7 +819,9 @@ function agregarTransitoEnviadas(){
 					title: "Error",
 					text: "Este registro ya existe",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			   return false;
 			}else{
@@ -786,7 +829,9 @@ function agregarTransitoEnviadas(){
 					title: "Error",
 					text: "Error al completar el registro",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			}
@@ -797,7 +842,9 @@ function agregarTransitoEnviadas(){
 			title: 'Error',
 			text: 'No se puede agregar/modificar registros fuera de esta fecha',
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
    }
@@ -816,7 +863,9 @@ function agregarTransitoRecibidas(){
 			title: 'Error',
 			text: 'No se puede agregar/modificar registros fuera de este periodo',
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
    }else{
@@ -834,6 +883,8 @@ function agregarTransitoRecibidas(){
 					text: 'Registro almacenado correctamente',
 					icon: 'success',
 					timer: 3000,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 				$('#registro_transito_recibida').modal('hide');
 				limpiarTR();
@@ -843,7 +894,9 @@ function agregarTransitoRecibidas(){
 					title: 'Error',
 					text: 'Error al intentar almacenar este registro',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			}else if(registro == 3){
@@ -851,7 +904,9 @@ function agregarTransitoRecibidas(){
 					title: 'Error',
 					text: 'Este registro no cuenta con atencion almacenada',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			}else if(registro == 4){
@@ -859,7 +914,9 @@ function agregarTransitoRecibidas(){
 					title: 'Error',
 					text: 'Este registro ya existe',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			}else{
@@ -867,7 +924,9 @@ function agregarTransitoRecibidas(){
 					title: 'Error',
 					text: 'Error al completar el registro',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 			    return false;
 			}
@@ -878,7 +937,9 @@ function agregarTransitoRecibidas(){
 			title: 'Error',
 			text: 'No se puede agregar/modificar registros fuera de esta fecha',
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	    return false;
    }
@@ -1069,6 +1130,9 @@ function evaluarRegistrosPendientes(){
 					title: 'Advertencia',
 					text: "Se le recuerda que tiene " + datos[0] + " " + string + " de subir en las Atenciones Medicas en este mes de " + datos[1] + ". Debe revisar sus registros pendientes.",
 					icon: 'warning',
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 			  });
 		   }
 
@@ -1544,7 +1608,9 @@ $('#acciones_atras').on('click', function(e){
 					text: "¡Si, deseo volver!",
 				}
 			},
-			closeOnClickOutside: false
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		}).then((willConfirm) => {
 			if (willConfirm === true) {
 				$('#main_facturacion').show();
@@ -1993,7 +2059,9 @@ function mailAtencion(atencion_id){
 				text: "¡Sí, enviar el reporte!",
 			}
 		},
-		closeOnClickOutside: false
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 	}).then((willConfirm) => {
 		if (willConfirm === true) {
 			sendMailAtencion(atencion_id);
@@ -2017,6 +2085,8 @@ function sendMailAtencion(atencion_id){
 					title: "Success",
 					text: "El reporte de laboratorio ha sido enviada por correo satisfactoriamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 		  }
 	  }

@@ -214,7 +214,9 @@ var registrar_abono_cxc_clientes_dataTable = function(tbody, table){
 					title: 'Error',
 					text: 'No puede realizar esta accion a las facturas canceladas!',
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		}else{
 			$("#GrupoPagosMultiplesFacturas").hide();

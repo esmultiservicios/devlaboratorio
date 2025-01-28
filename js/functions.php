@@ -684,6 +684,8 @@ function mostrarAlerta(tipo, titulo, mensaje) {
         text: mensaje,
         icon: tipo,  // "success", "error", "warning", "info"
         button: "Aceptar",
+        closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+        closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
     });
 }
 

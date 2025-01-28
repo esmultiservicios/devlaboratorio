@@ -24,7 +24,9 @@ $(document).ready(function(e) {
 				title: "Error", 
 				text: "Contraseñas no coinciden",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 			$("#form-cambiarcontra #Modalcambiarcontra_Edit").attr('disabled', true);
 			$("#form-cambiarcontra #repcontra").css("border-color", "red");
@@ -91,7 +93,9 @@ $(document).ready(function(e) {
 							title: "Error", 
 							text: "La contraseña que ingreso no coincide con la anterior",
 							icon: "error",
-							dangerMode: true
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 						$("#form-cambiarcontra #contranaterior").css("border-color", "red");
 						return false;
@@ -127,7 +131,9 @@ function agregaRegistro_contraseña(){
 							text:  "¡Bien Hecho!",
 						}
 					},
-					closeOnClickOutside: false
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				}).then((willConfirm) => {
 					if (willConfirm === true) {
 						setTimeout(function () {
@@ -142,7 +148,9 @@ function agregaRegistro_contraseña(){
 					title: "Error", 
 					text: "No se puede cambiar la contraseña",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});			   
 			   return false;				
 			}else{
@@ -150,7 +158,9 @@ function agregaRegistro_contraseña(){
 					title: "Error", 
 					text: "Error al cambiar los datos, por favor intente mas tarde",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});				
 				return false;
 	   		}

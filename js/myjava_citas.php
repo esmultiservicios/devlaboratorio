@@ -72,7 +72,9 @@ $(document).ready(function() {
 							title: "Error",
 							text: "No se puede agregar una cita en esta fecha",
 							icon: "error",
-							dangerMode: true
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 			         }
 			         }else{
@@ -80,15 +82,19 @@ $(document).ready(function() {
 							title: "Error",
 							text: "Debe seleccionar un médico y un servcicio antes de agendar una cita",
 							icon: "error",
-							dangerMode: true
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 		             }
 			   }else{
 					swal({
 						title: "Acceso Denegado",
 						text: "No tiene permisos para ejecutar esta acción",
-							icon: "error",
-							dangerMode: true
+						icon: "error",
+						dangerMode: true,
+						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 					});
 		       }
 		  }else{
@@ -96,7 +102,9 @@ $(document).ready(function() {
 					title: "Error",
 					text: "El médico se encuentra ausente, no se le puede agendar una cita. " + getComentarioAusencia(moment(start).format('YYYY-MM-DD HH:mm:ss'))+ "",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		  }	*/
 		},
@@ -130,7 +138,9 @@ $(document).ready(function() {
 						title: "Acceso Denegado",
 						text: "No tiene permisos para ejecutar esta acción",
 						icon: "error",
-						dangerMode: true
+						dangerMode: true,
+						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 					});
 		      }*/
 		    });
@@ -145,7 +155,9 @@ $(document).ready(function() {
 							title: "Error",
 							text: "No se puede mover una cita en esta fecha",
 							icon: "error",
-							dangerMode: true
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 			       }
 		        }else{
@@ -153,7 +165,9 @@ $(document).ready(function() {
 						title: "Acceso Denegado",
 						text: "No tiene permisos para ejecutar esta acción",
 						icon: "error",
-						dangerMode: true
+						dangerMode: true,
+						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 					});
 		        }
 		   }else{
@@ -161,7 +175,9 @@ $(document).ready(function() {
 					title: "Error",
 					text: "El médico se encuentra ausente, no se le puede agendar una cita. " + getComentarioAusencia(moment(event.start).format('YYYY-MM-DD HH:mm:ss')) + "",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		   }*/
 		},
@@ -174,7 +190,9 @@ $(document).ready(function() {
 							title: "Acceso Denegado",
 							text: "No tiene permisos para ejecutar esta acción",
 							icon: "error",
-							dangerMode: true
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 				}
 			}else{
@@ -182,7 +200,9 @@ $(document).ready(function() {
 					title: "Error",
 					text: "El médico se encuentra ausente, no se le puede agendar una cita",
 					icon: "error",
-					dangerMode: true
+					dangerMode: true,
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 				});
 		    }*/
 		}
@@ -235,7 +255,9 @@ $('#ModalImprimir_enviar').on('click', function(e){ // delete event clicked // W
 			title: "Error",
 			text: "No se pueden enviar los datos, los campos estan vacíos",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 		return false;
 	 }else{

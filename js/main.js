@@ -19,24 +19,20 @@ $('.FormularioAjax').submit(function (e) {
 
 	var textoAlerta;
 	var type;
-	var classButtom;
 
 	if (tipo == "save") {
 		textoAlerta = "Los datos que enviarás quedarán almacenados en el sistema";
 		type = "info";
-		classButtom = "btn-primary";
 	} else if (tipo == "delete") {
 		textoAlerta = "Los datos serán eliminados completamente del sistema";
 		type = "warning";
-		classButtom = "btn-warning";
+
 	} else if (tipo == "update") {
 		textoAlerta = "Los datos del sistema serán actualizados";
 		type = "info";
 	} else {
 		textoAlerta = "¿Quieres realizar la operación solicitada?";
 		type = "warning";
-		classButtom = "btn-primary";
-		classButtom = "btn-warning";
 	}
 
 	swal({
@@ -51,11 +47,12 @@ $('.FormularioAjax').submit(function (e) {
 			},
 			confirm: {
 				text: "Aceptar",
-				className: classButtom,
 				closeModal: false
 			}
 		},
-		dangerMode: false
+		dangerMode: false,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera		
 	}).then(function (isConfirm) {
 		if (isConfirm) {
 			$.ajax({
@@ -88,14 +85,17 @@ $('.FormularioAjax').submit(function (e) {
 							title: datos[0],
 							text: datos[1],
 							icon: datos[2],
-							confirmButtonClass: datos[3]
+							dangerMode: true,
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 					} else if (datos[0] == "Guardar") {
 						swal({
 							title: datos[0],
 							text: datos[1],
 							icon: datos[2],
-							confirmButtonClass: datos[3],
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 					} else {
 						swal({
@@ -103,7 +103,8 @@ $('.FormularioAjax').submit(function (e) {
 							text: datos[1],
 							icon: datos[2],
 							timer: 3000,
-							confirmButtonClass: datos[3]
+							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 						});
 					}
 

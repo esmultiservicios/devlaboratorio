@@ -7,7 +7,9 @@ function reportePDF(agenda_id){
 			title: "Acceso Denegado",
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
         return false;
     }
@@ -289,7 +291,9 @@ var editar_productos_busqueda_dataTable = function(tbody, table){
 				title: "Error",
 				text: "Lo sentimos no se puede seleccionar un producto, por favor seleccione un cliente antes de poder continuar",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 		}
 	});
@@ -420,7 +424,9 @@ $("#formulario_facturacion #invoiceItem").on('click', '.producto', function() {
 				title: "Error",
 				text: "Lo sentimos no se puede efectuar la búsqueda, por favor seleccione un cliente antes de poder continuar",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	   }
 	 });
@@ -507,7 +513,9 @@ $("#formulario_facturacion #invoiceItem").on('click', '.producto', function() {
 				title: "Error",
 				text: "Lo sentimos no se puede efectuar la búsqueda, por favor seleccione un cliente antes de poder continuar",
 				icon: "error",
-				dangerMode: true
+				dangerMode: true,
+				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 			});
 	   }
 	});
@@ -873,7 +881,9 @@ $('#formulario_pacientes #buscar_municipio_pacientes').on('click', function(e){
 			title: "Error",
 			text: "Lo sentimos el departamento no debe estar vacío, antes de seleccionar esta opción por favor seleccione un departamento, por favor corregir",
 			icon: "error",
-			dangerMode: true
+			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
 		});
 	}else{
 		listar_municipios_buscar();
@@ -1932,6 +1942,8 @@ function sendMail(facturas_id) {
 					title: "Success",
 					icon: "La factura ha sido enviada por correo satisfactoriamente",
 					type: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
 				});
 			}
 		}
@@ -1955,6 +1967,8 @@ function sendMailGroup(facturas_id) {
 					title: "Success",
 					text: "La factura ha sido enviada por correo satisfactoriamente",
 					icon: "success",
+					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera						
 				});
 			}
 		}
@@ -2013,6 +2027,8 @@ function viewReport(params) {
             icon: "error",
             button: "Cerrar",
 			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
         });
         return; // Salir de la función si la URL no está definida
     }
@@ -2030,6 +2046,8 @@ function viewReport(params) {
             icon: "error",
             button: "Cerrar",
 			dangerMode: true,
+			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
         });
         return;
     }
