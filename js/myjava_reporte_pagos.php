@@ -313,6 +313,7 @@ var listar_reporte_pagos = function(){
 					return '<a href="#" class="showDetallesPago">' + data + '</a>';
 				}
 			},
+			{"data": "tipo_pago"},
 			{"data": "paciente"},
 			{"data": "identidad"},
 			{"data": "numero"},			

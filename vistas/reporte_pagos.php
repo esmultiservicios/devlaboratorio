@@ -238,18 +238,19 @@ echo $fecha_inicial;
 							<thead>
 								<tr>
 									<th>Fecha</th>
+									<th>Tipo Pago</th>
 									<th>Paciente</th>
 									<th>Identidad</th>
 									<th>Factura</th>
 									<th>Pago Recibido</th>
 									<th>Efectivo</th>
-									<th>Tipo Pago</th>
+									<th>Tarjeta</th>
 									<th>Acciones</th>
 								</tr>
 							</thead>
 							<tfoot>
 								<tr>
-									<th colspan="3"></th>
+									<th colspan="4"></th>
 									<th colspan="1">Totales:</th>
 									<th id="footerImporte"></th>
 									<th id="footerEfectivo"></th>

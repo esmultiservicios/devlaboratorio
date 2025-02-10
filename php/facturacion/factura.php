@@ -260,9 +260,9 @@
 		<p class="nota"><center><?php echo convertir($total_despues_isv);?></center></p>
 		<p class="nota"></p>
 		<p class="nota">La factura es beneficio de todos "Exíjala"</p>
-		<p class="nota">N° correlativo de orden de compra excenta __________________</p>
-		<p class="nota">N° correlativo constancia de registro Exonerado __________________</p>
-		<p class="nota">N° identificativo del registro de la SAG __________________</p>
+		<p class="nota">N° correlativo de orden de compra excenta _____________</p>
+		<p class="nota">N° correlativo constancia de registro Exonerado _____________</p>
+		<p class="nota">N° identificativo del registro de la SAG _____________</p>
 		<?php
 			if($consulta_registro["estado"] == 2){
 		?>
