@@ -111,9 +111,9 @@
 		$totalPendiente += $saldo;
 
 		if($row['estado'] == 2){
-			$estadoColor = 'bg-c-green';
+			$estadoColor = 'bg-c-green';//Contado
 		}else{
-			$estadoColor = 'bg-warning';
+			$estadoColor = 'bg-c-yellow';//Credito
 		}
 
 		$data[] = array( 
