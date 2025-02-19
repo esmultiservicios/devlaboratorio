@@ -97,11 +97,11 @@ $result = $mysqli->query($registro);
 	
 	if($nroProductos == 0){
         $tabla = $tabla.'<tr>
-	       <td colspan="13" style="color:#C7030D">No se encontraron resultados</td>
+	       <td colspan="14" style="color:#C7030D">No se encontraron resultados</td>
 	    </tr>';		
 	}else{
        $tabla = $tabla.'<tr>
-	      <td colspan="7"><b><p ALIGN="center">Total de Registros Encontrados '.$nroProductos.'</p></b>
+	      <td colspan="14"><b><p ALIGN="center">Total de Registros Encontrados '.$nroProductos.'</p></b>
 	   </tr>';		
 	}   
 	
@@ -114,4 +114,3 @@ $result = $mysqli->query($registro);
 	
 $result->free();//LIMPIAR RESULTADO
 $mysqli->close();//CERRAR CONEXIÓN	
-?>

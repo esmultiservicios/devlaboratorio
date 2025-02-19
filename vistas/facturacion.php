@@ -248,15 +248,14 @@ $mysqli->close();//CERRAR CONEXIÓN
                         </div>
                     </div>
                     <label for="inputFecha" class="col-sm-1 col-form-label-md">Fecha <span
-                            class="priority">*<span /></label>
+                            class="priority">*</span></label>
                     <div class="col-sm-3">
                         <input type="date" class="form-control" value="<?php echo date('Y-m-d');?>" id="fechaGrupo"
                             name="fechaGrupo">
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label for="inputCliente" class="col-sm-1 col-form-label-md">Profesional <span
-                            class="priority">*<span /></label>
+                    <label for="inputCliente" class="col-sm-1 col-form-label-md">Profesional <span class="priority">*</span></label>
                     <div class="col-sm-5">
                         <div class="input-group mb-3">
                             <input type="hidden" class="form-control" placeholder="Profesional" id="colaborador_idGrupo"
@@ -275,14 +274,9 @@ $mysqli->close();//CERRAR CONEXIÓN
                             class="priority">*<span /></label>
                     <div class="col-sm-3">
                         <div class="input-group mb-3">
-                            <select id="servicio_idGrupo" name="servicio_idGrupo" class="custom-select"
-                                data-toggle="tooltip" data-placement="top" title="Servicio" required></select>
-                            <div class="input-group-append">
-                                <a data-toggle="modal" href="#" class="btn btn-outline-success"
-                                    id="buscar_serviciosGrupo">
-                                    <div class="sb-nav-link-icon"></div><i class="fab fa-servicestack fa-lg"></i>
-                                </a>
-                            </div>
+                            <select class="selectpicker" id="servicio_idGrupo" name="servicio_idGrupo" data-live-search="true"
+                                title="Servicio" data-width="100%" data-size="7" required>
+                            </select>
                         </div>
                     </div>
                     <label class="switch mb-3" data-toggle="tooltip" data-placement="top"
@@ -296,7 +290,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                 <div class="form-group row table-responsive-xl tableFixHead table table-hover">
                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                         <table class="table table-bordered table-hover" id="invoiceItemGrupo">
-                            <thead align="center" class="table-success">
+                            <thead class="table-success text-center">
                                 <tr>
                                     <th width="30%">Paciente</th>
                                     <th width="20%">Saldo</th>

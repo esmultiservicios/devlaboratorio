@@ -179,6 +179,7 @@ $('.FormularioAjax').submit(function (e) {
 						limpiarTabla();
 						pagination(1);
 						volver();
+						listar_cuentas_por_cobrar_clientes();
 						setTimeout(sendMail(datos[8]), 5000);
 						$('#' + datos[7]).modal('hide');
 					}
@@ -188,6 +189,7 @@ $('.FormularioAjax').submit(function (e) {
 						limpiarTabla();
 						pagination(1);
 						volver();
+						listar_cuentas_por_cobrar_clientes();
 						setTimeout(sendMail(datos[8]), 5000);
 						$('#' + datos[7]).modal('hide');
 						listar_cuentas_por_cobrar_clientes();

@@ -42,7 +42,14 @@ var listar_cuentas_por_cobrar_clientes = function(){
 		estado = $("#form_main_cobrar_clientes #cobrar_clientes_estado").val();
 	}
 
-	var clientes_id = $("#form_main_cobrar_clientes #cobrar_clientes").val();
+	var clientes_id = 0;
+
+	if($("#form_main_cobrar_clientes #cobrar_clientes").val() == "" || $("#form_main_cobrar_clientes #cobrar_clientes").val() == null){
+		clientes_id = 0;
+	}else{
+		clientes_id = $("#form_main_cobrar_clientes #cobrar_clientes").val();
+	}
+
 	var fechai = $("#form_main_cobrar_clientes #fechai").val();
 	var fechaf = $("#form_main_cobrar_clientes #fechaf").val();
 
@@ -122,6 +129,7 @@ var listar_cuentas_por_cobrar_clientes = function(){
 			{"defaultContent":"<button class='table_reportes abono_factura btn btn-dark ocultar'><span class='fa fa-money-bill-wave fa-solid'></span></button>"},
 			{"defaultContent":"<button class='table_reportes print_factura btn btn-dark ocultar'><span class='fas fa-file-download fa-lg'></span></button>"}
 		],
+		"order": [[2, 'asc']],
 		"pageLength": 10,
         "lengthMenu": lengthMenu,
 		"stateSave": true,

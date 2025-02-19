@@ -15,7 +15,7 @@ if(isset($_POST['cliente_admision'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
 	$cliente_admision = 0;
 }
 
-$nombre = cleanString($_POST['name']);
+$nombre = cleanStringConverterCase($_POST['name']);
 $apellido = "";
 $identidad = $_POST['rtn'];
 

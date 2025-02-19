@@ -624,12 +624,7 @@
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="col-md-4 mb-3">
-                            <label>Nickname <span class="priority">*<span /></label>
-                            <input type="text" required name="username" id="username" maxlength="100"
-                                class="form-control" />
-                        </div>
-                        <div class="col-md-8 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label for="email">Email</label>
                             <div class="input-group mb-3">
                                 <input type="text" name="email" id="email" class="form-control" placeholder="Email"

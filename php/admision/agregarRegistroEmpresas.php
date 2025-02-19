@@ -5,7 +5,7 @@ include "../funtions.php";
 //CONEXION A DB
 $mysqli = connect_mysqli();
 
-$nombre = cleanString($_POST['empresa']);
+$nombre = cleanStringConverterCase($_POST['empresa']);
 $apellido = "";
 $identidad = $_POST['rtn'];
 

@@ -1127,7 +1127,7 @@ function cleanStringStrtoupper($string){
 
 function cleanStringConverterCase($string){
 	//Limpia espacios al inicio y al final
-	$string =  trim($string);
+	$string = mb_convert_case(trim($string), MB_CASE_TITLE, 'UTF-8');
 
 	//Quita las barras de un string con comillas escapadas
 	$string = stripslashes($string); 

@@ -84,6 +84,7 @@ if($tamano_tabla >0){
 		$facturas_grupal_id = correlativo("facturas_grupal_id","facturas_grupal");
 		$insert = "INSERT INTO facturas_grupal
 			VALUES('$facturas_grupal_id','$secuencia_facturacion_id','$numero','$tipo_factura','$pacientes_id','$colaborador_id','$servicio_id','$importe','$notes','$fecha','2','$cierre','$usuario','$empresa_id','$fecha_registro')";
+
 		$query = $mysqli->query($insert);
 
 		if($query){
@@ -137,6 +138,7 @@ if($tamano_tabla >0){
 					//INSERTAMOS EL DETALLE DEL GRUPO DE FACTURAS
 					$insert_detalle = "INSERT INTO facturas_grupal_detalle
 						VALUES('$facturas_grupal_detalle_id','$facturas_grupal_id','$lineaFactura_id','$lineaPacientes_id','$muestra_id','$lineaCantidad','$lineaImporte','$lineaISV','$lineaDescuento')";
+
 					$mysqli->query($insert_detalle);
 
 					$total_valor += $lineaImporte;
@@ -144,6 +146,7 @@ if($tamano_tabla >0){
 					$isv_neto += $lineaISV;
 				}
 			}//FIN CICLO FOR
+
 			$total_despues_isv = ($total_valor + $isv_neto) - $descuentos;
 
 			//ACTUALIZAMOS EL IMPORTE DE LA FACTURA
@@ -152,6 +155,7 @@ if($tamano_tabla >0){
 					importe = '$total_despues_isv',
 					usuario = '$usuario'
 				WHERE facturas_grupal_id = '$facturas_grupal_id'";
+
 			$mysqli->query($update);
 
 			//CONSULTAMOS EL NUMERO QUE SIGUE DE EN LA SECUENCIA DE FACTURACION
@@ -162,6 +166,7 @@ if($tamano_tabla >0){
 			SET
 				siguiente = '$numero_secuencia_facturacion'
 			WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
+
 			$mysqli->query($update);
 
 			//CONSULTAMOS SI LA FACTURA YA EXISTE EN CUENTAS POR COBRAR
@@ -173,6 +178,7 @@ if($tamano_tabla >0){
 				$cobrar_clientes_id = correlativo("cobrar_clientes_id","cobrar_clientes_grupales");
 				$insert_cxc = "INSERT INTO cobrar_clientes_grupales 
 				(`cobrar_clientes_id`, `pacientes_id`, `facturas_id`, `fecha`, `saldo`, `estado`, `usuario`, `empresa_id`, `fecha_registro`) VALUES('$cobrar_clientes_id','$pacientes_id','$facturas_grupal_id','$fecha','$total_despues_isv','1','$usuario','$empresa_id','$fecha_registro')";
+				
 				$mysqli->query($insert_cxc);
 			}
 

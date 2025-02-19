@@ -41,7 +41,9 @@
 		<label for="servicio_id" class="col-sm-1 col-form-label-md">Servicio <span class="priority">*<span/></label>
 		<div class="col-sm-3">
 			<div class="input-group mb-3">
-			  <select id="servicio_id" name="servicio_id" class="custom-select" data-toggle="tooltip" data-placement="top" title="Servicio" required></select>
+				<select class="selectpicker" id="servicio_id" name="servicio_id" data-live-search="true"
+					title="Servicio" data-width="100%" data-size="7" required>
+				</select>
 			  <div class="input-group-append">				
 				<a data-toggle="modal" href="#" class="btn btn-outline-success" id="buscar_servicios"><div class="sb-nav-link-icon"></div><i class="fab fa-servicestack fa-lg"></i></a>
 			  </div>

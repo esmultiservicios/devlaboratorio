@@ -24,38 +24,50 @@
 		$clientes_id = "AND cc.pacientes_id = '".$datos['clientes_id']."'";
 	}
 
-	$queryCobrarClientes = "SELECT cc.cobrar_clientes_id AS 'cobrar_clientes_id', f.facturas_id AS 'facturas_id', CONCAT(p.nombre, ' ', p.apellido) AS 'cliente',
-	f.fecha AS 'fecha', cc.saldo AS 'saldo', CONCAT(sf.prefijo,'',LPAD(f.number, sf.relleno, 0)) AS 'numero', cc.estado,
-	f.importe, CONCAT(co.nombre, ' ', co.apellido) AS 'vendedor', CONCAT('Cliente') As 'Tipo'
-		FROM cobrar_clientes AS cc
-		INNER JOIN pacientes AS p
-		ON cc.pacientes_id = p.pacientes_id
-		INNER JOIN facturas AS f
-		ON cc.facturas_id = f.facturas_id
-		INNER JOIN secuencia_facturacion AS sf
-		ON f.secuencia_facturacion_id = sf.secuencia_facturacion_id
-		INNER JOIN colaboradores AS co
-		ON f.colaborador_id = co.colaborador_id
-		WHERE cc.estado = '".$datos['estado']."'
-		$fecha
-		$clientes_id
-		UNION
-		SELECT cc.cobrar_clientes_id AS 'cobrar_clientes_id', f.facturas_grupal_id AS 'facturas_id', CONCAT(p.nombre, ' ', p.apellido) AS 'cliente',
-		f.fecha AS 'fecha', cc.saldo AS 'saldo', CONCAT(sf.prefijo,'',LPAD(f.number, sf.relleno, 0)) AS 'numero', cc.estado,
-		f.importe, CONCAT(co.nombre, ' ', co.apellido) AS 'vendedor', CONCAT('Grupo') As 'Tipo'
-		FROM cobrar_clientes_grupales AS cc
-		INNER JOIN pacientes AS p
-		ON cc.pacientes_id = p.pacientes_id
-		INNER JOIN facturas_grupal AS f
-		ON cc.facturas_id = f.facturas_grupal_id
-		INNER JOIN secuencia_facturacion AS sf
-		ON f.secuencia_facturacion_id = sf.secuencia_facturacion_id
-		INNER JOIN colaboradores AS co
-		ON f.colaborador_id = co.colaborador_id
-		WHERE cc.estado = '".$datos['estado']."'
-		$fecha
-		$clientes_id	
-	";
+	$queryCobrarClientes = "SELECT 
+		cc.cobrar_clientes_id AS 'cobrar_clientes_id', 
+		f.facturas_id AS 'facturas_id', 
+		CONCAT(p.nombre, ' ', p.apellido) AS 'cliente',
+		f.fecha AS 'fecha', 
+		cc.saldo AS 'saldo', 
+		CONCAT(sf.prefijo, '', LPAD(f.number, sf.relleno, 0)) AS 'numero', 
+		cc.estado,
+		f.importe, 
+		CONCAT(co.nombre, ' ', co.apellido) AS 'vendedor', 
+		'Cliente' AS 'Tipo',
+		f.fecha_registro
+	FROM cobrar_clientes AS cc
+	INNER JOIN pacientes AS p ON cc.pacientes_id = p.pacientes_id
+	INNER JOIN facturas AS f ON cc.facturas_id = f.facturas_id
+	INNER JOIN secuencia_facturacion AS sf ON f.secuencia_facturacion_id = sf.secuencia_facturacion_id
+	INNER JOIN colaboradores AS co ON f.colaborador_id = co.colaborador_id
+	WHERE cc.estado = '".$datos['estado']."'
+	$fecha
+	$clientes_id
+	UNION
+	SELECT 
+		cc.cobrar_clientes_id AS 'cobrar_clientes_id', 
+		f.facturas_grupal_id AS 'facturas_id', 
+		CONCAT(p.nombre, ' ', p.apellido) AS 'cliente',
+		f.fecha AS 'fecha', 
+		cc.saldo AS 'saldo', 
+		CONCAT(sf.prefijo, '', LPAD(f.number, sf.relleno, 0)) AS 'numero', 
+		cc.estado,
+		f.importe, 
+		CONCAT(co.nombre, ' ', co.apellido) AS 'vendedor', 
+		'Grupo' AS 'Tipo',
+		f.fecha_registro
+	FROM cobrar_clientes_grupales AS cc
+	INNER JOIN pacientes AS p ON cc.pacientes_id = p.pacientes_id
+	INNER JOIN facturas_grupal AS f ON cc.facturas_id = f.facturas_grupal_id
+	INNER JOIN secuencia_facturacion AS sf ON f.secuencia_facturacion_id = sf.secuencia_facturacion_id
+	INNER JOIN colaboradores AS co ON f.colaborador_id = co.colaborador_id
+	WHERE cc.estado = '".$datos['estado']."'
+	$fecha
+	$clientes_id";
+
+	//echo $queryCobrarClientes."***";
+
 	$resultCobrarClientes = $mysqli->query($queryCobrarClientes);
 	
 	$arreglo = array();

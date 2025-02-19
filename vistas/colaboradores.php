@@ -98,8 +98,8 @@ $mysqli->close();//CERRAR CONEXIÓN
 					  <input type="text" required name="apellido" id="apellido" maxlength="100" class="form-control"/>
 					</div>
 					<div class="col-md-4 mb-3">
-					  <label for="edad">Identidad <span class="priority">*<span/></label>
-					  <input type="text" required name="identidad" id="identidad" maxlength="100" class="form-control" data-toggle="tooltip" data-placement="top" title="Este número de Identidad debe estar exactamente igual al que se registro en Odoo en la ficha del Colaborador"/>
+					  <label for="edad">Identidad</label>
+					  <input type="text" name="identidad" id="identidad" maxlength="100" class="form-control" data-toggle="tooltip" data-placement="top" title="Este número de Identidad debe estar exactamente igual al que se registro en Odoo en la ficha del Colaborador"/>
 					</div>
 				</div>
 				<div class="form-row">

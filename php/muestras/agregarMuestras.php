@@ -15,10 +15,10 @@ $hospital_clinica = $_POST['hospital_clinica'];
 $tipo_muestra_id = $_POST['tipo_muestra_id'];
 $referencia = $_POST['referencia'];
 $fecha = date("Y-m-d");
-$sitio_muestra = cleanStringStrtolower($_POST['sitio_muestra']);
-$diagonostico_muestra = cleanStringStrtolower($_POST['diagonostico_muestra']);
-$material_muestra = cleanStringStrtolower($_POST['material_muestra']);
-$datos_relevantes_muestras = cleanStringStrtolower($_POST['datos_relevantes_muestras']);
+$sitio_muestra = cleanStringConverterCase($_POST['sitio_muestra']);
+$diagonostico_muestra = cleanStringConverterCase($_POST['diagonostico_muestra']);
+$material_muestra = cleanStringConverterCase($_POST['material_muestra']);
+$datos_relevantes_muestras = cleanStringConverterCase($_POST['datos_relevantes_muestras']);
 $estado = 0;
 
 if(isset($_POST['mostrar_datos_clinicos'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA

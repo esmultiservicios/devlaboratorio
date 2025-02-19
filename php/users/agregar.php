@@ -8,7 +8,7 @@ $mysqli = connect_mysqli();
 $proceso = $_POST['pro'];
 $id = $_POST['id-registro'];
 $colaborador_id = $_POST['colaborador'];
-$username = trim($_POST['username']);
+$username = trim($_POST['email']);
 $email = trim($_POST['email']);
 $tipo = $_POST['tipo'];
 $estatus = $_POST['estatus'];
@@ -304,4 +304,3 @@ if($total_usuarios_sistema < $total_usuarios_plan){
 
 
 echo json_encode($datos);
-?>

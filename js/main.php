@@ -310,9 +310,11 @@ function getServicio(){
         success: function(data){
 		    $('#formulario_facturacion #servicio_id').html("");
 			$('#formulario_facturacion #servicio_id').html(data);
+			$('#formulario_facturacion #servicio_id').selectpicker('refresh');
 
 		    $('#formGrupoFacturacion #servicio_idGrupo').html("");
 			$('#formGrupoFacturacion #servicio_idGrupo').html(data);
+			$('#formGrupoFacturacion #servicio_idGrupo').selectpicker('refresh');
 		}
      });
 }

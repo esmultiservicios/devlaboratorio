@@ -88,11 +88,23 @@ function pagination(partida){
 	var fechai = $('#form_main_facturas #fecha_b').val();
 	var fechaf = $('#form_main_facturas #fecha_f').val();
 	var dato = $('#form_main_facturas #bs_regis').val();
-	var tipo_paciente_grupo = $('#form_main_facturas #tipo_paciente_grupo').val();
-	var pacientesIDGrupo = $('#form_main_facturas #pacientesIDGrupo').val();
+	var tipo_paciente_grupo;
+	var pacientesIDGrupo;
 	var estado = '';
 
-  if($('#form_main_facturas #estado').val() == "" || $('#form_main_facturas #estado').val() == null){
+	if($('#form_main_facturas #tipo_paciente_grupo').val() == "" || $('#form_main_facturas #tipo_paciente_grupo').val() == null){
+		tipo_paciente_grupo = "";
+	}else{
+		tipo_paciente_grupo = $('#form_main_facturas #tipo_paciente_grupo').val();
+	}
+
+	if($('#form_main_facturas #pacientesIDGrupo').val() == "" || $('#form_main_facturas #pacientesIDGrupo').val() == null){
+		pacientesIDGrupo = "";
+	}else{
+		pacientesIDGrupo = $('#form_main_facturas #pacientesIDGrupo').val();
+	}
+
+	if($('#form_main_facturas #estado').val() == "" || $('#form_main_facturas #estado').val() == null){
 		estado = 1;
 	}else{
 		estado = $('#form_main_facturas #estado').val();
@@ -106,8 +118,7 @@ function pagination(partida){
 		success:function(data){
 			var array = eval(data);
 			$('#agrega-registros').html(array[0]);
-			$('#pagination').html(array[1]);
-			swal.close();
+			$('#pagination').html(array[1]);			
 		}
 	});
 	return false;
@@ -429,6 +440,10 @@ function formFacturaGrupo(){
 	//ENVIAMOS EL TAMAÑO AL FORMULARIO DE FACTURAS, QUE POSTERIOR MENTE SE USARA PARA SABER EL TAMAÑO DE LA TABLA Y PODER ITERAR LOS DETALLES DE ESTA
 	$('#formGrupoFacturacion #tamano').val(tamaño);
 	netoGrupo = (subTotal + ISVGrupo) - descuentoGrupo;
+
+	$('#formGrupoFacturacion #servicio_idGrupo').val(1);
+	$('#formGrupoFacturacion #servicio_idGrupo').selectpicker('refresh');
+
 
 	$('#formGrupoFacturacion #subTotalBillGrupo').val(parseFloat(subTotal).toFixed(2));
 	$('#formGrupoFacturacion #taxAmountBillGrupo').val(parseFloat(ISVGrupo).toFixed(2));

@@ -137,7 +137,7 @@ if($tipo_factura === "1"){//NO ES NECESARIO EL ABONO
 
 				//ACTUALIZAMOS EL PAGO DE LA FACTURA CONSULTADA
 				//INSERTAMOS LOS DATOS EN LA ENTIDAD PAGO
-				/*$pagos_id = correlativo("pagos_id","pagos");
+				$pagos_id = correlativo("pagos_id","pagos");
 				$insert = "INSERT INTO pagos
 				VALUES ('$pagos_id','$facturaConsulta','$tipo_pago','$fecha','$total_despues_isv','$efectivo','$cambio','$tarjeta','$usuario','$estado_pago','$empresa_id','$fecha_registro')";
 				$query_pagos = $mysqli->query($insert);
@@ -148,7 +148,7 @@ if($tipo_factura === "1"){//NO ES NECESARIO EL ABONO
 						$insert = "INSERT INTO pagos_detalles
 						VALUES ('$pagos_detalles_id','$pagos_id','$tipo_pago_id','$banco_id','$total_despues_isv','$referencia_pago1','$referencia_pago2','$referencia_pago3')";
 						$query = $mysqli->query($insert);
-				}*/
+				}
 
 				//CONSULTAMOS EL NUMERO DE LA MUESTRA
 				$query_muestra = "SELECT muestras_id
