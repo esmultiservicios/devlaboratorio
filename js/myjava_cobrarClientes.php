@@ -129,7 +129,7 @@ var listar_cuentas_por_cobrar_clientes = function(){
 			{"defaultContent":"<button class='table_reportes abono_factura btn btn-dark ocultar'><span class='fa fa-money-bill-wave fa-solid'></span></button>"},
 			{"defaultContent":"<button class='table_reportes print_factura btn btn-dark ocultar'><span class='fas fa-file-download fa-lg'></span></button>"}
 		],
-		"order": [[2, 'asc']],
+		"order": [],
 		"pageLength": 10,
         "lengthMenu": lengthMenu,
 		"stateSave": true,

@@ -15,7 +15,7 @@ $usuario = $_SESSION['colaborador_id'];
 $empresa_id = $_SESSION['empresa_id'];
 $fecha_registro = date('Y-m-d H:i:s');
 $fact_eval = $_POST['fact_eval'] ?? 1;
-$activo = 1;
+$activo = 2;
 $estado = 4;  // ESTADO FACTURA CREDITO
 $importe = 0;
 $tipo = '';
@@ -43,7 +43,7 @@ if ($tipo_factura === '1') {
 // CONSULTAR DATOS DE LA SECUENCIA DE FACTURACION
 $query_secuencia = "SELECT secuencia_facturacion_id, prefijo, siguiente AS 'numero', rango_final, fecha_limite, incremento, relleno
 	FROM secuencia_facturacion
-	WHERE activo = '$activo' AND empresa_id = '$empresa_id' AND documento_id = '$documento'";
+	WHERE activo = 1 AND empresa_id = '$empresa_id' AND documento_id = '$documento'";
 
 $result = $mysqli->query($query_secuencia) or die($mysqli->error);
 $consulta2 = $result->fetch_assoc();
@@ -277,14 +277,15 @@ if ($pacientes_id != '' && $colaborador_id != '' && $servicio_id != '') {
 
 				$mysqli->query($update);
 
-				// CONSULTAMOS EL NUMERO QUE SIGUE DE EN LA SECUENCIA DE FACTURACION
+				// CONSULTAMOS EL NUMERO QUE SIGUE EN LA SECUENCIA DE FACTURACION
 				$numero_secuencia_facturacion = correlativoSecuenciaFacturacion('siguiente', 'secuencia_facturacion', 'documento_id = 1 AND activo = 1');
 
 				// ACTUALIZAMOS LA SECUENCIA DE FACTURACION AL NUMERO SIGUIENTE
 				$update = "UPDATE secuencia_facturacion 
-			SET 
-				siguiente = '$numero_secuencia_facturacion' 
-			WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
+				SET 
+					siguiente = '$numero_secuencia_facturacion'
+				WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
+
 				$mysqli->query($update);
 
 				// CONSULTAMOS SI LA FACTURA YA EXISTE EN CUENTAS POR COBRAR
@@ -475,15 +476,15 @@ if ($pacientes_id != '' && $colaborador_id != '' && $servicio_id != '') {
 
 				$mysqli->query($update);
 
-				// CONSULTAMOS EL NUMERO QUE SIGUE DE EN LA SECUENCIA DE FACTURACION
-				$numero_secuencia_facturacion = correlativoSecuenciaFacturacion('siguiente', 'secuencia_facturacion', 'documento_id = 4 AND activo = 1');
+				// CONSULTAMOS EL NUMERO QUE SIGUE EN LA SECUENCIA DE FACTURACION
+				$numero_secuencia_facturacion = correlativoSecuenciaFacturacion('siguiente', 'secuencia_facturacion', 'documento_id = 1 AND activo = 1');
 
 				// ACTUALIZAMOS LA SECUENCIA DE FACTURACION AL NUMERO SIGUIENTE
 				$update = "UPDATE secuencia_facturacion 
-			SET 
-				siguiente = '$numero_secuencia_facturacion' 
-			WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
-				$mysqli->query($update);
+				SET 
+					siguiente = '$numero_secuencia_facturacion' 
+				WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
+					$mysqli->query($update);
 
 				// CONSULTAMOS SI LA FACTURA YA EXISTE EN CUENTAS POR COBRAR
 				$query_factura_cxc = "SELECT cobrar_clientes_id FROM cobrar_clientes WHERE facturas_id = '$facturas_id'";

@@ -500,7 +500,7 @@ var listar_reporte_facturacion = function(){
 			{
 				"data": "tipo_documento",
 				"render": function(data, type, row) {
-					var color = data === 'Contado' ? '#FFA500' : '#9b59b6'; // Naranja para "Contado" y morado para "Crédito"
+					var color = data === 'Contado' ? '#119FB8' : '#FF781E'; // Naranja para "Contado" y morado para "Crédito"
 					return '<span class="tipo-documento" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
 				}
 			},
@@ -512,12 +512,31 @@ var listar_reporte_facturacion = function(){
 			{"data": "precio"},
 			{"data": "isv_neto"},	
 			{"data": "descuento"},
-			{"data": "total"},
+			{
+				"data": "total",
+				"render": function(data, type, row) {
+					var estadoPago = row.estado_pago;  // Obtenemos el estado_pago desde la fila
+					var color = 'black';  // Color por defecto
+					var tooltip = 'Estado desconocido'; // Mensaje por defecto
+
+					// Cambiar el color según el estado_pago
+					if (estadoPago === 'Pago Pendiente') {
+						color = '#CC2936';  // Rojo si está pendiente
+						tooltip = 'Pago Pendiente.';
+					} else if (estadoPago === 'Pagada') {
+						color = '#A5BF13';  // Verde si está pagada
+						tooltip = 'Pago Realizado.';
+					}
+
+					// Retornar el total con el color correspondiente
+					return '<span data-toggle="tooltip" data-placement="top" title="' + tooltip + '" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + '; font-weight: bold; cursor: help;">' + data + '</span>';
+				}
+			},
 			{"data": "servicio"},						
             {
                 "data": "tipo_factura_agrupada",
                 "render": function(data, type, row) {
-                    var color = data === 'Grupal' ? 'green' : 'blue'; // Cambiar a los colores deseados
+                    var color = data === 'Grupal' ? 'green' : '#006992'; // Cambiar a los colores deseados
                     return '<span class="tipo-factura" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
                 }
             },
@@ -573,7 +592,8 @@ var listar_reporte_facturacion = function(){
             $('#footer-isv').html(formatter.format(totalISV));
             $('#footer-descuento').html(formatter.format(totalDescuento));
             $('#footer-neto').html(formatter.format(totalNeto));
-        },		
+        },	
+		"order": [],	
         "lengthMenu": lengthMenu20,
 		"stateSave": true,
 		"bDestroy": true,		
@@ -606,6 +626,12 @@ var listar_reporte_facturacion = function(){
 			}
 		]		
 	});	 
+
+	// Inicializar tooltips después de cada redibujado de la tabla
+	$('#dataTableReporteFacturacionMain').on('draw.dt', function() {
+		$('[data-toggle="tooltip"]').tooltip();
+	});
+
 	table_reporte_facturacion.search('').draw();
 	$('#buscar').focus();
 	

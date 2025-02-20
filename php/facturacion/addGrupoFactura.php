@@ -274,7 +274,8 @@ if($tamano_tabla >0){
 			$update = "UPDATE facturas_grupal
 				SET
 					importe = '$total_despues_isv',
-					usuario = '$usuario'
+					usuario = '$usuario',
+					secuencia_facturacion_id = '$secuencia_facturacion_id'
 				WHERE facturas_grupal_id = '$facturas_grupal_id'";
 
 			$mysqli->query($update);

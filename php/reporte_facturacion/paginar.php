@@ -109,7 +109,7 @@ $registro = "SELECT f.facturas_id AS 'facturas_id', f.fecha AS 'fecha', p.identi
 	INNER JOIN colaboradores AS c
 	ON f.colaborador_id = c.colaborador_id
 	INNER JOIN muestras AS m
-  ON f.muestras_id = m.muestras_id
+  	ON f.muestras_id = m.muestras_id
 	WHERE f.fecha BETWEEN '$fechai' AND '$fechaf' AND f.estado ".$in."
 	$busqueda_paciente
   $consulta_datos
@@ -223,4 +223,3 @@ echo json_encode($array);
 
 $result->free();//LIMPIAR RESULTADO
 $mysqli->close();//CERRAR CONEXIÓN
-?>

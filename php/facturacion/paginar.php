@@ -188,7 +188,7 @@ while($registro2 = $result->fetch_assoc()){
 	$total = ($neto_antes_isv + $isv_neto) - $descuento;
 
 	if($registro2['numero'] == 0){
-		$numero = "AÃºn no se ha generado";
+		$numero = "Aún no se ha generado";
 	}else{
 		$numero = $registro2['prefijo'].''.rellenarDigitos($registro2['numero'], $registro2['relleno']);
 	}

@@ -26,6 +26,7 @@ $busqueda_paciente = '';
 if ($pacientesIDGrupo != '') {
     $busqueda_paciente = "AND f.pacientes_id = '$pacientesIDGrupo'";
 }
+
 $consulta = "
 SELECT 
     f.facturas_id AS 'facturas_id', 
@@ -43,7 +44,6 @@ SELECT
     f.tipo_factura,
     m.number AS 'muestra',
     
-    -- Sumar importes y descuentos por factura
     CAST(SUM(fd.precio * fd.cantidad) AS DECIMAL(12,2)) AS 'total_precio',
     CAST(SUM(fd.cantidad) AS DECIMAL(12,2)) AS 'cantidad',
     CAST(SUM(fd.descuento) AS DECIMAL(12,2)) AS 'descuento',
@@ -52,12 +52,17 @@ SELECT
 
     CAST(SUM(fd.precio) AS DECIMAL(12,2)) AS 'precio',
 
-    -- Nueva columna que indica si la factura es Individual o Grupal
     (CASE 
         WHEN COUNT(DISTINCT f.facturas_id) > 1 THEN 'Grupal'
         ELSE 'Individual'
-    END) AS 'tipo_factura_agrupada' 
-    
+    END) AS 'tipo_factura_agrupada',
+
+    (CASE 
+        WHEN pay.estado IS NULL THEN 'Pago Pendiente' 
+        WHEN pay.estado = 1 THEN 'Pagada'
+        ELSE 'Cancelada'
+    END) AS 'estado_pago'
+
 FROM facturas AS f
 INNER JOIN pacientes AS p ON f.pacientes_id = p.pacientes_id
 INNER JOIN secuencia_facturacion AS sc ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
@@ -65,11 +70,12 @@ INNER JOIN servicios AS s ON f.servicio_id = s.servicio_id
 INNER JOIN colaboradores AS c ON f.colaborador_id = c.colaborador_id
 INNER JOIN muestras AS m ON f.muestras_id = m.muestras_id
 INNER JOIN facturas_detalle AS fd ON f.facturas_id = fd.facturas_id
+-- Cambié el alias de la tabla pagos a 'pay'
+LEFT JOIN pagos AS pay ON f.facturas_id = pay.facturas_id
 WHERE f.fecha BETWEEN '$fechai' AND '$fechaf' 
 AND f.estado $in
 $busqueda_paciente
-GROUP BY f.number  
-ORDER BY f.number DESC;
+GROUP BY f.number;
 ";
 
 $result = $mysqli->query($consulta) or die($mysqli->error);

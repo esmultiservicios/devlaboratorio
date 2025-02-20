@@ -233,7 +233,7 @@ echo $fecha_inicial;
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Tipo Pago</th>
+                  <th>Tipo</th>
                   <th>Muestra</th>  
                   <th>Factura</th>  
                   <th>Empresa</th>                              
@@ -250,13 +250,13 @@ echo $fecha_inicial;
               </thead>
               <tfoot>
                <tr>
-                    <th colspan="6"></th>
+                    <th colspan="7"></th>
                     <th colspan="1">Total:</th>
                     <th id="footer-importe"></th>
                     <th id="footer-isv"></th>
                     <th id="footer-descuento"></th>
                     <th id="footer-neto"></th>
-                    <th colspan="3"></th>
+                    <th colspan="2"></th>
                 </tr>               
             </tfoot>              
             </table>
