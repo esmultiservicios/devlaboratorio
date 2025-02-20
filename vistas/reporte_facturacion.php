@@ -233,9 +233,9 @@ echo $fecha_inicial;
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Tipo</th>
+                  <th>Factura</th>
                   <th>Muestra</th>  
-                  <th>Factura</th>  
+                  <th>Número</th>  
                   <th>Empresa</th>                              
                   <th>Identidad</th>                  
                   <th>Profesional</th>
