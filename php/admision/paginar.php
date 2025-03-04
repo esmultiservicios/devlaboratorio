@@ -62,6 +62,15 @@ $registro = "SELECT p.pacientes_id, CONCAT(p.nombre, ' ', p.apellido) AS 'nombre
   
 $result = $mysqli->query($registro);
 
+// Aquí actualizamos el texto del botón según el estado
+if ($estado == "1") {
+	$estado_label = "Inhabilitar";
+	$icon = "fa fa-ban";
+} else {
+	$estado_label = "Habilitar";
+	$icon = "fa fa-check";
+}
+
 $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
 	<tr>
 		<th width="2%">N°</th>
@@ -72,21 +81,12 @@ $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
 		<th width="5%">Teléfono 2</th>
 		<th width="18%">Correo</th>    
 		<th width="45%">Dirección</th>
-		<th width="9%">Inhabilitar</th>                        
+		<th width="9.69%">'.$estado_label.'</th>                       
 		<th width="6%">Muestras</th>
 		<th width="8%">Editar</th>
 		<th width="9%">Eliminar</th>
 	</tr>
 	';
-
-   // Aquí actualizamos el texto del botón según el estado
-   if ($estado == "1") {
-		$estado_label = "Inhabilitar";
-		$icon = "fa fa-ban";
-	} else {
-		$estado_label = "Habilitar";
-		$icon = "fa fa-check";
-	}
 
 $i=1;			
 while($registro2 = $result->fetch_assoc()){

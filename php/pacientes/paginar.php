@@ -62,6 +62,16 @@ ORDER BY expediente LIMIT $limit, $nroLotes
 
 $result = $mysqli->query($query);
 
+// Aquí actualizamos el texto del botón según el estado
+if ($estado == "1") {
+	$estado_label = "Inhabilitar";
+	$icon = "fa fa-ban";
+} else {
+	$estado_label = "Habilitar";
+	$icon = "fa fa-check";
+}
+
+
 $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
 		<tr>
 			<th width="1.69%">N°</th>
@@ -73,21 +83,12 @@ $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
 			<th width="7.69%">Correo</th>
 			<th width="17.69%">Dirección</th>
 			<th width="1.69%">Estado</th>
-			<th width="9.69%">Inhabilitar</th>  <!-- Ajuste aquí -->
+			<th width="9.69%">'.$estado_label.'</th>
 			<th width="7.69%">Ver Muestras</th>
 			<th width="7.69%">Editar RTN</th>
 			<th width="8.69%">Editar Cliente</th>
-			<th width="10.69%">Eliminar</th>  <!-- Ajuste aquí -->
+			<th width="10.69%">Eliminar</th>
 		</tr>';
-
-   // Aquí actualizamos el texto del botón según el estado
-   if ($estado == "1") {
-		$estado_label = "Inhabilitar";
-		$icon = "fa fa-ban";
-	} else {
-		$estado_label = "Habilitar";
-		$icon = "fa fa-check";
-	}
 
 $i=1;
 while($registro2 = $result->fetch_assoc()){
