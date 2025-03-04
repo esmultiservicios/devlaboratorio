@@ -992,6 +992,104 @@ function pagination(partida){
 	return false;
 }
 
+function DisableRegister(pacientes_id){	
+	var nombre_usuario = consultarNombre(pacientes_id);
+	var expediente_usuario = consultarExpediente(pacientes_id);
+	var estado = $('#form_main #estado').val();
+	var estado_label = '';
+	var dato
+
+	if (estado == "1") {
+		estado_label = "Inhabilitar"; // Cambiado "habilitar" a "Inhabilitar"
+	} else {
+		estado_label = "Habilitar"; // Cambiado "inhabilitar" a "Habilitar"
+	}
+
+	console.log(estado_label); // Puedes ver el valor en la consola para verificar
+
+	if(expediente_usuario == 0){
+		dato = nombre_usuario;
+	}else{
+		dato = nombre_usuario + " (Expediente: " + expediente_usuario + ")";
+	}
+
+	swal({
+		title: "¿Estas seguro?",
+		text: "¿Desea " + estado_label + " este cliente: " + dato + "?",
+		content: {
+			element: "input",
+			attributes: {
+				placeholder: "Comentario",
+				type: "text",
+			},
+		},
+		icon: "warning",
+		buttons: {
+			cancel: "Cancelar",
+			confirm: {
+				text: "¡Sí, " + estado_label + " el cliente!",
+				closeModal: false,
+			},
+		},
+		dangerMode: true,
+		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
+		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera								
+	}).then((value) => {
+		if (value === null || value.trim() === "") {
+			return false;
+		}
+		deshabilitarPaciente(pacientes_id, value, estado);
+	});	
+}
+
+function deshabilitarPaciente(pacientes_id, comentario, estado) {
+    var url = '<?php echo SERVERURL; ?>php/admision/DeshabilitarPaciente.php';	
+	estado = (estado === null || estado === '') ? 1 : estado;
+
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: { 
+			pacientes_id: pacientes_id, 
+			comentario: comentario,
+			estado: estado
+		},
+        dataType: "json",
+        success: function(response) {
+            if (response.status === "success") {
+                swal({
+                    title: "Éxito",
+                    text: response.message,
+                    icon: "success",
+                    timer: 3000,
+                    closeOnEsc: false,
+                    closeOnClickOutside: false
+                });
+                pagination(1);
+            } else {
+                swal({
+                    title: "Error",
+                    text: response.message,
+                    icon: "error",
+                    dangerMode: true,
+                    closeOnEsc: false,
+                    closeOnClickOutside: false
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: "Error",
+                text: "Error en la comunicación con el servidor",
+                icon: "error",
+                dangerMode: true,
+                closeOnEsc: false,
+                closeOnClickOutside: false
+            });
+        }
+    });
+}
+
 function historiaMuestrasPacientes(partida){
 	var url = '<?php echo SERVERURL; ?>php/admision/paginar_historico_muestras_pacientes.php';
 	var url = '<?php echo SERVERURL; ?>php/admision/paginar_historico_muestras_pacientes.php';

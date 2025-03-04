@@ -63,20 +63,31 @@ $registro = "SELECT p.pacientes_id, CONCAT(p.nombre, ' ', p.apellido) AS 'nombre
 $result = $mysqli->query($registro);
 
 $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
-		  <tr>
-			<th width="2.09%">N°</th>
-			<th width="9.09%">RTN</th>
-			<th width="17.09%">Cliente</th>
-			<th width="3.09%">Edad</th>
-			<th width="6.09%">Teléfono 1</th>
-			<th width="6.09%">Teléfono 2</th>
-			<th width="17.09%">Correo</th>	
-			<th width="15.09%">Dirección</th>						
-			<th width="8.09%">Ver Mas</th>
-			<th width="7.09%">Editar</th>
-			<th width="8.09%">Eliminar</th>
-		   </tr>';
-			
+	<tr>
+		<th width="2%">N°</th>
+		<th width="8%">RTN</th>
+		<th width="18%">Cliente</th>
+		<th width="4%">Edad</th>
+		<th width="5%">Teléfono 1</th>
+		<th width="5%">Teléfono 2</th>
+		<th width="18%">Correo</th>    
+		<th width="45%">Dirección</th>
+		<th width="9%">Inhabilitar</th>                        
+		<th width="6%">Muestras</th>
+		<th width="8%">Editar</th>
+		<th width="9%">Eliminar</th>
+	</tr>
+	';
+
+   // Aquí actualizamos el texto del botón según el estado
+   if ($estado == "1") {
+		$estado_label = "Inhabilitar";
+		$icon = "fa fa-ban";
+	} else {
+		$estado_label = "Habilitar";
+		$icon = "fa fa-check";
+	}
+
 $i=1;			
 while($registro2 = $result->fetch_assoc()){
 	$tabla = $tabla.'<tr>
@@ -87,9 +98,12 @@ while($registro2 = $result->fetch_assoc()){
 	   <td>'.$registro2['telefono'].'</td>   
 	   <td>'.$registro2['telefono1'].'</td>
 	   <td>'.$registro2['correo'].'</td>  
-	   <td>'.$registro2['direccion'].'</td>     
+	   <td>'.$registro2['direccion'].'</td>   
 	   <td>
-	   		<a class="btn btn btn-secondary ml-2" href="javascript:showModalhistoriaMuestrasEmpresas('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="fas fa-eye fa-lg"></i> Ver Más</a>
+	   		<a class="btn btn btn-secondary ml-2" href="javascript:DisableRegister('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="'.$icon.' fa-lg"></i> '.$estado_label.'</a>
+	   </td>
+	   <td>
+	   		<a class="btn btn btn-secondary ml-2" href="javascript:showModalhistoriaMuestrasEmpresas('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="fas fa-eye fa-lg"></i> Ver</a>
 	   </td>
 	   <td>
 	   		<a class="btn btn btn-secondary ml-2" href="javascript:editarRegistro('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="fas fa-user-edit fa-lg"></i> Editar</a>
@@ -103,11 +117,11 @@ while($registro2 = $result->fetch_assoc()){
 
 if($nroProductos == 0){
 	$tabla = $tabla.'<tr>
-	   <td colspan="13" style="color:#C7030D">No se encontraron resultados</td>
+	   <td colspan="134 style="color:#C7030D">No se encontraron resultados</td>
 	</tr>';		
 }else{
    $tabla = $tabla.'<tr>
-	  <td colspan="13"><b><p ALIGN="center">Total de Registros Encontrados '.number_format($nroProductos).'</p></b>
+	  <td colspan="14"><b><p ALIGN="center">Total de Registros Encontrados '.number_format($nroProductos).'</p></b>
    </tr>';		
 }
 
@@ -120,4 +134,3 @@ echo json_encode($array);
 
 $result->free();//LIMPIAR RESULTADO
 $mysqli->close();//CERRAR CONEXIÓN	
-?>

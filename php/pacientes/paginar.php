@@ -59,24 +59,35 @@ FROM pacientes
 WHERE estado = '$estado' AND tipo_paciente_id = '$tipo_paciente' AND (expediente LIKE '$dato%' OR nombre LIKE '$dato%' OR apellido LIKE '$dato%' OR CONCAT(apellido,' ',nombre) LIKE '%$dato%' OR CONCAT(nombre,' ',apellido) LIKE '%$dato%' OR telefono1 LIKE '$dato%' OR identidad LIKE '$dato%')
 ORDER BY expediente LIMIT $limit, $nroLotes
 ";
+
 $result = $mysqli->query($query);
 
 $tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
-					<tr>
-					   <th width="2.69%">N°</th>
-					   <th width="6.69%">Identidad</th>
-					   <th width="14.69%">Paciente</th>
-					   <th width="2.69%">Genero</th>
-					   <th width="6.69%">Telefono1</th>
-					   <th width="5.69">Telefono2</th>
-					   <th width="7.69%">Correo</th>
-					   <th width="18.69%">Dirección</th>
-					   <th width="2.69%">Estado</th>
-					   <th width="7.69%">Ver Muestras</th>
-					   <th width="7.69%">Editar RTN</th>
-					   <th width="7.69%">Editar Cliente</th>
-					   <th width="8.69%">Eliminar</th>
-					</tr>';
+		<tr>
+			<th width="1.69%">N°</th>
+			<th width="6.69%">Identidad</th>
+			<th width="14.69%">Paciente</th>
+			<th width="2.69%">Genero</th>
+			<th width="5.69%">Telefono1</th>
+			<th width="5.69%">Telefono2</th>
+			<th width="7.69%">Correo</th>
+			<th width="17.69%">Dirección</th>
+			<th width="1.69%">Estado</th>
+			<th width="9.69%">Inhabilitar</th>  <!-- Ajuste aquí -->
+			<th width="7.69%">Ver Muestras</th>
+			<th width="7.69%">Editar RTN</th>
+			<th width="8.69%">Editar Cliente</th>
+			<th width="10.69%">Eliminar</th>  <!-- Ajuste aquí -->
+		</tr>';
+
+   // Aquí actualizamos el texto del botón según el estado
+   if ($estado == "1") {
+		$estado_label = "Inhabilitar";
+		$icon = "fa fa-ban";
+	} else {
+		$estado_label = "Habilitar";
+		$icon = "fa fa-check";
+	}
 
 $i=1;
 while($registro2 = $result->fetch_assoc()){
@@ -91,6 +102,9 @@ while($registro2 = $result->fetch_assoc()){
 	   <td>'.$registro2['email'].'</td>
 	   <td>'.$registro2['localidad'].'</td>
 	   <td>'.$registro2['estado'].'</td>
+	   <td>
+	   		<a class="btn btn btn-secondary ml-2" href="javascript:DisableRegister('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="'.$icon.' fa-lg"></i> '.$estado_label.'</a>
+	   </td>	   
 	   <td>
 		   <a class="btn btn btn-secondary ml-2" href="javascript:modal_muestras('.$registro2['pacientes_id'].');void(0);"><div class="sb-nav-link-icon"></div><i class="far fa-eye fa-lg"></i> Ver</a>
 	   </td>
@@ -124,4 +138,3 @@ $array = array(0 => $tabla,
 			   1 => $lista);
 
 echo json_encode($array);
-?>
