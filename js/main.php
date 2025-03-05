@@ -1,4 +1,21 @@
 <script>
+getGithubVersion();
+
+function getGithubVersion() {
+    var url = '<?php echo SERVERURL; ?>php/main/getGithubVersion.php';
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+            $('#version').text(response);
+        },
+        error: function() {
+            $('#version').text('Error al obtener la versión.');
+        }
+    });
+}
+
 function reportePDF(agenda_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4 || getUsuarioSistema() == 5 || getUsuarioSistema() == 8 || getUsuarioSistema() == 9){
 	    window.open('<?php echo SERVERURL; ?>php/citas/tickets.php?agenda_id='+agenda_id);
