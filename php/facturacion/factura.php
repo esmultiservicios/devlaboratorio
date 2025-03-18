@@ -26,10 +26,11 @@
 			<td class="info_empresa">
 				<div>
 					<span class="h2"><?php echo $consulta_registro['empresa']; ?></span>
-					<p><?php echo $consulta_registro['direccion_empresa']; ?></p>
-					<p>Teléfono: <?php echo $consulta_registro['empresa_telefono']; ?></p>
-					<p>Correo: <?php echo $consulta_registro['empresa_correo']; ?></p>
-					<p><?php echo $consulta_registro['otra_informacion']; ?></p>
+					<p><?= nl2br(htmlspecialchars($consulta_registro['direccion_empresa'], ENT_QUOTES, 'UTF-8')) ?></p>
+					<p>Teléfono: <?= htmlspecialchars($consulta_registro['empresa_telefono'], ENT_QUOTES, 'UTF-8') ?></p>
+					<p>Celular: <?= nl2br(htmlspecialchars($consulta_registro['empresa_celular'], ENT_QUOTES, 'UTF-8')) ?></p>
+					<p>Correo: <?= htmlspecialchars($consulta_registro['empresa_correo'], ENT_QUOTES, 'UTF-8') ?></p>
+					<p><?= nl2br(htmlspecialchars($consulta_registro['otra_informacion'], ENT_QUOTES, 'UTF-8')) ?></p>
 				</div>
 			</td>
 			<td class="info_factura">
