@@ -2038,7 +2038,7 @@ function viewReport(params) {
     var url = "<?php echo defined('SERVERURLWINDOWS') ? SERVERURLWINDOWS : ''; ?>";
 
     // Verificar si la URL está vacía o no definida
-    if (!url || url.trim() === "") {
+    /*if (!url || url.trim() === "") {
         swal({
             title: "Error de conexión",
             content: {
@@ -2054,7 +2054,7 @@ function viewReport(params) {
             closeOnClickOutside: false
         });
         return;
-    }
+    }*/
 
 	// Verificar si la URL responde antes de enviar el formulario
 	fetch(url, { method: "HEAD" })
