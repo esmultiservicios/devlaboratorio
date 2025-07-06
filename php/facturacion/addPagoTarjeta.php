@@ -1,4 +1,5 @@
 <?php
+//addPagoTarjeta.php
 session_start();   
 include "../funtions.php";
 	

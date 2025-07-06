@@ -108,7 +108,7 @@ function modal_eliminar(categoria_id){
 					visible: true
 				},
 				confirm: {
-					text: "¡Sí, Eliminar el usuario!",
+					text: "¡Sí, Eliminar el registro!",
 				}
 			},
 			dangerMode: true,

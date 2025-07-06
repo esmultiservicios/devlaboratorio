@@ -206,7 +206,7 @@ while($registro2 = $result->fetch_assoc()){
 			  <a style="text-decoration:none;" data-toggle="tooltip" data-placement="right" title = "Enviar Factura" href="javascript:mailBillGroup('.$registro2['facturas_id'].');void(0);" class="far fa-paper-plane fa-lg"></a>
 			</td>
 			<td>
-			  <a style="text-decoration:none;" data-toggle="tooltip" data-placement="right" title = "Crear Factura" href="javascript:printBillGroup('.$registro2['facturas_id'].');void(0);" class="fas fa-print fa-lg"></a>
+			  <a style="text-decoration:none;" data-toggle="tooltip" data-placement="right" title = "Crear Factura" href="javascript:printBillGroup('.$registro2['numero'].');void(0);" class="fas fa-print fa-lg"></a>
 			</td>
             <td>'.$cierre_.'</td>
 			<td>

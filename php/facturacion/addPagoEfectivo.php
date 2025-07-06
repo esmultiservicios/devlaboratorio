@@ -1,4 +1,5 @@
 <?php
+//addPagoEfectivo.php
 session_start();   
 include "../funtions.php";
 	

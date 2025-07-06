@@ -1,4 +1,5 @@
 <?php
+//addPagoCheque.php
 session_start();   
 include "../funtions.php";
 	

@@ -504,3 +504,115 @@ Se debe agregar unos codigos que estan en myjava_facturacion.php inician con Men
         max-height: 60px; /* Ajusta la altura máxima para pantallas más grandes */
     }
 }
+
+/* CAMPANA DE NOTIFICACIONES - ESTILOS MEJORADOS */
+.navbar-nav .nav-item.dropdown.mx-1 {
+    display: none; /* Oculto por defecto */
+    margin-right: 0.5rem;
+}
+
+#notification-bell {
+    position: relative;
+    font-size: 1.25rem;
+    color: #adb5bd;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+#notification-bell:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+#notification-bell i.fas.fa-bell {
+    color: #ffc107; /* Color amarillo para cuando hay notificaciones */
+}
+
+/* Badge de notificación */
+#notification-count {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.65rem;
+    min-width: 18px;
+    height: 18px;
+    display: none; /* Oculto por defecto */
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    font-weight: bold;
+    border: 2px solid #343a40;
+}
+
+/* Dropdown de notificaciones */
+.notification-dropdown {
+    min-width: 280px;
+    max-width: 350px;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.notification-dropdown .dropdown-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.notification-dropdown .dropdown-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f1f1;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+    color: #212529;
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-dropdown .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+/* Badge en dropdown */
+#notification-dropdown-count {
+    font-size: 0.75rem;
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #dc3545;
+    color: white;
+    font-weight: bold;
+    margin-left: auto;
+    padding: 0 0.35em;
+}
+
+/* Efecto para nuevas notificaciones */
+.new-notification {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}

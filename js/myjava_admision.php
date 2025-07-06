@@ -391,22 +391,16 @@ function paginationMuestras(partida){
 		async: true,
 		data:'partida='+partida+'&estado='+estado+'&cliente='+cliente+'&tipo_muestra='+tipo_muestra+'&fecha_i='+fecha_i+'&fecha_f='+fecha_f+'&dato='+dato,
 		beforeSend: function(){
-			swal({
-				title: "",
-				text: "Por favor espere...",
-				icon: '<?php echo SERVERURL; ?>img/gif-load.gif',
-				closeOnConfirm: false,
-				showConfirmButton: false,
-				imageSize: '150x150',
-			});
+			showLoading("Por favor espere...");
 		},
 		success:function(data){
 			var array = eval(data);
 			$('#agrega-registros_muestras').html(array[0]);
 			$('#pagination_muestras').html(array[1]);
-			swal.close();
+			hideLoading();
 		},
 		error : function(){
+			hideLoading();
 			swal({
 				title: 'Error',
 				text: 'No se enviaron los datos, favor corregir',
@@ -521,45 +515,17 @@ function anularRegistroMuestra(muestras_id, pacientes_id, comentario){
 		data:'muestras_id='+muestras_id+'&pacientes_id='+pacientes_id+'&comentario='+comentario,
 		success: function(registro){
 			if(registro == 1){
-				swal({
-					title: "Success",
-					text: "Registro anulado correctamente",
-					icon: "success",
-					timer: 3000, //timeOut for auto-clos
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("success", "Success", "Registro anulado correctamente");
 				paginationMuestras(1);
 			   return false;
 			}else if(registro == 2){
-				swal({
-					title: "Error",
-					text: "No se puede anular este registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "Lo sentimos ya existe una factura para esta muestra, por favor anule la factrua antes de proceder.");
 	           return false;
 			}else if(registro == 3){
-				swal({
-					title: "Error",
-					text: "Lo sentimos ya existe una factura para esta muestra, por favor anule la factrua antes de proceder.",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "No se puede anular este registro");
 	           return false;
 			}else{
-				swal({
-					title: "Error",
-					text: "Error al completar el registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "Error al completar el registro");
 	           return false;
 			}
   		}
@@ -575,45 +541,17 @@ function eliminarRegistroMuestra(muestras_id, pacientes_id, comentario){
 		data:'muestras_id='+muestras_id+'&pacientes_id='+pacientes_id+'&comentario='+comentario,
 		success: function(registro){
 			if(registro == 1){
-				swal({
-					title: "Success",
-					text: "Registro eliminado correctamente",
-					icon: "success",
-					timer: 3000, //timeOut for auto-clos
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera										
-				});
+				showNotify("success", "Success", "Registro eliminado correctamente");
 				paginationMuestras(1);
 			   return false;
 			}else if(registro == 2){
-				swal({
-					title: "Error",
-					text: "No se puede eliminar este registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "No se puede eliminar este registro");
 	           return false;
 			}else if(registro == 3){
-				swal({
-					title: "Error",
-					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "No se puede eliminar este registro, cuenta con información almacenada");
 	           return false;
 			}else{
-				swal({
-					title: "Error",
-					text: "Error al completar el registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "Error al completar el registro");
 	           return false;
 			}
   		}
@@ -629,45 +567,17 @@ function eliminarRegistro(pacientes_id, comentario){
 		data:'id='+pacientes_id+'&comentario='+comentario,
 		success: function(registro){
 			if(registro == 1){
-				swal({
-					title: "Success",
-					text: "Registro eliminado correctamente",
-					type: "success",
-					timer: 3000, //timeOut for auto-clos
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera										
-				});
+				showNotify("success", "Success", "Registro eliminado correctamente");
 				pagination(1);
 			   return false;
 			}else if(registro == 2){
-				swal({
-					title: "Error",
-					text: "No se puede eliminar este registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "No se puede eliminar este registro");
 	           return false;
 			}else if(registro == 3){
-				swal({
-					title: "Error",
-					text: "No se puede eliminar este registro, cuenta con información almacenada",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "No se puede eliminar este registro, cuenta con información almacenada");
 	           return false;
 			}else{
-				swal({
-					title: "Error",
-					text: "Error al completar el registro",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
+				showNotify("error", "Error", "Error al completar el registro");
 	           return false;
 			}
   		}
@@ -740,35 +650,14 @@ function deshabilitarPaciente(pacientes_id, comentario, estado) {
         dataType: "json",
         success: function(response) {
             if (response.status === "success") {
-                swal({
-                    title: "Éxito",
-                    text: response.message,
-                    icon: "success",
-                    timer: 3000,
-                    closeOnEsc: false,
-                    closeOnClickOutside: false
-                });
+				showNotify("success", "Success", response.message);
                 pagination(1);
             } else {
-                swal({
-                    title: "Error",
-                    text: response.message,
-                    icon: "error",
-                    dangerMode: true,
-                    closeOnEsc: false,
-                    closeOnClickOutside: false
-                });
+				showNotify("error", "Error", response.message);
             }
         },
         error: function() {
-            swal({
-                title: "Error",
-                text: "Error en la comunicación con el servidor",
-                icon: "error",
-                dangerMode: true,
-                closeOnEsc: false,
-                closeOnClickOutside: false
-            });
+			showNotify("error", "Error", "Error en la comunicación con el servidor");
         }
     });
 }
@@ -808,7 +697,7 @@ function modal_eliminar(pacientes_id){
 			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera								
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
-				swal("¡Necesita escribir algo!", { icon: "error" });
+				showNotify("error", "Error", "¡Necesita escribir algo!");
 				return false;
 			}
 			eliminarRegistro(pacientes_id, value);
@@ -847,20 +736,13 @@ function modal_eliminar(pacientes_id){
 			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera								
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
-				swal("¡Necesita escribir algo!", { icon: "error" });
+				showNotify("error", "Error", "¡Necesita escribir algo!");
 				return false;
 			}
 			eliminarRegistro(pacientes_id, value);
 		});
   }else{
-	  swal({
-			title: 'Acceso Denegado',
-			text: 'No tiene permisos para ejecutar esta acción',
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-	  });
+	showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
 	 return false;
   }
 }
@@ -900,12 +782,12 @@ function modal_eliminarMuestras(pacientes_id, muestras_id){
 			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera								
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
-				swal("¡Necesita escribir algo!", { icon: "error" });
+				showNotify("error", "Error", "¡Necesita escribir algo!");
 				return false;
 			}
 			eliminarRegistroMuestra(muestras_id, pacientes_id, value);
 		});
-  }else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
+	}else if (consultarExpediente(pacientes_id) == 0 && (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3)){
 			var nombre_usuario = consultarNombre(pacientes_id);
 			var expediente_usuario = consultarExpediente(pacientes_id);
 			var dato;
@@ -939,21 +821,14 @@ function modal_eliminarMuestras(pacientes_id, muestras_id){
 				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera									
 			}).then((value) => {
 				if (value === null || value.trim() === "") {
-					swal("¡Necesita escribir algo!", { icon: "error" });
+					showNotify("error", "Error", "¡Necesita escribir algo!");
 					return false;
 				}
 				eliminarRegistroMuestra(muestras_id, pacientes_id, value);
 			});
-	  swal({
-			title: 'Acceso Denegado',
-			text: 'No tiene permisos para ejecutar esta acción',
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
-	  });
-	 return false;
-  }
+			showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
+			return false;
+	}
 }
 
 function modalAnularMuestras(pacientes_id, muestras_id){
@@ -991,7 +866,7 @@ function modalAnularMuestras(pacientes_id, muestras_id){
 			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera				
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
-				swal("¡Necesita escribir algo!", { icon: "error" });
+				showNotify("error", "Error", "¡Necesita escribir algo!");
 				return false;
 			}
 			anularRegistroMuestra(muestras_id, pacientes_id, value);
@@ -1030,20 +905,13 @@ function modalAnularMuestras(pacientes_id, muestras_id){
 			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera				
 		}).then((value) => {
 			if (value === null || value.trim() === "") {
-				swal("¡Necesita escribir algo!", { icon: "error" });
+				showNotify("error", "Error", "¡Necesita escribir algo!");
 				return false;
 			}
 			anularRegistroMuestra(muestras_id, pacientes_id, value);
 		});
 	}else{
-		swal({
-			title: 'Acceso Denegado',
-			text: 'No tiene permisos para ejecutar esta acción',
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
-		});
+		showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
 		return false;
   }
 }
@@ -1127,14 +995,7 @@ function editarRegistro(pacientes_id){
 			}
 		});
 	}else{
-		swal({
-			title: 'Acceso Denegado',
-			text: 'No tiene permisos para ejecutar esta acción',
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
-		});
+		showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
 		return false;
 	}
 }
@@ -1206,14 +1067,7 @@ function showModalhistoriaMuestrasEmpresas(pacientes_id){
 		 historiaMuestrasEmpresas(1);
 	 }
 	}else{
-	 swal({
-		 title: "Acceso Denegado",
-		 text: "No tiene permisos para ejecutar esta acción",
-		 icon: "error",
-		 dangerMode: true,
-		 closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-		 closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
-	 });
+		showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
 	}
 }
 
@@ -1322,15 +1176,6 @@ $('#formulario_admision #add_empresa').on('click', function(e){
 
 $('#form_main_admision #ver_muestras').on('click', function(e){
 	e.preventDefault();
-	/*swal({
-		title: "Opción en desarrollo",
-		text: "Opción en desarrollo",
-		icon: "warning",
-		dangerMode: true,
-		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera			
-	});*/
-
 	$('#main_facturacion').hide();
 	$('#facturacion').hide();
 	$('#main_admision_muestras').show();
@@ -1477,37 +1322,16 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
 			if(getEstadoFactura(muestras_id) === ""){
 				createBill(muestras_id, producto, nombre_producto, precio_venta, isv);
 			}else{
-				swal({
-					title: "Error",
-					text: "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al módulo de facturación y realice le cobro de esta.",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
-				});
+				showNotify("error", "Error", "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al módulo de facturación y realice le cobro de esta.");
 			}
 		}else if($('#form_main_admision_muestras #estado').val() == 1){
 			if(getEstadoFactura(muestras_id) == ""){
 				createBill(muestras_id, producto, nombre_producto, precio_venta, isv);
 			}else{
-				swal({
-					title: "Error",
-					text: "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al reporte de facturación para buscarla, puede usar el numero de muestra como referencia.",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
+				showNotify("error", "Error", "Lo sentimos esta factura ya ha sido emitida, por favor diríjase al reporte de facturación para buscarla, puede usar el numero de muestra como referencia.");
 			}
 		}else{
-			swal({
-				title: "Error",
-				text: "Lo sentimos no puede generar factura a una muestra anulada.",
-				icon: "error",
-				dangerMode: true,
-				closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-				closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-			});
+			showNotify("error", "Error", "Lo sentimos no puede generar factura a una muestra anulada.");
 		}
 }
 
@@ -1607,26 +1431,13 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
 					}
 				});
 			}else{
-				swal({
-					title: "Error",
-					text: "Lo sentimos esta factura ya ha sido generada, por favor diríjase al módulo de facturación y realice le cobro de esta",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
+				showNotify("error", "Error", "Lo sentimos esta factura ya ha sido generada, por favor diríjase al módulo de facturación y realice le cobro de esta");
 			}
 	}else{
-		swal({
-			title: "Acceso Denegado",
-			text: "No tiene permisos para ejecutar esta acción",
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-		});
+		showNotify("error", "Acceso Denegado", "No tiene permisos para ejecutar esta acción");
 	}
 }
+
 
 //INICIO MODAL PAGOS
 function pago(facturas_id){
@@ -1682,7 +1493,6 @@ function pago(facturas_id){
 }
 
 $(document).ready(function(){
-
 	$("#tab1").on("click", function(){
 		$("#modal_pagos").on('shown.bs.modal', function(){
            $(this).find('#formTarjetaBill #efectivo_bill').focus();

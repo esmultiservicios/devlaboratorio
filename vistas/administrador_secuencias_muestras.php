@@ -162,7 +162,7 @@ $mysqli->close();//CERRAR CONEXIÓN
           <div class="col-md-12 mb-3">
 					  <label for="comentario">Comentario</label>
 					  <div class="input-group mb-3">
-						   <input type="text" name="comentario" id="comentario" class="form-control" placeholder="Comentario" maxlength="150" oninput="if(this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" required>
+						   <input type="text" name="comentario" id="comentario" class="form-control" placeholder="Comentario" maxlength="150" oninput="if(this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);">
 							<div class="input-group-append">
 								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-comments fa-lg"></i></span>
 							</div>

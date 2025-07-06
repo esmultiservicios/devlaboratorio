@@ -2098,4 +2098,65 @@ function enviarFormulario(url, params, ventana) {
     document.body.removeChild(form);
 }
 //FIN FUNCION PARA OBTENER REPORTES DESDE IIS
+
+function cargarContadorFacturasPendientes() {
+    $.ajax({
+        url: '<?php echo SERVERURL; ?>php/DetallesFacturacion/contarFacturasPendientesClientes.php',
+        type: 'POST',
+        dataType: 'json',
+        success: function(response) {
+            if (response.type === 'success') {
+                const $campana = $('#notification-bell').closest('li');
+                const $contadorCampana = $('#notification-count');
+                const $contadorDropdown = $('#notification-dropdown-count');
+                const $badgeUsuario = $('#badge-facturas-pendientes-dropdown');
+
+                if (response.total_pendientes > 0) {
+                    // Mostrar campana y elementos relacionados
+                    $campana.show();
+                    $contadorCampana.text(response.total_pendientes).show();
+                    $contadorDropdown.text(response.total_pendientes);
+                    $badgeUsuario.text(response.total_pendientes).show();
+
+                    // Cambiar icono a campana llena (con notificaciones)
+                    $('#notification-bell i')
+                        .removeClass('far fa-bell')
+                        .addClass('fas fa-bell');
+
+                    // Efecto visual para nuevas notificaciones
+                    $campana.addClass('new-notification');
+                    setTimeout(() => {
+                        $campana.removeClass('new-notification');
+                    }, 2000);
+
+                } else {
+                    // Ocultar campana y elementos relacionados
+                    $campana.hide();
+                    $contadorCampana.hide();
+                    $badgeUsuario.hide();
+
+                    // Cambiar icono a campana vacía (sin notificaciones)
+                    $('#notification-bell i')
+                        .removeClass('fas fa-bell')
+                        .addClass('far fa-bell');
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al cargar notificaciones:", error);
+        }
+    });
+}
+
+// Inicializar y actualizar periódicamente
+$(() => {
+    // Cargar al inicio
+    cargarContadorFacturasPendientes();
+    
+    // Actualizar cada 5 minutos (300,000 ms)
+    setInterval(cargarContadorFacturasPendientes, 300000);
+    
+    // Opcional: Actualizar al hacer foco en la ventana
+    $(window).on('focus', cargarContadorFacturasPendientes);
+});
 </script>

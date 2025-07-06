@@ -1,6 +1,68 @@
 <?php
+//funtions.php
 require_once "conf/configAPP.php";
 date_default_timezone_set('America/Tegucigalpa');   
+
+class mainModel
+{
+	public function connection()
+	{
+		// Desactiva la conexión persistente removiendo 'p:'
+		$mysqli = new mysqli(SERVER, USER, PASS);
+	
+		if ($mysqli->connect_errno) {
+			throw new Exception('Fallo al conectar a MySQL, connection: ' . $mysqli->connect_error);
+		}
+	
+		$mysqli->set_charset('utf8mb4'); // Usamos utf8mb4 para soporte completo de caracteres
+	
+		// Intenta seleccionar la base de datos
+		if (!$mysqli->select_db($GLOBALS['db'])) {
+			throw new Exception('Error al seleccionar la base de datos desde mainModel.php, connection: ' . $mysqli->error);
+		}
+	
+		return $mysqli;
+	}
+
+	public function connectToDatabase($config) {
+		$conn = new mysqli($config['host'], $config['user'], $config['pass'], $config['name']);
+		
+		if ($conn->connect_error) {
+			error_log("Error conectando a DB cliente: " . $conn->connect_error);
+			return false;
+		}
+		
+		$conn->set_charset("utf8");
+		return $conn;
+	}
+
+	public static function validarSesion() {
+		// Forzar reinicio de sesión si hay problemas
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_start([
+				'name' => 'SD_SESSION',
+				'cookie_lifetime' => 86400,
+				'cookie_secure' => true,
+				'cookie_httponly' => true,
+				'cookie_samesite' => 'Lax'
+			]);
+		}
+	
+		if (empty($_SESSION['colaborador_id'])) {
+			// Destruir sesión inválida
+			session_unset();
+			session_destroy();
+			
+			return [
+				"error" => true,
+				"mensaje" => "Sesión expirada o inválida",
+				"redireccion" => SERVERURL."login/"
+			];
+		}
+		
+		return ["error" => false];
+	}
+}
 
 function dia_nombre($fecha){
    $dia_nombre = '';
@@ -110,47 +172,55 @@ function getRandom($word, $length, $number){
 	return $word.$number; 
 }
 
-function testingMail($servidor, $correo, $contraseña, $puerto, $SMTPSecure, $CharSet){
-	$cabeceras = "MIME-Version: 1.0\r\n";
-	$cabeceras .= "Content-type: text/html; charset=iso-8859-1\r\n";
-	$cabeceras .= "From: $correo \r\n";
-			
-	//incluyo la clase phpmailer	
-	include_once("phpmailer/class.phpmailer.php");
-	include_once("phpmailer/class.smtp.php");
-		
-	$mail = new PHPMailer(); //creo un objeto de tipo PHPMailer
-	$mail->SMTPDebug = 1;
-	$mail->IsSMTP(); //protocolo SMTP
-	$mail->IsHTML(true);
-	$mail->CharSet = $CharSet;
-	$mail->SMTPAuth = true;//autenticación en el SMTP
-	$mail->SMTPSecure = $SMTPSecure;
-	$mail->SMTPOptions = array(
-		'ssl' => array(
-			'verify_peer' => false,
-			'verify_peer_name' => false,
-			'allow_self_signed' => true
-		)
-	);		
-	$mail->Host = $servidor;//servidor de SMTP de gmail
-	$mail->Port = $puerto;//puerto seguro del servidor SMTP de gmail
-	$mail->From = $correo; //Remitente del correo
-	$mail->FromName = $correo; //Remitente del correo
-	$mail->AddAddress($correo);// Destinatario
-	$mail->Username = $correo;//Aqui pon tu correo
-	$mail->Password = $contraseña;//Aqui pon tu contraseña de gmail
-	
-
-	$mail->WordWrap = 50; //No. de columnas
-			
-	if($mail->SmtpConnect()){ //enviamos el correo por PHPMailer
-		echo 1;//MENSAJE ENVIADO	   
-	}else{
-		echo 2;//MENSAJE NO ENVIADO	   
-	}			   
-
-}	
+function testingMail($servidor, $correo, $contraseña, $puerto, $SMTPSecure, $CharSet) {
+    // Incluir las clases principales de PHPMailer 5.5
+    require_once("phpmailer/PHPMailer.php");
+    require_once("phpmailer/SMTP.php");
+    require_once("phpmailer/Exception.php"); // Para manejo de excepciones
+    
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true); // Namespace completo
+    
+    try {
+        // Configuración del servidor SMTP
+        $mail->SMTPDebug = 2; // Usar valor numérico directamente (2 = conexión + cliente + servidor)
+        $mail->isSMTP();
+        $mail->Host = $servidor;
+        $mail->SMTPAuth = true;
+        $mail->Username = $correo;
+        $mail->Password = $contraseña;
+        $mail->SMTPSecure = $SMTPSecure; // 'tls' o 'ssl'
+        $mail->Port = $puerto;
+        
+        // Configuración SSL para desarrollo
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+        
+        // Configuración del correo
+        $mail->setFrom($correo, 'Sistema de Prueba');
+        $mail->addAddress($correo); // Enviar a sí mismo para prueba
+        $mail->isHTML(true);
+        $mail->CharSet = $CharSet;
+        $mail->Subject = 'Prueba de configuración SMTP';
+        $mail->Body = '<h1>Esta es una prueba de correo</h1><p>Si recibes este mensaje, la configuración SMTP es correcta.</p>';
+        $mail->AltBody = 'Esta es una prueba de correo (versión texto plano)';
+        
+        // Intento de envío
+        $mail->send();
+        return 1; // Éxito
+        
+    } catch (PHPMailer\PHPMailer\Exception $e) {
+        error_log("Error PHPMailer: " . $e->getMessage());
+        return 2; // Fallo
+    } catch (Exception $e) {
+        error_log("Error general: " . $e->getMessage());
+        return 2; // Fallo
+    }
+}
 		
 function getRealIP(){
 	if (isset($_SERVER["HTTP_CLIENT_IP"])){
@@ -324,6 +394,105 @@ function connect_mysqli(){
     $mysqli->set_charset("utf8mb4"); // utf8mb4 es mejor que utf8 para caracteres especiales como emojis
 
     return $mysqli;
+}
+
+function obtenerSecuenciaActiva($mysqli, $empresa_id, $documento_id) {
+    $query = "SELECT secuencia_facturacion_id 
+              FROM secuencia_facturacion 
+              WHERE activo = 1 
+              AND empresa_id = ? 
+              AND documento_id = ?
+              ORDER BY secuencia_facturacion_id DESC 
+              LIMIT 1";
+    $stmt = $mysqli->prepare($query);
+    $stmt->bind_param("ii", $empresa_id, $documento_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($result->num_rows == 0) {
+        return null;
+    }
+    
+    return $result->fetch_assoc()['secuencia_facturacion_id'];
+}
+
+function bloquearYObtenerSecuencia($mysqli, $secuencia_id) {
+    // Iniciar transacción
+    $mysqli->begin_transaction();
+    
+    try {
+        // Bloquear y obtener la secuencia con FOR UPDATE
+        $query = "SELECT secuencia_facturacion_id, prefijo, siguiente, incremento, relleno, rango_final 
+                  FROM secuencia_facturacion 
+                  WHERE secuencia_facturacion_id = ?
+                  FOR UPDATE";
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("i", $secuencia_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if($result->num_rows == 0) {
+            return [
+                'error' => true,
+                'mensaje' => 'No se encontró la secuencia de facturación'
+            ];
+        }
+        
+        $secuenciaData = $result->fetch_assoc();
+        
+        // Verificar rango final
+        $siguiente_numero = $secuenciaData['siguiente'] + $secuenciaData['incremento'];
+        if($siguiente_numero > $secuenciaData['rango_final']) {
+            return [
+                'error' => true,
+                'mensaje' => 'Se ha alcanzado el límite del rango autorizado de facturación'
+            ];
+        }
+        
+        return [
+            'error' => false,
+            'data' => $secuenciaData
+        ];
+    } catch (Exception $e) {
+        $mysqli->rollback();
+        return [
+            'error' => true,
+            'mensaje' => 'Error al obtener secuencia: ' . $e->getMessage()
+        ];
+    }
+}
+
+function obtenerNumeroFactura($mysqli, $empresa_id, $documento_id) {
+    // Primero obtener la secuencia activa correcta
+    $secuencia_id = obtenerSecuenciaActiva($mysqli, $empresa_id, $documento_id);
+    
+    if(!$secuencia_id) {
+        return [
+            'error' => true,
+            'mensaje' => 'No se encontró una secuencia de facturación activa para este tipo de documento'
+        ];
+    }
+    
+    // Obtener y bloquear la secuencia
+    $secuenciaResult = bloquearYObtenerSecuencia($mysqli, $secuencia_id);
+    
+    if($secuenciaResult['error']) {
+        return $secuenciaResult;
+    }
+    
+    $secuenciaData = $secuenciaResult['data'];
+    
+    return [
+        'error' => false,
+        'data' => [
+            'secuencia_facturacion_id' => $secuenciaData['secuencia_facturacion_id'],
+            'numero' => $secuenciaData['siguiente'],
+            'incremento' => $secuenciaData['incremento'],
+            'prefijo' => $secuenciaData['prefijo'],
+            'relleno' => $secuenciaData['relleno'],
+            'rango_final' => $secuenciaData['rango_final']
+        ]
+    ];
 }
 	
 //FUNCION QUE PERMITE GENERAR LA CONTRASEÑA DE FORMA AUTOMATICA
@@ -691,6 +860,56 @@ function historial_acceso($comentario, $nombre_host, $colaborador_id){
   
   $result->free();//LIMPIAR RESULTADO
   $result_acceso->free();//LIMPIAR RESULTADO
+}
+
+function obtenerIdYNumeroFactura($mysqli, $empresa_id, $documento_id, $activo = 1) {
+    $mysqli->autocommit(false);
+    
+    try {
+        // 1. Bloquear y obtener los valores actuales
+        $query = "SELECT secuencia_facturacion_id, siguiente 
+                  FROM secuencia_facturacion 
+                  WHERE empresa_id = ? 
+                    AND documento_id = ? 
+                    AND activo = ?
+                  LIMIT 1 FOR UPDATE";
+        
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("iii", $empresa_id, $documento_id, $activo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows == 0) {
+            throw new Exception("No se encontró secuencia activa");
+        }
+        
+        $row = $result->fetch_assoc();
+        $secuencia_facturacion_id = $row['secuencia_facturacion_id'];
+        $numero = $row['siguiente'];
+        
+        // 2. Actualizar el número siguiente (incremento mínimo de 1)
+        $update = "UPDATE secuencia_facturacion 
+                   SET siguiente = siguiente + 1
+                   WHERE secuencia_facturacion_id = ?";
+        
+        $stmt = $mysqli->prepare($update);
+        $stmt->bind_param("i", $secuencia_facturacion_id);
+        $stmt->execute();
+        
+        // 3. Confirmar transacción
+        $mysqli->commit();
+        
+        return [
+            'secuencia_facturacion_id' => $secuencia_facturacion_id,
+            'numero' => $numero
+        ];
+        
+    } catch (Exception $e) {
+        $mysqli->rollback();
+        throw new Exception("Error al obtener número: " . $e->getMessage());
+    } finally {
+        $mysqli->autocommit(true);
+    }
 }
 
 function sendSMS($to, $mensaje){

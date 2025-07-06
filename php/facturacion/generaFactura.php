@@ -50,19 +50,19 @@ $result = $mysqli->query($query) or die($mysqli->error);
 
 // OBTENER DETALLE DE FACTURA
 $query_factura_detalle = "SELECT p.nombre AS 'producto', 
-		SUM(fd.cantidad) AS 'cantidad', 
-		fd.precio AS 'precio', 
-		SUM(fd.descuento) AS 'descuento', 
-		fd.productos_id  AS 'productos_id', 
-		SUM(fd.isv_valor) AS 'isv_valor', 
-		CONCAT(p1.nombre, ' ', p1.apellido) AS 'paciente'
-	FROM facturas_detalle AS fd
-	INNER JOIN productos AS p ON fd.productos_id = p.productos_id
-	INNER JOIN facturas AS f ON fd.facturas_id = f.facturas_id
-	LEFT JOIN muestras_hospitales AS mh ON f.muestras_id = mh.muestras_id
-	LEFT JOIN pacientes AS p1 ON mh.pacientes_id = p1.pacientes_id
-	WHERE fd.facturas_id = '$noFactura'
-	GROUP BY fd.productos_id";
+        fd.cantidad AS 'cantidad', 
+        fd.precio AS 'precio', 
+        fd.descuento AS 'descuento', 
+        fd.productos_id AS 'productos_id', 
+        fd.isv_valor AS 'isv_valor', 
+        CONCAT(p1.nombre, ' ', p1.apellido) AS 'paciente'
+    FROM facturas_detalle AS fd
+    INNER JOIN productos AS p ON fd.productos_id = p.productos_id
+    INNER JOIN facturas AS f ON fd.facturas_id = f.facturas_id
+    LEFT JOIN muestras_hospitales AS mh ON f.muestras_id = mh.muestras_id
+    LEFT JOIN pacientes AS p1 ON mh.pacientes_id = p1.pacientes_id
+    WHERE fd.facturas_id = '$noFactura'"; // Eliminé el GROUP BY
+	
 $result_factura_detalle = $mysqli->query($query_factura_detalle) or die($mysqli->error);
 
 $abono = 0;
