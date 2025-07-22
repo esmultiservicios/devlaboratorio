@@ -1,4 +1,3 @@
-//script_css.php
 <link rel="shortcut icon" href="<?php echo SERVERURL; ?>img/cami.png" type="text/css" media="screen">	
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>bootstrap/css/bootstrap.min.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>css/notyf.min.css" type="text/css" media="screen">		

@@ -80,9 +80,26 @@ $('.FormularioAjax').submit(function (e) {
 				success: function (data) {
 					var datos = eval(data);
 					swal.close();
+					// Obtener el ID del modal desde datos[7]
+					var modalId = datos[7];
+
+					// Verificar si está definido y cerrar el modal
+					if (modalId) {
+						var modal = document.getElementById(modalId);
+						if (modal) {
+							// Cierra el modal (asumiendo que estás usando Bootstrap)
+							var bootstrapModal = bootstrap.Modal.getInstance(modal);
+							if (bootstrapModal) {
+								bootstrapModal.hide();
+							} else {
+								// Si no hay una instancia existente, crea una y la cierra
+								new bootstrap.Modal(modal).hide();
+							}
+						}
+					}
 
 					if (datos[0] == "Error") {
-						showNotify(datos[2], datos[0], datos[1]);											
+						showNotify(datos[2], datos[0], datos[1]);									
 					} else if (datos[0] == "Guardar") {
 						showNotify(datos[2], datos[0], datos[1]);
 					} else {
