@@ -87,13 +87,17 @@ $('.FormularioAjax').submit(function (e) {
 					if (modalId) {
 						var modal = document.getElementById(modalId);
 						if (modal) {
-							// Cierra el modal (asumiendo que estás usando Bootstrap)
-							var bootstrapModal = bootstrap.Modal.getInstance(modal);
+							// Bootstrap 4.6 usa jQuery, así que puedes hacerlo de estas formas:
+							
+							// Opción 1: Usando jQuery (recomendado para Bootstrap 4)
+							$(modal).modal('hide');
+							
+							// O Opción 2: Vanilla JS (si prefieres no usar jQuery)
+							var bootstrapModal = $(modal).data('bs.modal');
 							if (bootstrapModal) {
 								bootstrapModal.hide();
 							} else {
-								// Si no hay una instancia existente, crea una y la cierra
-								new bootstrap.Modal(modal).hide();
+								$(modal).modal('hide');
 							}
 						}
 					}
@@ -404,6 +408,10 @@ function showNotify(type, title, message) {
     } else {
         console.error('Tipo de notificación no válido');
     }
+
+	if (typeof swal !== 'undefined' && typeof swal.close === 'function') {
+		swal.close();
+	}
 }
 
 //INICIO BUSCAR DATOS EN TABLA

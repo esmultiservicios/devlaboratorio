@@ -540,7 +540,7 @@ function deleteBill(facturas_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 		swal({
 			title: "¿Estas seguro?",
-			text: "¿Desea anular la factura para el paciente: " + getNumeroNombrePaciente(facturas_id) + "?",
+			text: "¿Desea eliminar la factura para el paciente: " + getNumeroNombrePaciente(facturas_id) + "?",
 			icon: "warning",
 			buttons: {
 				cancel: {
@@ -548,7 +548,7 @@ function deleteBill(facturas_id){
 					visible: true
 				},
 				confirm: {
-					text: "¡Si, deseo anular la factura!",
+					text: "¡Si, deseo eliminar la factura!",
 				}
 			},
 			dangerMode: true,
