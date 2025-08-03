@@ -413,7 +413,8 @@ if($query){
 			11 => $producto,
 			12 => $nombre_producto,
 			13 => $precio_venta,
-			14 => $isv
+			14 => $isv,
+			15 => 'Muestra'
 		);
 	}else{
 		$datos = array(

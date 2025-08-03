@@ -462,37 +462,122 @@ function bloquearYObtenerSecuencia($mysqli, $secuencia_id) {
     }
 }
 
+/**
+ * Obtiene un número de factura, primero buscando en los fallidos y luego en la secuencia normal
+ */
 function obtenerNumeroFactura($mysqli, $empresa_id, $documento_id) {
-    // Primero obtener la secuencia activa correcta
-    $secuencia_id = obtenerSecuenciaActiva($mysqli, $empresa_id, $documento_id);
-    
-    if(!$secuencia_id) {
+    try {
+        // 1. Buscar un número fallido disponible
+        $sql_fallidos = "SELECT numero FROM secuencia_factura_fallida 
+                         WHERE empresa_id = ? AND documento_id = ? 
+                         ORDER BY numero ASC LIMIT 1 FOR UPDATE";
+        $stmt_fallidos = $mysqli->prepare($sql_fallidos);
+        $stmt_fallidos->bind_param("ii", $empresa_id, $documento_id);
+        $stmt_fallidos->execute();
+        $result_fallidos = $stmt_fallidos->get_result();
+
+        if ($result_fallidos->num_rows > 0) {
+            // 2. Si hay un número fallido, lo tomamos
+            $row = $result_fallidos->fetch_assoc();
+            $numero_usado = $row['numero'];
+            $stmt_fallidos->close();
+
+            // 3. Obtener la secuencia correspondiente para el prefijo y relleno
+            $sql_secuencia = "SELECT secuencia_facturacion_id, prefijo, relleno 
+                              FROM secuencia_facturacion 
+                              WHERE empresa_id = ? AND documento_id = ? AND activo = 1 
+                              LIMIT 1";
+            $stmt_secuencia = $mysqli->prepare($sql_secuencia);
+            $stmt_secuencia->bind_param("ii", $empresa_id, $documento_id);
+            $stmt_secuencia->execute();
+            $result_secuencia = $stmt_secuencia->get_result();
+            
+            if($result_secuencia->num_rows == 0) {
+                $stmt_secuencia->close();
+                return ['error' => true, 'mensaje' => 'No se encontró secuencia activa para esta empresa y documento'];
+            }
+            
+            $secuencia = $result_secuencia->fetch_assoc();
+            $stmt_secuencia->close();
+
+            // 4. Eliminar el número fallido para que no vuelva a usarse
+            $delete_sql = "DELETE FROM secuencia_factura_fallida 
+                           WHERE empresa_id = ? AND documento_id = ? AND numero = ?";
+            $delete_stmt = $mysqli->prepare($delete_sql);
+            $delete_stmt->bind_param("iii", $empresa_id, $documento_id, $numero_usado);
+            $delete_stmt->execute();
+            $delete_stmt->close();
+
+            return [
+                'error' => false,
+                'data' => [
+                    'secuencia_facturacion_id' => $secuencia['secuencia_facturacion_id'],
+                    'numero' => $numero_usado,
+                    'prefijo' => $secuencia['prefijo'] ?? '',
+                    'relleno' => $secuencia['relleno'] ?? '',
+                    'incremento' => 1, // Valor por defecto para números fallidos
+                    'rango_final' => 0 // No aplica para números fallidos
+                ]
+            ];
+        }
+        $stmt_fallidos->close();
+
+        // 5. Si no hay números fallidos, obtener el siguiente número de la secuencia normal
+        $sql = "SELECT secuencia_facturacion_id, prefijo, siguiente, rango_final, incremento, relleno 
+                FROM secuencia_facturacion 
+                WHERE empresa_id = ? AND documento_id = ? AND activo = 1 
+                LIMIT 1 
+                FOR UPDATE";
+        $stmt = $mysqli->prepare($sql);
+        $stmt->bind_param("ii", $empresa_id, $documento_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if($result->num_rows == 0) {
+            $stmt->close();
+            return ['error' => true, 'mensaje' => 'No se encontró secuencia activa'];
+        }
+        
+        $secuencia = $result->fetch_assoc();
+        $stmt->close();
+
+        $siguiente_numero = $secuencia['siguiente'];
+        
+        // 6. Verificar que no exceda el rango final
+        if ($siguiente_numero > $secuencia['rango_final']) {
+            return ['error' => true, 'mensaje' => 'Se ha alcanzado el límite del rango de numeración'];
+        }
+
+        // 7. Calcular el nuevo número
+        $nuevo_numero = $siguiente_numero + $secuencia['incremento'];
+        
+        // 8. Actualizar la secuencia
+        $update_sql = "UPDATE secuencia_facturacion SET siguiente = ? WHERE secuencia_facturacion_id = ?";
+        $update_stmt = $mysqli->prepare($update_sql);
+        $update_stmt->bind_param("ii", $nuevo_numero, $secuencia['secuencia_facturacion_id']);
+        
+        if(!$update_stmt->execute()) {
+            $update_stmt->close();
+            return ['error' => true, 'mensaje' => 'Error al actualizar secuencia'];
+        }
+        $update_stmt->close();
+
         return [
-            'error' => true,
-            'mensaje' => 'No se encontró una secuencia de facturación activa para este tipo de documento'
+            'error' => false,
+            'data' => [
+                'secuencia_facturacion_id' => $secuencia['secuencia_facturacion_id'],
+                'numero' => $siguiente_numero,
+                'incremento' => $secuencia['incremento'],
+                'prefijo' => $secuencia['prefijo'],
+                'relleno' => $secuencia['relleno'],
+                'rango_final' => $secuencia['rango_final']
+            ]
         ];
+
+    } catch (Exception $e) {
+        error_log("Error en obtenerNumeroFactura: " . $e->getMessage());
+        return ['error' => true, 'mensaje' => 'Error al generar número de factura: ' . $e->getMessage()];
     }
-    
-    // Obtener y bloquear la secuencia
-    $secuenciaResult = bloquearYObtenerSecuencia($mysqli, $secuencia_id);
-    
-    if($secuenciaResult['error']) {
-        return $secuenciaResult;
-    }
-    
-    $secuenciaData = $secuenciaResult['data'];
-    
-    return [
-        'error' => false,
-        'data' => [
-            'secuencia_facturacion_id' => $secuenciaData['secuencia_facturacion_id'],
-            'numero' => $secuenciaData['siguiente'],
-            'incremento' => $secuenciaData['incremento'],
-            'prefijo' => $secuenciaData['prefijo'],
-            'relleno' => $secuenciaData['relleno'],
-            'rango_final' => $secuenciaData['rango_final']
-        ]
-    ];
 }
 	
 //FUNCION QUE PERMITE GENERAR LA CONTRASEÑA DE FORMA AUTOMATICA

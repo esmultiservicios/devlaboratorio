@@ -220,6 +220,7 @@ $mysqli->close();//CERRAR CONEXIÓN
         <div id="grupo_facturacion" style="display:none;">
             <form class="FormularioAjax" id="formGrupoFacturacion" data-async data-target="#rating-modal" action=""
                 method="POST" data-form="" autocomplete="off" enctype="multipart/form-data">
+
                 <div class="form-group row">
                     <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
                         <button class="btn btn-primary" type="submit" id="validar" data-toggle="tooltip"
@@ -227,7 +228,30 @@ $mysqli->close();//CERRAR CONEXIÓN
                             <div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Registrar
                         </button>
                     </div>
+
+                    <!-- Contador de facturas - Fuera del button-group -->
+                    <div id="facturas-counter-2" class="counter-container counter-normal mt-2 mt-sm-0">
+                        <div class="counter-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="counter-content">
+                            <div id="counter-header" class="counter-header">
+                                <strong>TOTAL DISPONIBLE AUTORIZADO POR EL SAR</strong>
+                            </div>
+                            <div id="counter-status" class="counter-status status-normal">
+                                0 facturas disponibles
+                            </div>
+                            <div class="counter-number-container">
+                                <span id="counter-number">0</span>
+                            </div>
+                            <div id="counter-footer" class="counter-footer">
+                                <small>Rango autorizado: <span id="rango-inicial">0</span> al <span id="rango-final">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
                 <div class="form-group row">
                     <label for="inputCliente" class="col-sm-1 col-form-label-md">Empresa <span
                             class="priority">*<span /></label>

@@ -42,6 +42,8 @@ if($result_factura->num_rows>0){
     $fecha_factura = $consultaFactura['fecha'];
     $pacientes_id = $consultaFactura['pacientes_id'];
     $tipo_factura = $consultaFactura['tipo_factura'];
+    $tipo_factura = $consultaFactura['tipo_factura'];
+	$numero = $consultaFactura['number'];
 }
 
 if($tipo_factura == 2){
@@ -151,7 +153,8 @@ if($tipo_factura === "1"){
                 6 => $tipoLabel,
                 7 => "modal_grupo_pagos",
                 8 => $facturas_id,
-                9 => "Guardar"
+                9 => $numero,
+                10 => "Guardar"
             );
         }else{
             $datos = array(
@@ -243,7 +246,8 @@ if($tipo_factura === "1"){
                 6 => $tipoLabel,
                 7 => "modal_grupo_pagos",
                 8 => $facturas_id,
-                9 => "Guardar"
+                9 => $numero,
+                10 => "Guardar"
             );                
         }else{
             $datos = array(

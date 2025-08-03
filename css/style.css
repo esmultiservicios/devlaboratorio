@@ -616,3 +616,117 @@ Se debe agregar unos codigos que estan en myjava_facturacion.php inician con Men
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
+
+/* CONTADOR DE FACTURAS - ESTILOS MEJORADOS */
+.counter-container {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    border-left: 4px solid #dc3545;
+    min-width: 280px; /* Opcional: reducir si es necesario */
+    max-width: 400px; /* Aumentado de 350px a 400px */
+    margin-left: 10px; /* Cambiado de "auto" a un valor fijo */
+    height: auto;
+    line-height: 1.4;
+    animation: pulse-danger 1.5s infinite;
+    flex-shrink: 0; /* Evita que el contenedor se reduzca */
+}
+
+.counter-icon {
+    margin-right: 12px;
+    font-size: 22px;
+    color: #dc3545;
+}
+
+.counter-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.counter-header {
+    margin-bottom: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #dc3545;
+}
+
+.counter-status {
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: #6c757d;
+}
+
+#counter-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #212529;
+    margin: 3px 0;
+}
+
+.counter-footer {
+    font-size: 11px;
+    color: #6c757d;
+    margin-top: 3px;
+    padding-top: 4px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* ESTADOS Y ANIMACIONES */
+.counter-normal {
+    border-left-color: #28a745;
+    animation: pulse-normal 2s infinite;
+}
+.counter-normal .counter-icon,
+.counter-normal .counter-header {
+    color: #28a745;
+}
+
+.counter-warning {
+    border-left-color: #ffc107;
+    animation: pulse-warning 2s infinite;
+}
+.counter-warning .counter-icon,
+.counter-warning .counter-header {
+    color: #ffc107;
+}
+
+.counter-danger {
+    border-left-color: #dc3545;
+    animation: pulse-danger 1.5s infinite;
+}
+.counter-danger .counter-icon,
+.counter-danger .counter-header {
+    color: #dc3545;
+}
+
+/* ANIMACIONES */
+@keyframes pulse-danger {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.3); }
+    70% { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.3); }
+    70% { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+@keyframes pulse-normal {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.3); }
+    70% { box-shadow: 0 0 0 8px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .counter-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 10px 0;
+    }
+}

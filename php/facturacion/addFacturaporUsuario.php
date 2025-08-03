@@ -42,37 +42,18 @@ try {
         throw new Exception("Lo sentimos, el Paciente, Profesional o Servicio no pueden quedar en blanco");
     }
 
-    // OBTENER Y BLOQUEAR SECUENCIA DE FACTURACIÓN
-    $query_secuencia = "SELECT secuencia_facturacion_id, prefijo, siguiente AS 'numero', 
-                        rango_final, fecha_limite, incremento, relleno
-                        FROM secuencia_facturacion
-                        WHERE activo = 1 AND empresa_id = ? AND documento_id = ? 
-                        LIMIT 1 FOR UPDATE";
+    // OBTENER NÚMERO DE FACTURA USANDO LA NUEVA LÓGICA
+    $numeroFactura = obtenerNumeroFactura($mysqli, $empresa_id, $documento);
     
-    $stmt = $mysqli->prepare($query_secuencia);
-    $stmt->bind_param("ii", $empresa_id, $documento);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows == 0) {
-        throw new Exception("No se encontró una secuencia de facturación activa");
+    if($numeroFactura['error']) {
+        throw new Exception($numeroFactura['mensaje']);
     }
-    
-    $secuencia = $result->fetch_assoc();
-    $stmt->close();
 
-    $secuencia_facturacion_id = $secuencia['secuencia_facturacion_id'];
-    $prefijo = $secuencia['prefijo'];
-    $numero = $secuencia['numero'];
-    $rango_final = $secuencia['rango_final'];
-    $incremento = $secuencia['incremento'];
-    $no_factura = $prefijo."".str_pad($numero, $secuencia['relleno'], "0", STR_PAD_LEFT);
-
-    // VERIFICAR RANGO
-    $nuevo_numero = $numero + $incremento;
-    if ($nuevo_numero > $rango_final) {
-        throw new Exception("Se ha alcanzado el límite del rango autorizado de facturación");
-    }
+    $secuencia_facturacion_id = $numeroFactura['data']['secuencia_facturacion_id'];
+    $numero = $numeroFactura['data']['numero'];
+    $prefijo = $numeroFactura['data']['prefijo'];
+    $relleno = $numeroFactura['data']['relleno'];
+    $no_factura = $prefijo."".str_pad($numero, $relleno, "0", STR_PAD_LEFT);
 
     // VALIDAR DETALLES
     if (!isset($_POST['productName']) || empty($_POST['productName'][0]) || empty($_POST['quantity'][0]) || empty($_POST['price'][0])) {
@@ -92,10 +73,11 @@ try {
             WHERE facturas_id = ?";
 
     $stmt = $mysqli->prepare($update);
-    // Cambiar 'siiisiii' a 'siiisiiii' (añadir una 'i' adicional para el facturas_id)
     $stmt->bind_param('siiisiiii', $fecha, $tipo_factura, $numero, $secuencia_facturacion_id, $estado, $notes, $colaborador_id, $servicio_id, $facturas_id);
     
     if (!$stmt->execute()) {
+        // Registrar número como fallido si no se pudo actualizar
+        registrarNumeroFallido($mysqli, $empresa_id, $documento, $numero);
         throw new Exception("Error al actualizar la factura");
     }
     $stmt->close();
@@ -217,16 +199,6 @@ try {
     }
     $stmt->close();
 
-    // ACTUALIZAR SECUENCIA - IMPORTANTE: Solo si todo lo demás fue exitoso
-    $update = "UPDATE secuencia_facturacion SET siguiente = ? WHERE secuencia_facturacion_id = ?";
-    $stmt = $mysqli->prepare($update);
-    $stmt->bind_param("ii", $nuevo_numero, $secuencia_facturacion_id);
-    
-    if (!$stmt->execute()) {
-        throw new Exception("Error al actualizar secuencia de facturación");
-    }
-    $stmt->close();
-
     // REGISTRAR CUENTA POR COBRAR (SOLO SI NO EXISTE)
     $query_cxc = "SELECT cobrar_clientes_id FROM cobrar_clientes WHERE facturas_id = ?";
     $stmt = $mysqli->prepare($query_cxc);
@@ -278,3 +250,22 @@ try {
 }
 
 echo json_encode($datos);
+
+
+/**
+ * Registra un número de factura fallido para su posible reutilización
+ */
+function registrarNumeroFallido($conexion, $empresa_id, $documento_id, $numero) {
+    try {
+        $insert = "INSERT INTO secuencia_factura_fallida (empresa_id, documento_id, numero, fecha_registro)
+                   VALUES (?, ?, ?, NOW())";
+        $stmt = $conexion->prepare($insert);
+        $stmt->bind_param("iii", $empresa_id, $documento_id, $numero);
+        $stmt->execute();
+        $stmt->close();
+        return true;
+    } catch (Exception $e) {
+        error_log("Error al registrar número fallido: " . $e->getMessage());
+        return false;
+    }
+}

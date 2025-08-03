@@ -899,6 +899,7 @@ function pay(facturas_id){
 				$('#formulario_facturacion #colaborador_id').val(datos[3]);
 				$('#formulario_facturacion #colaborador_nombre').val(datos[4]);
 				$('#formulario_facturacion #servicio_id').val(datos[5]);
+				$('#formulario_facturacion #servicio_id').selectpicker('refresh');
 				$('#formulario_facturacion #notes').val(datos[6]);
 				$('#formulario_facturacion #paciente_muestra').val(datos[7]);
 				$('#formulario_facturacion #muestras_numero').val(datos[8]);
@@ -1068,92 +1069,131 @@ $('#formularioMuestras #buscar_paciente_consulta_muestras').on('click', function
 });
 
 function getTotalFacturasDisponibles(){
-	var url = '<?php echo SERVERURL; ?>php/facturacion/getTotalFacturasDisponibles.php';
+    var url = '<?php echo SERVERURL; ?>php/facturacion/getTotalFacturasDisponibles.php';
 
-	$.ajax({
-	   type:'POST',
-	   url:url,
-	   async: false,
-	   success:function(registro){
-			var valores = eval(registro);
-			var mensaje = "";
+    $.ajax({
+        type: 'POST',
+        url: url,
+        async: true,
+        dataType: 'json',
+        success: function(valores) {
+            // Función para formatear números
+            function formatNumber(num) {
+                num = parseInt(num, 10) || 0;
+                return num.toLocaleString('en-US');
+            }
 
-			if(valores[0] >=10 && valores[0] <= 30){
-				mensaje = "Total Facturas disponibles: " + valores[0];
+            // Procesar valores
+            var facturasDisponibles = parseInt(valores[0], 10) || 0;
+            var diasRestantes = parseInt(valores[1], 10) || 0;
+            var rangoFinal = formatNumber(valores[3] || "0");
+            var rangoInicial = formatNumber(valores[4] || "0");
 
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-warning");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-danger");
-
-				$("#mensajeFacturas").attr("disabled", true);
-				$("#formulario_facturacion #validar").attr("disabled", false);
-				$("#formulario_facturacion #cobrar").attr("disabled", false);
-				$("#formGrupoFacturacion #validar").attr("disabled", false);
-			}else if(valores[0] >=0 && valores[0] <= 9){
-				mensaje = "Total Facturas disponibles: " + valores[0];
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-				$("#mensajeFacturas").attr("disabled", true);
-				$("#formulario_facturacion #validar").attr("disabled", false);
-				$("#formulario_facturacion #cobrar").attr("disabled", false);
-				$("#formGrupoFacturacion #validar").attr("disabled", false);
-			}
-			else{
-				mensaje = "";
-
-				$("#formulario_facturacion #validar").attr("disabled", false);
-				$("#formulario_facturacion #cobrar").attr("disabled", false);
-				$("#formGrupoFacturacion #validar").attr("disabled", false);
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-			}
-
-			if(valores[0] ==0){
-				mensaje = "Total Facturas disponibles: " + valores[0];
-				mensaje += "<br/>Solo esta factura puede realizar";
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-				$("#mensajeFacturas").attr("disabled", true);
-				$("#formulario_facturacion #validar").attr("disabled", false);
-				$("#formulario_facturacion #cobrar").attr("disabled", false);
-				$("#formGrupoFacturacion #validar").attr("disabled", false);
-			}
-
-			if(valores[0] < 0){
-				mensaje = "No puede seguir facturando";
-
-				$("#formulario_facturacion #cobrar").attr("disabled", true);
-				$("#formulario_facturacion #validar").attr("disabled", true);
-				$("#formGrupoFacturacion #validar").attr("disabled", true);
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-			}
-
-			if(valores[1] == 1){
-				mensaje += "<br/>Su fecha límite es: " + valores[2];
-				$("#formulario_facturacion #validar").attr("disabled", false);
-				$("#formulario_facturacion #cobrar").attr("disabled", false);
-				$("#formGrupoFacturacion #validar").attr("disabled", false);
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-warning");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-danger");
-			}
-
-			if(valores[1] == 0){
-				mensaje += "<br/>Su fecha limite de facturación es hoy";
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-			}
-
-			if(valores[1] < 0){
-				mensaje += "<br/>Ya alcanzo su fecha límite";
-				$("#formulario_facturacion #validar").attr("disabled", true);
-				$("#formulario_facturacion #cobrar").attr("disabled", true);
-				$("#formGrupoFacturacion #validar").attr("disabled", true);
-				$("#mensajeFacturas").html(mensaje).addClass("alert alert-danger");
-				$("#mensajeFacturas").html(mensaje).removeClass("alert alert-warning");
-			}
-	   }
-	});
+            // Actualizar ambos contadores
+            updateCounter('facturas-counter-1', facturasDisponibles, diasRestantes, rangoInicial, rangoFinal);
+            updateCounter('facturas-counter-2', facturasDisponibles, diasRestantes, rangoInicial, rangoFinal);
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al obtener facturas disponibles:", error);
+            handleCounterError('facturas-counter-1');
+            handleCounterError('facturas-counter-2');
+        }
+    });
 }
 
-setInterval('getTotalFacturasDisponibles()',1000);
+// Función para actualizar un contador específico
+function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInicial, rangoFinal) {
+    // Elementos del DOM
+    var counter = $('#' + counterId);
+    var counterHeader = $('#' + counterId + ' #counter-header');
+    var counterStatus = $('#' + counterId + ' #counter-status');
+    var counterNumber = $('#' + counterId + ' #counter-number');
+    var counterFooter = $('#' + counterId + ' #counter-footer');
+    var counterIcon = $('#' + counterId + ' .counter-icon i');
+    
+    // Actualizar rangos
+    $('#' + counterId + ' #rango-inicial').text(rangoInicial);
+    $('#' + counterId + ' #rango-final').text(rangoFinal);
+    
+    // Determinar el estado
+    if(facturasDisponibles < 0 || diasRestantes < 0) {
+        // Estado: Límite excedido
+        counterHeader.html('<strong>LÍMITE AUTORIZADO EXCEDIDO</strong>');
+        counterStatus.html('Ha superado el máximo de facturas permitidas');
+        counterNumber.text('0');
+        counterFooter.html(`<small>Rango autorizado: ${rangoInicial} al ${rangoFinal}</small>`);
+        
+        counter.addClass('counter-danger').removeClass('counter-normal counter-warning');
+        counterIcon.removeClass().addClass('fas fa-ban').css('color', '#dc3545');
+        
+        $("#validar, #cobrar").prop("disabled", true).css({
+            'opacity': '0.6',
+            'cursor': 'not-allowed'
+        });
+    } 
+    else if(facturasDisponibles <= 10 || diasRestantes <= 3) {
+        // Estado: Alerta (quedan pocas)
+        counterHeader.html('<strong>ALERTA: FACTURAS DISPONIBLES</strong>');
+        counterStatus.html(`${formatNumber(facturasDisponibles)} restantes de ${rangoFinal}`);
+        counterNumber.text(formatNumber(facturasDisponibles));
+        counterFooter.html(`<small>Quedan ${diasRestantes} días para usar el rango autorizado</small>`);
+        
+        counter.addClass('counter-warning').removeClass('counter-normal counter-danger');
+        counterIcon.removeClass().addClass('fas fa-exclamation-triangle').css('color', '#ffc107');
+        
+        $("#validar, #cobrar").prop("disabled", false).css({
+            'opacity': '1',
+            'cursor': 'pointer'
+        });
+    }
+    else if(facturasDisponibles <= 30 || diasRestantes <= 7) {
+        // Estado: Advertencia
+        counterHeader.html('<strong>FACTURAS DISPONIBLES</strong>');
+        counterStatus.html(`${formatNumber(facturasDisponibles)} restantes de ${rangoFinal}`);
+        counterNumber.text(formatNumber(facturasDisponibles));
+        counterFooter.html(`<small>Rango autorizado: ${rangoInicial} al ${rangoFinal}</small>`);
+        
+        counter.addClass('counter-warning').removeClass('counter-normal counter-danger');
+        counterIcon.removeClass().addClass('fas fa-info-circle').css('color', '#ffc107');
+        
+        $("#validar, #cobrar").prop("disabled", false).css({
+            'opacity': '1',
+            'cursor': 'pointer'
+        });
+    }
+    else {
+        // Estado: Normal
+        counterHeader.html('<strong>TOTAL DISPONIBLE AUTORIZADO</strong>');
+        counterStatus.html(`${formatNumber(facturasDisponibles)} facturas disponibles`);
+        counterNumber.text(formatNumber(facturasDisponibles));
+        counterFooter.html(`<small>Rango autorizado: ${rangoInicial} al ${rangoFinal}</small>`);
+        
+        counter.addClass('counter-normal').removeClass('counter-warning counter-danger');
+        counterIcon.removeClass().addClass('fas fa-check-circle').css('color', '#28a745');
+        
+        $("#validar, #cobrar").prop("disabled", false).css({
+            'opacity': '1',
+            'cursor': 'pointer'
+        });
+    }
+}
+
+// Función para manejar errores
+function handleCounterError(counterId) {
+    $('#' + counterId + ' #counter-header').html('<strong>ERROR DE CONEXIÓN</strong>');
+    $('#' + counterId + ' #counter-status').text('No se pueden cargar los datos').addClass('status-danger');
+    $('#' + counterId + ' #counter-number').text('0');
+}
+
+// Función para formatear números (extraída para reutilización)
+function formatNumber(num) {
+    num = parseInt(num, 10) || 0;
+    return num.toLocaleString('en-US');
+}
+
+// Inicializar
+$(function () {
+    getTotalFacturasDisponibles();
+    setInterval(getTotalFacturasDisponibles, 60000);
+});
 </script>

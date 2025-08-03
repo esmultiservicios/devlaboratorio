@@ -80,6 +80,12 @@ $('.FormularioAjax').submit(function (e) {
 				success: function (data) {
 					var datos = eval(data);
 					swal.close();
+					// Verifica si datos es un array y tiene suficientes elementos
+					if (!Array.isArray(datos)) {
+						console.error("La respuesta no es un array:", datos);
+						return;
+					}				
+
 					// Obtener el ID del modal desde datos[7]
 					var modalId = datos[7];
 
@@ -177,7 +183,7 @@ $('.FormularioAjax').submit(function (e) {
 					}
 
 					if (datos[6] == "PagosGrupal") {
-						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						printBillGroup(datos[9]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
 						limpiarTabla();
 						pagination(1);
 						volver();
@@ -187,7 +193,7 @@ $('.FormularioAjax').submit(function (e) {
 					}
 
 					if (datos[6] == "PagosGrupalCredito") {
-						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						printBillGroup(datos[9]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
 						limpiarTabla();
 						pagination(1);
 						volver();
@@ -216,7 +222,7 @@ $('.FormularioAjax').submit(function (e) {
 					}
 
 					if (datos[6] == "PagosCXCGrupal") {
-						printBillGroup(datos[8]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
+						printBillGroup(datos[9]); //LLAMAMOS LA FUNCION PARA IMPRIMIR LA FACTURA
 						limpiarTabla();
 						pagination(1);
 						volver();
@@ -230,7 +236,7 @@ $('.FormularioAjax').submit(function (e) {
 					}
 
 					if (datos[6] == "formPacientesAdmision") {
-						createBill(datos[10], datos[11], datos[12], datos[13], datos[14]);//LLAMAMOS LA FACTURA
+						createBill(datos[10], datos[11], datos[12], datos[13], datos[14], datos[15]);//LLAMAMOS LA FACTURA
 					}
 
 					if (datos[9] == "Eliminar") {
@@ -801,6 +807,8 @@ $(function () {
 		trigger: "hover"
 	})
 });
+
+
 
 /*
 //INICIO MENU FORM PAGOS FACTURAS

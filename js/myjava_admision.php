@@ -1335,7 +1335,7 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
 		}
 }
 
-function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
+function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, muestra){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 			if(getFacturaEmision(muestras_id) == ""){
 				$('#formulario_facturacion')[0].reset();
@@ -1355,6 +1355,7 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
 						$('#formulario_facturacion #colaborador_id').val(datos[3]);
 						$('#formulario_facturacion #colaborador_nombre').val(datos[4]);
 						$('#formulario_facturacion #servicio_id').val(datos[5]);
+						$('#formulario_facturacion #servicio_id').selectpicker('refresh');
 						$('#formulario_facturacion #material_enviado_muestra').val(datos[6]);
 						$('#formulario_facturacion #paciente_muestra_codigo').val(datos[7]);
 						$('#formulario_facturacion #paciente_muestra').val(datos[8]);
@@ -1364,6 +1365,13 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
 						$('#formulario_facturacion #validar').attr("disabled", false);
 						$('#formulario_facturacion #addRows').attr("disabled", false);
 						$('#formulario_facturacion #removeRows').attr("disabled", false);
+
+						$('#cobrar').hide();
+
+						if(muestra === "Muestra"){
+							$('.counter-container').hide();
+						}
+
 						$('#formulario_facturacion #validar').show();
 						$('#formulario_facturacion #editar').hide();
 						$('#formulario_facturacion #eliminar').hide();
@@ -1391,6 +1399,9 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv){
 						$('#formulario_facturacion #invoiceItem #price_0').val(precio_venta);
 						$('#formulario_facturacion #invoiceItem #total_0').val(precio_venta);
 
+						if(muestra === "Muestra"){
+							$('#facturas-counter').hide();
+						}							
 
 						var porcentaje_isv = 0;
 						var porcentaje_calculo = 0;

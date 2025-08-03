@@ -2,61 +2,56 @@
 session_start();   
 include "../funtions.php";
 
-//CONEXION A DB
+// CONEXION A DB
 $mysqli = connect_mysqli();
 
+// Inicializar variables
 $numeroAnterior = 0;
 $numeroMaximo = 0;
+$rangoInicial = 0;
 $contador = 0;
 $empresa_id = $_SESSION['empresa_id'];
+$fecha_limite = date('Y-m-d');
 
-$queryNumero = "SELECT siguiente AS 'numero'
-	FROM secuencia_facturacion
-	WHERE activo = 1 AND empresa_id = '$empresa_id'
-	ORDER BY siguiente DESC LIMIT 1";
-$resultNumero = $mysqli->query($queryNumero) or die($mysqli->error);
+$query = "SELECT 
+            siguiente AS 'numero', 
+            rango_inicial, 
+            rango_final,
+            fecha_limite,
+            DATEDIFF(fecha_limite, CURDATE()) AS 'dias_restantes'
+          FROM secuencia_facturacion
+          WHERE activo = 1 AND empresa_id = ?
+          ORDER BY siguiente DESC 
+          LIMIT 1";
 
-if($resultNumero->num_rows>0){
-	$consultaNumero = $resultNumero->fetch_assoc();
-	if($consultaNumero['numero'] == ""){
-		$numeroAnterior = 0;
-	}else{
-		$numeroAnterior = $consultaNumero['numero'];
-	}
+$stmt = $mysqli->prepare($query);
+$stmt->bind_param("i", $empresa_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if($result->num_rows > 0) {
+    $consulta = $result->fetch_assoc();
+    $numeroAnterior = empty($consulta['numero']) ? 0 : $consulta['numero'];
+    $rangoInicial = $consulta['rango_inicial'];
+    $numeroMaximo = $consulta['rango_final'];
+    $fecha_limite = $consulta['fecha_limite'];
+    $contador = $consulta['dias_restantes'];
 }
 
-//CONSULTAMOS EL NUMERO MAXIMO PERMITIDO
-$queryNumeroMaximo = "SELECT rango_final AS 'numero'
-	FROM secuencia_facturacion
-	WHERE activo = 1 AND empresa_id = '$empresa_id'";
-$resultNumeroMaximo = $mysqli->query($queryNumeroMaximo) or die($mysqli->error);
+// Calcular facturas pendientes
+$facturasPendientes = (int)$numeroMaximo - (int)$numeroAnterior;
 
-if($resultNumeroMaximo->num_rows>0){
-	$consultaNumeroMaximo = $resultNumeroMaximo->fetch_assoc();
-	$numeroMaximo = $consultaNumeroMaximo['numero'];
-}
-
-$facturasPendientes = $numeroMaximo - $numeroAnterior;
-
-//OBTENEMOS LA FECHA LIMITE DE FACTURACION
-$querFechaLimite= "SELECT DATEDIFF(fecha_limite, NOW()) AS 'dias_transcurridos', fecha_limite AS 'fecha_limite'
-	FROM secuencia_facturacion
-	WHERE activo = 1 AND empresa_id = '$empresa_id'";
-$resultNFechaLimite = $mysqli->query($querFechaLimite) or die($mysqli->error);
-
-if($resultNFechaLimite->num_rows>0){
-	$consultaFechaLimite = $resultNFechaLimite->fetch_assoc();
-	$contador = $consultaFechaLimite['dias_transcurridos'];
-	$fecha_limite = $consultaFechaLimite['fecha_limite'];
-}
-
+// Preparar respuesta
 $datos = array(
-	0 => $facturasPendientes,
-	1 => $contador,	
-	2 => $fecha_limite,		
+    0 => $facturasPendientes,
+    1 => $contador,    
+    2 => $fecha_limite,
+    3 => $numeroMaximo,
+    4 => $rangoInicial
 );
 
+header('Content-Type: application/json');
 echo json_encode($datos);
 
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+$stmt->close();
+$mysqli->close();

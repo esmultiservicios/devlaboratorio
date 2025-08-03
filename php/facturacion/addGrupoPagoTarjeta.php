@@ -218,7 +218,8 @@ if($tipo_factura === "1"){//NO ES NECESARIO EL ABONO
 				6 => $tipoLabel ,//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
 				7 => "modal_grupo_pagos", //Modals Para Cierre Automatico
 				8 => $facturas_id, //Modals Para Cierre Automatico
-				9 => "Guardar" //confirmButtonText
+                9 => $numero,
+                10 => "Guardar"
 			);
 		}else{//NO SE PUEDO ALMACENAR ESTE REGISTRO
 			$datos = array(
@@ -310,59 +311,8 @@ if($tipo_factura === "1"){//NO ES NECESARIO EL ABONO
 			$mysqli->query($update_ccx) or die($mysqli->error);	
 			
 			//SI EL SADO LLEGA A CERO PROCEDEMOS EN AGREGAR LA SECUENCIA DE FACTURACION ELIMINANDO LA DE LA FACTURA PROFORMA
-			if($nuevo_saldo == 0){
-				$documento = "1";//Factura Electronica
-				$query_secuencia = "SELECT secuencia_facturacion_id, prefijo, siguiente AS 'numero', rango_final, fecha_limite, incremento, relleno
-					FROM secuencia_facturacion
-					WHERE activo = '1' AND empresa_id = '$empresa_id' AND documento_id = '$documento'";
-
-				$result = $mysqli->query($query_secuencia) or die($mysqli->error);
-				$consulta2 = $result->fetch_assoc();
-
-				$secuencia_facturacion_id = "";
-				$numero = "0";
-
-				if($result->num_rows>0){
-					$secuencia_facturacion_id = $consulta2['secuencia_facturacion_id'];	
-					$numero = $consulta2['numero'];	
-					
-					//ACTUALIZAMOS LA FACTURA
-					$update_factura = "UPDATE facturas_grupal
-						SET
-							secuencia_facturacion_id  = '$secuencia_facturacion_id',
-							number = '$numero'
-						WHERE facturas_grupal_id = '$facturas_id'";
-					$mysqli->query($update_factura) or die($mysqli->error);	
-					
-					//CONSULTAMOS LOS NUMEROS DE FACTURAS QUE SE ATENDIERON
-					$query_facturas = "SELECT facturas_id
-						FROM facturas_grupal_detalle
-						WHERE facturas_grupal_id = '$facturas_id'";
-					$result_facturas = $mysqli->query($query_facturas) or die($mysqli->error);
-
-					while($registroFacturas = $result_facturas->fetch_assoc()){//INICIO CICLO WHILE
-						$facturaConsulta = $registroFacturas['facturas_id'];
-					
-						//ACTUALIZAMOS LA FACTURA
-						$update_factura = "UPDATE facturas
-							SET
-								secuencia_facturacion_id  = '$secuencia_facturacion_id',
-								number = '$numero'
-							WHERE facturas_id = '$facturaConsulta'";
-						$mysqli->query($update_factura) or die($mysqli->error);						
-					}					
-
-					$tipoLabel = "PagosCXCGrupal";	
-
-					//ACTUALIZAMOS LA SECUENCIA DE FACTURACION PARA LA FACTURA Electronica
-					$numero_secuencia_facturacion = correlativoSecuenciaFacturacion("siguiente", "secuencia_facturacion", "documento_id = 1 AND activo = 1");
-					
-					$update = "UPDATE secuencia_facturacion 
-					SET 
-						siguiente = '$numero_secuencia_facturacion' 
-					WHERE secuencia_facturacion_id = '$secuencia_facturacion_id'";
-					$mysqli->query($update);					
-				}
+			if($nuevo_saldo == 0){						
+				$tipoLabel = "PagosCXCGrupal";				
 			}	
 
 			$datos = array(

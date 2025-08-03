@@ -609,6 +609,7 @@ function getServicioMuestras(){
 	   success:function(data){
 	      $('#formularioMuestras #servicio_muestras').html("");
 		  $('#formularioMuestras #servicio_muestras').html(data);
+		  $('#formularioMuestras #servicio_muestras').selectpicker('refresh');
 	  }
 	});
 	return false;
@@ -623,6 +624,7 @@ function getRemitente(){
 	   success:function(data){
 	      $('#formularioMuestras #remitente').html("");
 		  $('#formularioMuestras #remitente').html(data);
+		  $('#formularioMuestras #remitente').selectpicker('refresh');
 	  }
 	});
 	return false;

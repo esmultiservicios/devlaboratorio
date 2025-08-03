@@ -1,11 +1,39 @@
 <div class="table-responsive" id="facturacion" style="display: none;">
 	<form class="invoice-form FormularioAjax" id="formulario_facturacion" action="" method="POST" data-form="" enctype="multipart/form-data">
-	  <div class="form-group row">
-		<div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
-		    <button class="btn btn-primary" type="submit" id="validar" data-toggle="tooltip" data-placement="top" title="Registrar la Factura"><div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Guardar</button>
-		    <button class="btn btn-primary" type="submit" id="cobrar" data-toggle="tooltip" data-placement="top" title="Cobrar la Factura"><div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Cobrar</button>								
+	<div class="form-group row">
+		<div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 d-flex align-items-center justify-content-between flex-wrap">
+		    <div class="button-group mr-3">
+		        <button class="btn btn-primary" type="submit" id="validar" data-toggle="tooltip" data-placement="top" title="Registrar la Factura">
+		            <div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Guardar
+		        </button>
+		        <button class="btn btn-primary" type="submit" id="cobrar" data-toggle="tooltip" data-placement="top" title="Cobrar la Factura">
+		            <div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Cobrar
+		        </button>
+		    </div>
+		    
+		    <!-- Contador de facturas - Fuera del button-group -->
+		    <div id="facturas-counter-1" class="counter-container counter-normal mt-2 mt-sm-0">
+				<div class="counter-icon">
+					<i class="fas fa-file-invoice"></i>
+				</div>
+				<div class="counter-content">
+					<div id="counter-header" class="counter-header">
+						<strong>TOTAL DISPONIBLE AUTORIZADO POR EL SAR</strong>
+					</div>
+					<div id="counter-status" class="counter-status status-normal">
+						0 facturas disponibles
+					</div>
+					<div class="counter-number-container">
+						<span id="counter-number">0</span>
+					</div>
+					<div id="counter-footer" class="counter-footer">
+						<small>Rango autorizado: <span id="rango-inicial">0</span> al <span id="rango-final">0</span></small>
+					</div>
+				</div>
+		    </div>
 		</div>
-	  </div>				  
+	  </div>
+
 	  <div class="form-group row">
 		<label for="inputCliente" class="col-sm-1 col-form-label-md">Empresa <span class="priority">*<span/></label>
 		<div class="col-sm-5">
@@ -44,9 +72,6 @@
 				<select class="selectpicker" id="servicio_id" name="servicio_id" data-live-search="true"
 					title="Servicio" data-width="100%" data-size="7" required>
 				</select>
-			  <div class="input-group-append">				
-				<a data-toggle="modal" href="#" class="btn btn-outline-success" id="buscar_servicios"><div class="sb-nav-link-icon"></div><i class="fab fa-servicestack fa-lg"></i></a>
-			  </div>
 			</div>
 		</div>				
 	  </div>
@@ -56,7 +81,8 @@
 			<input type="text" class="form-control" id="muestras_numero" name="muestras_numero" readonly>
 		</div>
 		<div class="col-sm-9">
-			<label class="switch mb-2" data-toggle="tooltip" data-placement="top" title="Tipo de Factura, Contado o Crédito">
+			<label class="col-sm-1 col-form-label-md">Factura</label>
+			<label class="switch mb-2" data-toggle="tooltip" data-placement="top" title="Tipo de Factura, Contado o Crédito"> 
 				<input type="checkbox" id="facturas_activo" name="facturas_activo" value="1" checked>
 				<div class="slider round"></div>
 			</label>
@@ -88,7 +114,7 @@
 							<input type="hidden" name="isv[]" id="isv_0" class="form-control" placeholder="Producto ISV" autocomplete="off">
 							<input type="hidden" name="facturas_detalle_id[]" id="facturas_detalle_id_0" class="form-control" placeholder="Código Producto" autocomplete="off">
 							<input type="hidden" name="valor_isv[]" id="valor_isv_0" class="form-control" placeholder="Valor ISV" autocomplete="off">
-							<input type="hidden" name="productoID[]" id="productoID_0" class="form-control" placeholder="Código Producto" autocomplete="off">						
+							<input type="text" name="productoID[]" id="productoID_0" class="form-control" placeholder="Código Producto" autocomplete="off">						
 							<div class="input-group mb-3">
 								<input type="text" name="productName[]" id="productName_0" class="form-control producto" placeholder="Producto o Servicio" autocomplete="off">
 								<div id="suggestions_producto_0" class="suggestions"></div>
