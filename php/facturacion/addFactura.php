@@ -73,7 +73,7 @@ try {
             WHERE facturas_id = ?";
 
     $stmt = $mysqli->prepare($update);
-    $stmt->bind_param('siiisiiii', $fecha, $tipo_factura, $numero, $secuencia_facturacion_id, $estado, $notes, $colaborador_id, $servicio_id, $facturas_id);
+    $stmt->bind_param('siiissiii', $fecha, $tipo_factura, $numero, $secuencia_facturacion_id, $estado, $notes, $colaborador_id, $servicio_id, $facturas_id);
     
     if (!$stmt->execute()) {
         // Registrar número como fallido si no se pudo actualizar
