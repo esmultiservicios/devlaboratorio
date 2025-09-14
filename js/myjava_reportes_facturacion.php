@@ -642,7 +642,7 @@ var listar_reporte_facturacion = function(){
 
 	table_reporte_facturacion.search('').draw();
 	$('#buscar').focus();
-	
+
 	show_invoice_detail_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);
 	print_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);
 	close_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);

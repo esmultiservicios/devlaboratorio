@@ -579,6 +579,23 @@ function obtenerNumeroFactura($mysqli, $empresa_id, $documento_id) {
         return ['error' => true, 'mensaje' => 'Error al generar número de factura: ' . $e->getMessage()];
     }
 }
+
+function marcarMuestraAtendidaPorFactura(mysqli $mysqli, int $facturaId): void {
+    $sql = "SELECT muestras_id FROM facturas WHERE facturas_id = ? LIMIT 1";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param("i", $facturaId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : null;
+    $stmt->close();
+    if (!$row || empty($row['muestras_id'])) return;
+    $muestras_id = (int)$row['muestras_id'];
+    $upd = "UPDATE muestras SET estado = '1' WHERE muestras_id = ?";
+    $stmt = $mysqli->prepare($upd);
+    $stmt->bind_param("i", $muestras_id);
+    $stmt->execute();
+    $stmt->close();
+}
 	
 //FUNCION QUE PERMITE GENERAR LA CONTRASEÑA DE FORMA AUTOMATICA
 function generar_password_complejo(){

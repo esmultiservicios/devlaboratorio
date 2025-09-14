@@ -20,7 +20,7 @@ $query = "SELECT
             fecha_limite,
             DATEDIFF(fecha_limite, CURDATE()) AS 'dias_restantes'
           FROM secuencia_facturacion
-          WHERE activo = 1 AND empresa_id = ?
+          WHERE activo = 1 AND empresa_id = ? AND documento_id = 1
           ORDER BY siguiente DESC 
           LIMIT 1";
 

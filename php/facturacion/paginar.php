@@ -4,121 +4,160 @@ include "../funtions.php";
 
 // CONEXION A DB
 $mysqli = connect_mysqli();
+$mysqli->set_charset('utf8mb4');
 
-// Obtener parámetros con valores por defecto
-$colaborador_id = $_SESSION['colaborador_id'];
-$paginaActual = isset($_POST['partida']) ? (int)$_POST['partida'] : 1;
-$fechai = isset($_POST['fechai']) ? $_POST['fechai'] : date('Y-m-01');
-$fechaf = isset($_POST['fechaf']) ? $_POST['fechaf'] : date('Y-m-d');
-$dato = isset($_POST['dato']) ? $_POST['dato'] : '';
-$tipo_paciente_grupo = isset($_POST['tipo_paciente_grupo']) ? (int)$_POST['tipo_paciente_grupo'] : '';
-$pacientesIDGrupo = isset($_POST['pacientesIDGrupo']) ? (int)$_POST['pacientesIDGrupo'] : '';
-$estado = isset($_POST['estado']) ? (int)$_POST['estado'] : 1;
+$colaborador_id        = (int)$_SESSION['colaborador_id'];
+$paginaActual          = isset($_POST['partida']) ? (int)$_POST['partida'] : 1;
+$fechai                = isset($_POST['fechai']) ? $_POST['fechai'] : date('Y-m-01');
+$fechaf                = isset($_POST['fechaf']) ? $_POST['fechaf'] : date('Y-m-d');
+$dato                  = isset($_POST['dato']) ? trim($_POST['dato']) : '';
+$tipo_paciente_grupo   = isset($_POST['tipo_paciente_grupo']) && $_POST['tipo_paciente_grupo'] !== '' ? (int)$_POST['tipo_paciente_grupo'] : null;
+$pacientesIDGrupo      = isset($_POST['pacientesIDGrupo']) && $_POST['pacientesIDGrupo'] !== '' ? (int)$_POST['pacientesIDGrupo'] : null;
+$estado                = isset($_POST['estado']) ? (int)$_POST['estado'] : 1;
 
-// Inicializar variables de búsqueda
-$busqueda_tipo_paciente_grupo = "";
-$busqueda_pacientesIDGrupo = "";
-$consulta_datos = "";
-$busqueda_usuario = "";
-
-// Construir condiciones de búsqueda seguras
-if(!empty($dato)){
-    $dato = $mysqli->real_escape_string($dato);
-    $consulta_datos = "AND (p.expediente LIKE '%$dato%' OR p.nombre LIKE '%$dato%' OR p.apellido LIKE '%$dato%' OR CONCAT(p.apellido,' ',p.nombre) LIKE '%$dato%' OR f.number LIKE '%$dato%')";
-}
-
-if(!empty($tipo_paciente_grupo)){
-    $busqueda_tipo_paciente_grupo = "AND p.tipo_paciente_id = '$tipo_paciente_grupo'";
-}
-
-if(!empty($pacientesIDGrupo)){
-    $busqueda_pacientesIDGrupo = "AND p.pacientes_id = '$pacientesIDGrupo'";
-}
-
-// Filtrar por usuario actual si el estado es 2 (Pagada) o 4 (Crédito)
-if($estado == 2 || $estado == 4){
-    $busqueda_usuario = "AND f.usuario = '$colaborador_id'";
-}
-
-// Configuración de paginación
 $nroLotes = 200;
-$limit = ($paginaActual <= 1) ? 0 : $nroLotes * ($paginaActual - 1);
+$offset   = max(0, ($paginaActual - 1) * $nroLotes);
 
-// Consulta optimizada con JOIN para obtener detalles
-$registro = "SELECT SQL_CALC_FOUND_ROWS 
-    f.facturas_id, 
-    DATE_FORMAT(f.fecha, '%d/%m/%Y') AS 'fecha', 
-    CONCAT(p.nombre,' ',p.apellido) AS 'empresa', 
-    p.identidad AS 'identidad', 
-    CONCAT(c.nombre,' ',c.apellido) AS 'profesional', 
-    f.estado, 
-    s.nombre AS 'consultorio', 
-    sc.prefijo, 
-    f.number, 
-    sc.relleno, 
-    CONCAT(p1.nombre,' ',p1.apellido) AS 'paciente', 
-    p1.pacientes_id AS 'codigoPacienteEmpresa', 
-    f.muestras_id, 
-    c.colaborador_id, 
-    m.number AS 'muestra',
-    COALESCE(SUM(fd.precio), 0) AS total_precio,
-    COALESCE(SUM(fd.cantidad), 0) AS total_cantidad,
-    COALESCE(SUM(fd.descuento), 0) AS total_descuento,
-    COALESCE(SUM(fd.isv_valor), 0) AS total_isv,
-    COALESCE(SUM(fd.precio * fd.cantidad), 0) AS neto_antes_isv
-    FROM facturas AS f
-    INNER JOIN pacientes AS p ON f.pacientes_id = p.pacientes_id
-    INNER JOIN secuencia_facturacion AS sc ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
-    INNER JOIN servicios AS s ON f.servicio_id = s.servicio_id
-    INNER JOIN colaboradores AS c ON f.colaborador_id = c.colaborador_id
-    LEFT JOIN muestras_hospitales AS mh ON f.muestras_id = mh.muestras_id
-    LEFT JOIN pacientes AS p1 ON mh.pacientes_id = p1.pacientes_id
-    LEFT JOIN muestras AS m ON f.muestras_id = m.muestras_id
-    LEFT JOIN facturas_detalle AS fd ON f.facturas_id = fd.facturas_id
-    WHERE f.estado = '$estado' 
-    AND f.fecha BETWEEN '$fechai' AND '$fechaf'
-    $busqueda_usuario
-    $busqueda_tipo_paciente_grupo
-    $busqueda_pacientesIDGrupo
-    $consulta_datos
-    GROUP BY f.facturas_id
-    ORDER BY f.fecha DESC, f.facturas_id DESC
-    LIMIT $limit, $nroLotes";
+// ===============================
+// 1) Construir WHERE + binds
+// ===============================
+$where   = [];
+$types   = '';
+$params  = [];
 
-$result = $mysqli->query($registro) or die($mysqli->error);
+// estado + rango de fechas (SIEMPRE)
+$where[] = 'f.estado = ?';
+$types  .= 'i';
+$params[] = $estado;
 
-// Obtener el total de registros de manera eficiente
-$total_registros = $mysqli->query("SELECT FOUND_ROWS()")->fetch_row()[0];
-$nroPaginas = ceil($total_registros / $nroLotes);
+$where[] = 'f.fecha BETWEEN ? AND ?';
+$types  .= 'ss';
+$params[] = $fechai;
+$params[] = $fechaf;
 
-// Construir paginación
+// si estado es 2 ó 4 filtrar por usuario
+if ($estado === 2 || $estado === 4) {
+    $where[] = 'f.usuario = ?';
+    $types  .= 'i';
+    $params[] = $colaborador_id;
+}
+
+// filtros por tipo/empresa (tabla pacientes p)
+if (!is_null($tipo_paciente_grupo)) {
+    $where[] = 'p.tipo_paciente_id = ?';
+    $types  .= 'i';
+    $params[] = $tipo_paciente_grupo;
+}
+if (!is_null($pacientesIDGrupo)) {
+    $where[] = 'p.pacientes_id = ?';
+    $types  .= 'i';
+    $params[] = $pacientesIDGrupo;
+}
+
+// búsqueda libre
+if ($dato !== '') {
+    $like = "%$dato%";
+    $where[] = '(p.expediente LIKE ? OR p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.apellido," ",p.nombre) LIKE ? OR CAST(f.number AS CHAR) LIKE ?)';
+    $types  .= 'sssss';
+    array_push($params, $like, $like, $like, $like, $like);
+}
+
+$whereSQL = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+// ===============================
+// 2) Consulta principal (con subquery de agregados)
+// ===============================
+$sql = "
+SELECT
+    f.facturas_id,
+    DATE_FORMAT(f.fecha, '%d/%m/%Y') AS fecha,
+    CONCAT(p.nombre,' ',p.apellido) AS empresa,
+    p.identidad AS identidad,
+    CONCAT(c.nombre,' ',c.apellido) AS profesional,
+    f.estado,
+    s.nombre AS consultorio,
+    sc.prefijo,
+    f.number,
+    sc.relleno,
+    COALESCE(CONCAT(p1.nombre,' ',p1.apellido), '') AS paciente,
+    p1.pacientes_id AS codigoPacienteEmpresa,
+    f.muestras_id,
+    c.colaborador_id,
+    m.number AS muestra,
+    COALESCE(fd_sum.total_precio, 0)      AS total_precio,
+    COALESCE(fd_sum.total_cantidad, 0)    AS total_cantidad,
+    COALESCE(fd_sum.total_descuento, 0)   AS total_descuento,
+    COALESCE(fd_sum.total_isv, 0)         AS total_isv,
+    COALESCE(fd_sum.neto_antes_isv, 0)    AS neto_antes_isv
+FROM facturas AS f
+INNER JOIN pacientes  AS p  ON f.pacientes_id = p.pacientes_id
+INNER JOIN secuencia_facturacion AS sc ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
+INNER JOIN servicios   AS s  ON f.servicio_id  = s.servicio_id
+INNER JOIN colaboradores AS c ON f.colaborador_id = c.colaborador_id
+LEFT  JOIN muestras_hospitales AS mh ON f.muestras_id = mh.muestras_id
+LEFT  JOIN pacientes AS p1 ON mh.pacientes_id = p1.pacientes_id
+LEFT  JOIN muestras  AS m  ON f.muestras_id = m.muestras_id
+LEFT  JOIN (
+    SELECT
+        facturas_id,
+        SUM(precio)                       AS total_precio,
+        SUM(cantidad)                     AS total_cantidad,
+        SUM(descuento)                    AS total_descuento,
+        SUM(isv_valor)                    AS total_isv,
+        SUM(precio * cantidad)            AS neto_antes_isv
+    FROM facturas_detalle
+    GROUP BY facturas_id
+) AS fd_sum ON fd_sum.facturas_id = f.facturas_id
+{$whereSQL}
+ORDER BY f.fecha DESC, f.facturas_id DESC
+LIMIT ?, ?
+";
+
+$stmt = $mysqli->prepare($sql);
+if (!$stmt) { die($mysqli->error); }
+$types_main = $types . 'ii';
+$params_main = $params;
+$params_main[] = $offset;
+$params_main[] = $nroLotes;
+$stmt->bind_param($types_main, ...$params_main);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// ===============================
+// 3) COUNT(*) total (sin LIMIT)
+// ===============================
+$sqlCount = "
+SELECT COUNT(*) AS total
+FROM facturas AS f
+INNER JOIN pacientes AS p ON f.pacientes_id = p.pacientes_id
+{$whereSQL}
+";
+$stmtCount = $mysqli->prepare($sqlCount);
+$stmtCount->bind_param($types, ...$params);
+$stmtCount->execute();
+$total_registros = (int)$stmtCount->get_result()->fetch_assoc()['total'];
+$stmtCount->close();
+
+$nroPaginas = (int)ceil($total_registros / $nroLotes);
+
+// ===============================
+// 4) Paginación
+// ===============================
 $lista = '';
-if($nroPaginas > 1){
-    if($paginaActual > 1){
+if ($nroPaginas > 1) {
+    if ($paginaActual > 1) {
         $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination(1);">Inicio</a></li>';
         $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination('.($paginaActual-1).');">Anterior '.($paginaActual-1).'</a></li>';
     }
-    
-    if($paginaActual < $nroPaginas){
+    if ($paginaActual < $nroPaginas) {
         $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination('.($paginaActual+1).');">Siguiente '.($paginaActual+1).' de '.$nroPaginas.'</a></li>';
-        $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination('.($nroPaginas).');">Ultima</a></li>';
+        $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination('.$nroPaginas.');">Ultima</a></li>';
     }
 }
 
-// Configurar textos según estado
-$estados_config = [
-    1 => ['estado_' => "Borrador", 'texto1' => "Facturar", 'texto2' => "Eliminar"],
-    2 => ['estado_' => "Pagada", 'texto1' => "Enviar", 'texto2' => "Imprimir"],
-    4 => ['estado_' => "Crédito", 'texto1' => "Imprimir", 'texto2' => "Cobrar"],
-    3 => ['estado_' => "Cancelada", 'texto1' => "Imprimir", 'texto2' => ""]
-];
-
-$config_estado = $estados_config[$estado] ?? ['estado_' => "", 'texto1' => "", 'texto2' => ""];
-$estado_ = $config_estado['estado_'];
-$texto1 = $config_estado['texto1'];
-$texto2 = $config_estado['texto2'];
-
-// Plantillas de botones por estado
+// ===============================
+// 5) Botones por estado (mismo comportamiento)
+// ===============================
 $botones_por_estado = [
     1 => [
         'texto1' => '<a class="btn btn-secondary ml-2" href="javascript:pay(%d);"><i class="fas fa-file-invoice fa-lg"></i> Facturar</a>',
@@ -138,7 +177,9 @@ $botones_por_estado = [
     ]
 ];
 
-// Construir tabla
+// ===============================
+// 6) Render tabla (encabezados FIJOS)
+// ===============================
 $tabla = '<table class="table table-striped table-condensed table-hover">
     <thead>
         <tr>
@@ -155,101 +196,79 @@ $tabla = '<table class="table table-striped table-condensed table-hover">
             <th width="6.66%">Descuento</th>
             <th width="6.66%">Neto</th>
             <th width="3.66%">Estado</th>
-            <th width="8.66%">'.$texto1.'</th>
-            <th width="8.66%">'.$texto2.'</th>
+            <th width="8.66%">Facturar</th>
+            <th width="8.66%">Eliminar</th>
         </tr>
     </thead>
     <tbody>';
 
-if($total_registros > 0){
+if ($total_registros > 0) {
     $i = 1;
-    while($registro2 = $result->fetch_assoc()){
-        $total = ($registro2['neto_antes_isv'] + $registro2['total_isv']) - $registro2['total_descuento'];
-        $numero = ($registro2['number'] == 0) ? "Aún no se ha generado" : $registro2['prefijo'].''.rellenarDigitos($registro2['number'], $registro2['relleno']);
-        
-        // Formatear información del paciente/empresa
-        $paciente = $registro2['paciente'];
-        $empresa = ($paciente != "") ? $registro2['empresa']." (<b>Paciente</b>: ".$paciente.")" : $registro2['empresa'];
-        
-        // Obtener botones según estado
-        $botones = $botones_por_estado[$registro2['estado']] ?? [];
-        $texto1_btn = isset($botones['texto1']) ? sprintf($botones['texto1'], $registro2['facturas_id']) : '';
-        $texto2_btn = isset($botones['texto2']) ? sprintf($botones['texto2'], $registro2['facturas_id']) : '';
-        
-        // Construir fila
-        $tabla .= sprintf('<tr>
-            <td><input class="itemRowFactura" type="checkbox" name="itemFactura" id="itemFactura_%d" value="%d"></td>
-            <td>%d</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>
-                <div name="quantyGrupoQuantityValor" id="quantyGrupoQuantityValor_%d" data-value="%d"></div>
-                <div name="profesionalIDGrupo" id="profesionalIDGrupo_%d" data-value="%d"></div>
-                <div name="muestraGrupo" id="muestraGrupo_%d" data-value="%d"></div>
-                <div name="codigoFacturaGrupo" id="codigoFacturaGrupo_%d" data-value="%d"></div>
-                <div name="pacientesIDFacturaGrupo" id="pacientesIDFacturaGrupo_%d" data-value="%d"></div>
-                <div name="importeFacturaGrupo" id="importeFacturaGrupo_%d" data-value="%.2f"></div>%.2f
-                <div name="ISVFacturaGrupo" id="precioFacturaGrupo_%d" data-value="%.2f"></div>
-                <div name="ISVFacturaGrupo" id="ISVFacturaGrupo_%d" data-value="%.2f"></div>
-                <div name="DescuentoFacturaGrupo" id="DescuentoFacturaGrupo_%d" data-value="%.2f"></div>
-                <div name="DescuentoFacturaGrupo" id="netoAntesISVFacturaGrupo_%d" data-value="%.2f"></div>
-            </td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-        </tr>',
-        $i-1, $registro2['facturas_id'], // Para el checkbox
-        $i++, // Número de fila
-        $registro2['fecha'],
-        $registro2['muestra'],
-        $numero,
-        $empresa,
-        $registro2['identidad'],
-        $registro2['profesional'],
-        number_format($registro2['total_precio'], 2),
-        number_format($registro2['total_isv'], 2),
-        number_format($registro2['total_descuento'], 2),
-        $registro2['facturas_id'], $registro2['total_cantidad'],
-        $registro2['facturas_id'], $registro2['colaborador_id'],
-        $registro2['facturas_id'], $registro2['muestras_id'],
-        $registro2['facturas_id'], $registro2['facturas_id'],
-        $registro2['facturas_id'], $registro2['codigoPacienteEmpresa'],
-        $registro2['facturas_id'], $total,
-        $total,
-        $registro2['facturas_id'], $registro2['total_precio'],
-        $registro2['facturas_id'], $registro2['total_isv'],
-        $registro2['facturas_id'], $registro2['total_descuento'],
-        $registro2['facturas_id'], $registro2['neto_antes_isv'],
-        $estado_,
-        $texto1_btn,
-        $texto2_btn);
+    while ($r = $result->fetch_assoc()) {
+        $total  = ($r['neto_antes_isv'] + $r['total_isv']) - $r['total_descuento'];
+        $numero = ($r['number'] == 0)
+            ? "Aún no se ha generado"
+            : $r['prefijo'] . rellenarDigitos($r['number'], $r['relleno']);
+
+        $empresaTxt = $r['empresa'];
+        if (!empty($r['paciente'])) {
+            $empresaTxt .= " (<b>Paciente</b>: " . $r['paciente'] . ")";
+        }
+
+        $botones  = $botones_por_estado[$r['estado']] ?? [];
+        $texto1_btn = isset($botones['texto1']) ? sprintf($botones['texto1'], $r['facturas_id']) : '';
+        $texto2_btn = isset($botones['texto2']) ? sprintf($botones['texto2'], $r['facturas_id']) : '';
+
+        $tabla .= '<tr>';
+        $tabla .= '<td><input class="itemRowFactura" type="checkbox" name="itemFactura" id="itemFactura_'.($i-1).'" value="'.$r['facturas_id'].'"></td>';
+        $tabla .= '<td>'.($i++).'</td>';
+        $tabla .= '<td>'.$r['fecha'].'</td>';
+        $tabla .= '<td>'.($r['muestra'] ?: '').'</td>';
+        $tabla .= '<td>'.$numero.'</td>';
+        $tabla .= '<td>'.$empresaTxt.'</td>';
+        $tabla .= '<td>'.$r['identidad'].'</td>';
+        $tabla .= '<td>'.$r['profesional'].'</td>';
+        $tabla .= '<td>'.number_format($r['total_precio'], 2).'</td>';
+        $tabla .= '<td>'.number_format($r['total_isv'], 2).'</td>';
+        $tabla .= '<td>'.number_format($r['total_descuento'], 2).'</td>';
+
+        // celda con data-values para el grupal
+        $tabla .= '<td>
+            <div id="quantyGrupoQuantityValor_'.$r['facturas_id'].'" data-value="'.$r['total_cantidad'].'"></div>
+            <div id="profesionalIDGrupo_'.$r['facturas_id'].'"      data-value="'.$r['colaborador_id'].'"></div>
+            <div id="muestraGrupo_'.$r['facturas_id'].'"            data-value="'.$r['muestras_id'].'"></div>
+            <div id="codigoFacturaGrupo_'.$r['facturas_id'].'"      data-value="'.$r['facturas_id'].'"></div>
+            <div id="pacientesIDFacturaGrupo_'.$r['facturas_id'].'" data-value="'.$r['codigoPacienteEmpresa'].'"></div>
+            <div id="importeFacturaGrupo_'.$r['facturas_id'].'"     data-value="'.number_format($total,2,'.','').'"></div>'.number_format($total,2).'
+            <div id="precioFacturaGrupo_'.$r['facturas_id'].'"      data-value="'.number_format($r['total_precio'],2,'.','').'"></div>
+            <div id="ISVFacturaGrupo_'.$r['facturas_id'].'"         data-value="'.number_format($r['total_isv'],2,'.','').'"></div>
+            <div id="DescuentoFacturaGrupo_'.$r['facturas_id'].'"   data-value="'.number_format($r['total_descuento'],2,'.','').'"></div>
+            <div id="netoAntesISVFacturaGrupo_'.$r['facturas_id'].'" data-value="'.number_format($r['neto_antes_isv'],2,'.','').'"></div>
+        </td>';
+
+        // estado y botones
+        $estadoTxt = ($r['estado']==1?'Borrador':($r['estado']==2?'Pagada':($r['estado']==4?'Crédito':($r['estado']==3?'Cancelada':''))));
+        $tabla .= '<td>'.$estadoTxt.'</td>';
+        $tabla .= '<td>'.$texto1_btn.'</td>';
+        $tabla .= '<td>'.$texto2_btn.'</td>';
+
+        $tabla .= '</tr>';
     }
 } else {
     $tabla .= '<tr><td colspan="15" style="color:#C7030D">No se encontraron resultados para los filtros seleccionados</td></tr>';
 }
-
 $tabla .= '</tbody></table>';
 
-// Agregar total de registros si hay resultados
-if($total_registros > 0){
+if ($total_registros > 0) {
     $tabla .= '<div class="text-center mt-3"><b>Total de Registros Encontrados: '.$total_registros.'</b></div>';
 }
 
-// Preparar respuesta JSON
-$array = array(
+echo json_encode([
     0 => $tabla,
     1 => $lista
-);
+]);
 
-echo json_encode($array);
-
-// Liberar recursos
-if(isset($result)) $result->free();
+// liberar
+$result && $result->free();
+$stmt->close();
 $mysqli->close();

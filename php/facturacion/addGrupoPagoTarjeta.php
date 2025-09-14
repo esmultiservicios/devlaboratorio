@@ -1,353 +1,287 @@
 <?php
-//addGrupoPagoTarjeta.php
+// addGrupoPagoTarjeta.php
 session_start();
 include "../funtions.php";
 
-//CONEXION A DB
+// CONEXION A DB
 $mysqli = connect_mysqli();
+$mysqli->set_charset('utf8mb4');
 
-$facturas_id = $_POST['factura_id_tarjeta'];
-$fecha = date("Y-m-d");
-$importe = $_POST['monto_efectivo'];
-$efectivo_bill = $_POST['monto_efectivo'] ?? 0;
-$cambio = 0;
-$empresa_id = $_SESSION['empresa_id'];
-$usuario = $_SESSION['colaborador_id'];
-$tipo_pago_id = 2;//TARJETA
-$banco_id = 0;//SIN BANCO
-$tipo_pago = 1;//1. CONTADO 2. CRÉDITO
-$estado = 2;//FACTURA PAGADA
-$estado_atencion = 1;
-$estado_pago = 1;//ACTIVO
-$fecha_registro = date("Y-m-d H:i:s");
-$referencia_pago1 = cleanStringConverterCase($_POST['cr_bill']);//TARJETA DE CREDITO
-$referencia_pago2 = cleanStringConverterCase($_POST['exp']);//FECHA DE EXPIRACION
-$referencia_pago3 = cleanStringConverterCase($_POST['cvcpwd']);//NUMERO DE APROBACIÓN
-$activo = 1;//SECUENCIA DE FACTURACION
-$efectivo = 0;
-$tarjeta = $importe;
+// --------- ENTRADAS ----------
+$facturas_id   = (int)($_POST['factura_id_tarjeta'] ?? 0); // facturas_grupal_id
+$fecha         = date("Y-m-d");
+$importe       = (float)($_POST['monto_efectivo'] ?? 0);   // total contado (tarjeta)
+$efectivo_bill = (float)($_POST['monto_efectivo'] ?? 0);   // abono crédito
+$cambio        = 0;
+
+$empresa_id    = (int)$_SESSION['empresa_id'];
+$usuario       = (int)$_SESSION['colaborador_id'];
+
+$tipo_pago_id  = 2;   // TARJETA
+$banco_id      = 0;   // SIN BANCO
+$tipo_pago     = 1;   // 1=CONTADO 2=CRÉDITO
+$estado_pagada = 2;   // FACTURA PAGADA
+$estado_atenc  = 1;   // atenciones
+$estado_pago   = 1;   // activo
+$fecha_reg     = date("Y-m-d H:i:s");
+
+$ref1 = cleanStringConverterCase($_POST['cr_bill'] ?? ''); // tarjeta
+$ref2 = cleanStringConverterCase($_POST['exp'] ?? '');     // expiración
+$ref3 = cleanStringConverterCase($_POST['cvcpwd'] ?? '');  // aprobación
+
 $tipoLabel = "PagosGrupal";
 
-//CONSULTAR DATOS DE LA FACTURA
-$query_factura = "SELECT servicio_id, colaborador_id, fecha, pacientes_id, tipo_factura, number
-	FROM facturas_grupal
-	WHERE facturas_grupal_id = '$facturas_id'";
-$result_factura = $mysqli->query($query_factura) or die($mysqli->error);
-$consultaFactura = $result_factura->fetch_assoc();
-
-$servicio_id = "";
-$colaborador_id = "";
-$fecha_factura = "";
-$pacientes_id = "";
-$tipo_factura = "";
-
-if($result_factura->num_rows>0){
-	$servicio_id = $consultaFactura['servicio_id'];
-	$colaborador_id = $consultaFactura['colaborador_id'];
-	$fecha_factura = $consultaFactura['fecha'];
-	$pacientes_id = $consultaFactura['pacientes_id'];
-	$tipo_factura = $consultaFactura['tipo_factura'];
-	$numero = $consultaFactura['number'];
+// --------- HELPERS ----------
+function totalFactura($mysqli, $facturaId) {
+    $sql = "SELECT COALESCE(SUM(cantidad * precio),0) AS total
+            FROM facturas_detalle
+            WHERE facturas_id = ?";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param("i", $facturaId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : ['total'=>0];
+    $stmt->close();
+    return (float)$row['total'];
 }
 
-if($tipo_factura == 2){
-	$tipoLabel = "PagosGrupalCredito";
+function pagosPreviosFactura($mysqli, $facturaId) {
+    $sql = "SELECT COALESCE(SUM(importe),0) AS pagado
+            FROM pagos
+            WHERE facturas_id = ? AND estado = 1";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param("i", $facturaId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : ['pagado'=>0];
+    $stmt->close();
+    return (float)$row['pagado'];
 }
 
-if($tipo_factura === "1"){//NO ES NECESARIO EL ABONO
-	//VALIDAMOS QUE EL PAGO PARA LA FACTURA NO EXISTA, DE EXISTIR NO SE ALMACENA
-	$queryPagos = "SELECT pagos_grupal_id
-		FROM pagos_grupal
-		WHERE facturas_grupal_id = '$facturas_id'";
-	$result_ConsultaPagos = $mysqli->query($queryPagos) or die($mysqli->error);
+function insertarPagoFacturaTarjeta($mysqli, $facturaId, $tipo_pago, $fecha, $monto, $usuario, $empresa_id, $fecha_reg, $tipo_pago_id, $banco_id, $ref1, $ref2, $ref3) {
+    $efectivo = 0.0; $tarjeta = $monto; $cambio = 0; $estado = 1;
+    $pagos_id = correlativo("pagos_id","pagos");
+    $insPag = "INSERT INTO pagos
+        (pagos_id, facturas_id, tipo_pago, fecha, importe, efectivo, cambio, tarjeta, usuario, estado, empresa_id, fecha_registro)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+    $stmt = $mysqli->prepare($insPag);
+    $stmt->bind_param("iiisddidiiis",
+        $pagos_id, $facturaId, $tipo_pago, $fecha, $monto, $efectivo, $cambio, $tarjeta, $usuario, $estado, $empresa_id, $fecha_reg
+    );
+    if(!$stmt->execute()){ $stmt->close(); throw new Exception("Error pago (tarjeta) factura $facturaId: ".$mysqli->error); }
+    $stmt->close();
 
-	if($result_ConsultaPagos->num_rows==0){
-		$pagos_grupal_id = correlativo("pagos_grupal_id","pagos_grupal");
-		$insert = "INSERT INTO pagos_grupal
-		VALUES ('$pagos_grupal_id','$facturas_id','$tipo_pago','$fecha_factura','$importe','$efectivo','$cambio','$tarjeta','$usuario','$estado_pago','$empresa_id','$fecha_registro')";
-		$query = $mysqli->query($insert);
-
-		if($query){
-			//ACTUALIZAMOS EL DETALLE DEL PAGO
-			$pagos_grupal_detalles_id  = correlativo('pagos_grupal_detalles_id', 'pagos_grupal_detalles');
-			$insert = "INSERT INTO pagos_grupal_detalles
-				VALUES ('$pagos_grupal_detalles_id','$pagos_grupal_id','$tipo_pago_id','$banco_id','$importe','$referencia_pago1','$referencia_pago2','$referencia_pago3')";
-			$query = $mysqli->query($insert);
-			/*******************************************************************************************************************************************************************/
-			//CONSULTAMOS EL NUMERO DE ATENCION
-			$query_atencion = "SELECT atencion_id
-				FROM atenciones_medicas
-				WHERE pacientes_id = '$pacientes_id' AND servicio_id = '$servicio_id' AND colaborador_id = '$colaborador_id' AND fecha = '$fecha_factura'";
-			$result_atencion = $mysqli->query($query_atencion) or die($mysqli->error);
-			$consultaDatosAtencion = $result_atencion->fetch_assoc();
-
-			$atencion_id = "";
-
-			if($result_atencion->num_rows>0){
-				$atencion_id = $consultaDatosAtencion['atencion_id'];
-			}
-			/*******************************************************************************************************************************************************************/
-			//ACTUALIZAMOS EL ESTADO DE LA FACTURA GRUPAL
-			$update_factura = "UPDATE facturas_grupal
-				SET
-					estado = '$estado'
-				WHERE facturas_grupal_id = '$facturas_id'";
-			$mysqli->query($update_factura) or die($mysqli->error);		
-
-			//CONSULTAMOS LOS NUMEROS DE FACTURAS QUE SE ATENDIERON
-			$query_facturas = "SELECT facturas_id
-				FROM facturas_grupal_detalle
-				WHERE facturas_grupal_id = '$facturas_id'";
-			$result_facturas = $mysqli->query($query_facturas) or die($mysqli->error);
-
-			while($registroFacturas = $result_facturas->fetch_assoc()){//INICIO CICLO WHILE
-				$total_valor = 0;
-				$descuentos = 0;
-				$isv_neto = 0;
-				$total_despues_isv = 0;
-
-				$facturaConsulta = $registroFacturas['facturas_id'];
-
-				//CONSULTAMOS EL TOTAL EN EL DETALLE DE LAS FACTURAS
-				$query_facturas_detalles = "SELECT cantidad, precio, isv_valor, descuento
-					FROM facturas_detalle
-					WHERE facturas_id = '$facturaConsulta'";
-				$result_facturas_detalles = $mysqli->query($query_facturas_detalles) or die($mysqli->error);
-
-				while($registroFacturasDetalles = $result_facturas_detalles->fetch_assoc()){
-					$total_valor += ($registroFacturasDetalles['precio'] * $registroFacturasDetalles['cantidad']);
-					$descuentos += $registroFacturasDetalles['descuento'];
-					$isv_neto += $registroFacturasDetalles['isv_valor'];
-				}
-				$total_despues_isv = ($total_valor + $isv_neto) - $descuentos;
-				$cambio_ = 0;
-
-				//CONSULTAR DATOS DE LA FACTURA
-				$query_factura_grupal_consulta = "SELECT servicio_id, colaborador_id, fecha, pacientes_id
-					FROM facturas
-					WHERE facturas_id = '$facturaConsulta'";
-				$result_factura_grupal_consulta = $mysqli->query($query_factura_grupal_consulta) or die($mysqli->error);
-				$consultaFactura_result_factura_grupal_consulta = $result_factura_grupal_consulta->fetch_assoc();
-
-				$fecha_factura = "";
-
-				if($result_factura_grupal_consulta->num_rows>0){
-					$fecha_factura = $consultaFactura_result_factura_grupal_consulta['fecha'];
-				}
-
-				//ACTUALIZAMOS EL PAGO DE LA FACTURA CONSULTADA
-				//INSERTAMOS LOS DATOS EN LA ENTIDAD PAGO
-				/*$pagos_id = correlativo("pagos_id","pagos");
-				$insert = "INSERT INTO pagos
-				VALUES ('$pagos_id','$facturaConsulta','$tipo_pago','$fecha','$total_despues_isv','$efectivo','$cambio','$tarjeta','$usuario','$estado_pago','$empresa_id','$fecha_registro')";
-				$query_pagos = $mysqli->query($insert);
-
-				if($query_pagos){
-					//ACTUALIZAMOS EL DETALLE DEL PAGO
-						$pagos_detalles_id = correlativo("pagos_detalles_id","pagos_detalles");
-						$insert = "INSERT INTO pagos_detalles
-						VALUES ('$pagos_detalles_id','$pagos_id','$tipo_pago_id','$banco_id','$total_despues_isv','$referencia_pago1','$referencia_pago2','$referencia_pago3')";
-						$query = $mysqli->query($insert);
-				}*/
-
-				//CONSULTAMOS EL NUMERO DE LA MUESTRA
-				$query_muestra = "SELECT muestras_id
-					FROM facturas
-					WHERE facturas_id = '$facturaConsulta'";
-				$result_muestras = $mysqli->query($query_muestra) or die($mysqli->error);
-
-				if($result_muestras->num_rows>0){
-					$consulta2Muestras = $result_muestras->fetch_assoc();
-					$muestras_id = $consulta2Muestras['muestras_id'];
-
-					//ACTUALIZAMOS EL ESTADO DE LA MUESTRA
-					$update_muestra = "UPDATE muestras
-						SET
-							estado = '1'
-						WHERE muestras_id = '$muestras_id'";
-					  $mysqli->query($update_muestra) or die($mysqli->error);
-				}
-
-				//ACTUALIZAMOS EL ESTADO DE LA FACTURA
-				$update_factura = "UPDATE facturas
-					SET
-						estado = '$estado'					
-					WHERE facturas_id = '$facturaConsulta'";
-				$mysqli->query($update_factura) or die($mysqli->error);
-			}//FIN CICLO WHILE
-
-			//ACTUALIZAMOS EL ESTADO DE LA ATENCION PARA SABER SI SE PAGO O NO LA FACTURA
-			$update_atencion = "UPDATE atenciones_medicas
-				SET
-					estado = '$estado_atencion'
-				WHERE atencion_id  = '$atencion_id'";
-			$mysqli->query($update_atencion) or die($mysqli->error);
-			
-			//CONSULTAMOS EL SALDO ANTERIOR cobrar_clientes
-			$query_saldo_cxc = "SELECT saldo FROM cobrar_clientes_grupales WHERE facturas_id = '$facturas_id'";
-			$result_saldo_cxc = $mysqli->query($query_saldo_cxc) or die($mysqli->error);
-			
-			if($result_saldo_cxc->num_rows>0){
-				$consulta2Saldo = $result_saldo_cxc->fetch_assoc();
-				$saldo_cxc = (float)$consulta2Saldo['saldo'];
-				$nuevo_saldo = (float)$saldo_cxc - (float)$importe;
-				$estado_cxc = 1;
-				
-				$tolerancia = 0.0001; // Puedes ajustar esta tolerancia según sea necesario
-				if (abs($nuevo_saldo) < $tolerancia) {
-					$estado_cxc = 2;
-				}
-				
-				//ACTUALIZAR CUENTA POR cobrar_clientes
-				$update_ccx = "UPDATE cobrar_clientes_grupales 
-					SET 
-						saldo = '$nuevo_saldo',
-						estado = '$estado_cxc'
-					WHERE 
-						facturas_id = '$facturas_id'";
-				$mysqli->query($update_ccx) or die($mysqli->error);					
-			}			
-
-			$datos = array(
-				0 => "Almacenado",
-				1 => "Pago Realizado Correctamente, ¿Desea enviar esta factura por correo electrónico?",
-				2 => "info",
-				3 => "btn-primary",
-				4 => "formTarjetaBillGrupal",
-				5 => "Registro",
-				6 => $tipoLabel ,//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
-				7 => "modal_grupo_pagos", //Modals Para Cierre Automatico
-				8 => $facturas_id, //Modals Para Cierre Automatico
-                9 => $numero,
-                10 => "Guardar"
-			);
-		}else{//NO SE PUEDO ALMACENAR ESTE REGISTRO
-			$datos = array(
-				0 => "Error",
-				1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir",
-				2 => "error",
-				3 => "btn-danger",
-				4 => "",
-				5 => "",
-			);
-		}
-	}else{//NO SE PUEDO ALMACENAR ESTE REGISTRO
-		$datos = array(
-			0 => "Error",
-			1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir",
-			2 => "error",
-			3 => "btn-danger",
-			4 => "",
-			5 => "",
-		);
-	}
-}else{
-	//CONSULTAMOS LA SECUENCIA DE FACTURACION
-	$query_secuencia = "SELECT secuencia_facturacion_id FROM facturas WHERE facturas_id  = '$facturas_id'";
-	$result_secuencia = $mysqli->query($query_secuencia) or die($mysqli->error);
-
-	if($result_secuencia->num_rows>0){
-		$consulta2secuencia = $result_secuencia->fetch_assoc();
-		$secuencia_facturacion_id = $consulta2secuencia['secuencia_facturacion_id'];
-	}
-
-	$abono = $efectivo_bill;
-	$cambio = 0;
-
-	//CONSULTAMOS EL SALDO ANTERIOR cobrar_clientes
-	$query_saldo_cxc = "SELECT saldo FROM cobrar_clientes_grupales WHERE facturas_id = '$facturas_id' AND estado = 1";
-	$result_saldo_cxc = $mysqli->query($query_saldo_cxc) or die($mysqli->error);
-
-	if($result_saldo_cxc->num_rows>0){
-		$consulta2Saldo = $result_saldo_cxc->fetch_assoc();
-		$saldo_cxc = (float)$consulta2Saldo['saldo'];
-		
-		//CONSULTAMOS EL TOTAL DEL PAGO REALIZADO
-		$query_pagos = "SELECT CAST(COALESCE(SUM(importe), 0) AS UNSIGNED) AS 'importe'
-			FROM pagos_grupal
-			WHERE facturas_grupal_id = '$facturas_id'";
-		$result_pagos = $mysqli->query($query_pagos) or die($mysqli->error);
-		
-		if($result_pagos->num_rows>0){
-			$consulta2Saldo = $result_pagos->fetch_assoc();
-			$abono = $consulta2Saldo['importe'] === "0" ? $efectivo_bill : (float)$consulta2Saldo['importe'];
-		}
-							
-		$nuevo_saldo = (float)$saldo_cxc - (float)$efectivo_bill;	
-
-		$pagos_grupal_id = correlativo("pagos_grupal_id","pagos_grupal");
-		$insert = "INSERT INTO pagos_grupal
-		VALUES ('$pagos_grupal_id','$facturas_id','$tipo_pago','$fecha_factura','$efectivo_bill','$efectivo_bill','$cambio','$tarjeta','$usuario','$estado_pago','$empresa_id','$fecha_registro')";
-		$query = $mysqli->query($insert);
-		
-		if($query){
-			//ACTUALIZAMOS EL DETALLE DEL PAGO
-			$pagos_grupal_detalles_id  = correlativo('pagos_grupal_detalles_id', 'pagos_grupal_detalles');
-			$insert = "INSERT INTO pagos_grupal_detalles
-				VALUES ('$pagos_grupal_detalles_id','$pagos_grupal_id','$tipo_pago_id','$banco_id','$efectivo_bill','$referencia_pago1','$referencia_pago2','$referencia_pago3')";
-			$query = $mysqli->query($insert);	
-
-			$estado_cxc = 1;
-			
-			$tolerancia = 0.0001; // Puedes ajustar esta tolerancia según sea necesario
-
-			// Verificar si el nuevo saldo es cercano a cero con tolerancia para valores de punto flotante
-			if (is_float($nuevo_saldo) && abs($nuevo_saldo) < $tolerancia) {
-				$estado_cxc = 2;
-			}
-
-			// Verificar si el nuevo saldo es cero para valores enteros
-			if ($nuevo_saldo == 0) {
-				$estado_cxc = 2;
-			}
-			
-			//ACTUALIZAR CUENTA POR cobrar_clientes
-			$update_ccx = "UPDATE cobrar_clientes_grupales 
-				SET 
-					saldo = '$nuevo_saldo',
-					estado = '$estado_cxc'
-				WHERE 
-					facturas_id = '$facturas_id'";
-			$mysqli->query($update_ccx) or die($mysqli->error);	
-			
-			//SI EL SADO LLEGA A CERO PROCEDEMOS EN AGREGAR LA SECUENCIA DE FACTURACION ELIMINANDO LA DE LA FACTURA PROFORMA
-			if($nuevo_saldo == 0){						
-				$tipoLabel = "PagosCXCGrupal";				
-			}	
-
-			$datos = array(
-				0 => "Almacenado",
-				1 => "Pago Realizado Correctamente, ¿Desea enviar esta factura por correo electrónico?",
-				2 => "info",
-				3 => "btn-primary",
-				4 => "formEfectivoBillGrupal",
-				5 => "Registro",
-				6 => $tipoLabel ,//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
-				7 => "modal_grupo_pagos", //Modals Para Cierre Automatico
-				8 => $facturas_id, //Modals Para Cierre Automatico
-				9 => $numero,
-				10 => "Guardar"
-			);				
-		}else{
-			$datos = array(
-				0 => "Error", 
-				1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir", 
-				2 => "error",
-				3 => "btn-danger",
-				4 => "",
-				5 => "",			
-			);				
-		}		
-	}else{
-		$datos = array(
-			0 => "Error", 
-			1 => "No existe un cobro pendiente para este cliente", 
-			2 => "error",
-			3 => "btn-danger",
-			4 => "",
-			5 => "",			
-		);			
-	}		
+    $pagos_detalles_id = correlativo("pagos_detalles_id","pagos_detalles");
+    $insDet = "INSERT INTO pagos_detalles
+        (pagos_detalles_id, pagos_id, tipo_pago_id, banco_id, efectivo, descripcion1, descripcion2, descripcion3)
+        VALUES (?,?,?,?,?,?,?,?)";
+    $stmt = $mysqli->prepare($insDet);
+    $stmt->bind_param("iiiidsss", $pagos_detalles_id, $pagos_id, $tipo_pago_id, $banco_id, $monto, $ref1, $ref2, $ref3);
+    if(!$stmt->execute()){ $stmt->close(); throw new Exception("Error detalle (tarjeta) factura $facturaId: ".$mysqli->error); }
+    $stmt->close();
+    return $pagos_id;
 }
 
+// --------- TRANSACCIÓN ----------
+$mysqli->begin_transaction();
+
+try {
+    // 1) Datos de la factura GRUPAL
+    $qf = "SELECT servicio_id, colaborador_id, fecha, pacientes_id, tipo_factura, number
+           FROM facturas_grupal WHERE facturas_grupal_id = ?";
+    $stmt = $mysqli->prepare($qf);
+    $stmt->bind_param("i", $facturas_id);
+    $stmt->execute();
+    $resF = $stmt->get_result();
+    $rowF = $resF ? $resF->fetch_assoc() : null;
+    $stmt->close();
+    if (!$rowF) throw new Exception("Factura grupal no encontrada");
+
+    $servicio_id    = (int)$rowF['servicio_id'];
+    $colaborador_id = (int)$rowF['colaborador_id'];
+    $fecha_factura  = $rowF['fecha'];
+    $pacientes_id   = (int)$rowF['pacientes_id'];
+    $tipo_factura   = (int)$rowF['tipo_factura'];  // 1=contado 2=crédito
+    $numero         = (string)$rowF['number'];
+    if ($tipo_factura === 2) $tipoLabel = "PagosGrupalCredito";
+
+    // 2) Pago grupal (TARJETA)
+    $monto_grupal   = ($tipo_factura === 1) ? $importe : $efectivo_bill;
+    if ($monto_grupal <= 0) throw new Exception("El monto del pago no puede ser cero.");
+
+    if ($tipo_factura === 1) {
+        $sqlPrev = "SELECT pagos_grupal_id FROM pagos_grupal WHERE facturas_grupal_id = ?";
+        $stmt = $mysqli->prepare($sqlPrev);
+        $stmt->bind_param("i", $facturas_id);
+        $stmt->execute();
+        $prev = $stmt->get_result();
+        $stmt->close();
+        if ($prev->num_rows > 0) throw new Exception("El pago de esta factura grupal ya fue registrado");
+    }
+
+    $efectivo_grupal = 0.0; $tarjeta_grupal = $monto_grupal; $cambio_grupal = 0;
+
+    $pagos_grupal_id = correlativo("pagos_grupal_id","pagos_grupal");
+    $insPG = "INSERT INTO pagos_grupal
+        (pagos_grupal_id, facturas_grupal_id, tipo_pago, fecha, importe, efectivo, cambio, tarjeta, usuario, estado, empresa_id, fecha_registro)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+    $stmt = $mysqli->prepare($insPG);
+    $stmt->bind_param("iiisddidiiis",
+        $pagos_grupal_id, $facturas_id, $tipo_pago, $fecha_factura,
+        $monto_grupal, $efectivo_grupal, $cambio_grupal, $tarjeta_grupal,
+        $usuario, $estado_pago, $empresa_id, $fecha_reg
+    );
+    if(!$stmt->execute()) throw new Exception("Error pago grupal (tarjeta): ".$stmt->error);
+    $stmt->close();
+
+    $pgd_id = correlativo("pagos_grupal_detalles_id","pagos_grupal_detalles");
+    $insPGD = "INSERT INTO pagos_grupal_detalles
+        (pagos_grupal_detalles_id, pagos_id, tipo_pago_id, banco_id, efectivo, descripcion1, descripcion2, descripcion3)
+        VALUES (?,?,?,?,?,?,?,?)";
+    $stmt = $mysqli->prepare($insPGD);
+    $stmt->bind_param("iiiidsss", $pgd_id, $pagos_grupal_id, $tipo_pago_id, $banco_id, $monto_grupal, $ref1, $ref2, $ref3);
+    if(!$stmt->execute()) throw new Exception("Error detalle pago grupal (tarjeta): ".$stmt->error);
+    $stmt->close();
+
+    // 3) Facturas del grupal
+    $facturas_sel = [];
+    $sqlFact = "SELECT facturas_id FROM facturas_grupal_detalle
+                WHERE facturas_grupal_id = ? ORDER BY facturas_id ASC";
+    $stmt = $mysqli->prepare($sqlFact);
+    $stmt->bind_param("i", $facturas_id);
+    $stmt->execute();
+    $resList = $stmt->get_result();
+    while ($r = $resList->fetch_assoc()) $facturas_sel[] = (int)$r['facturas_id'];
+    $stmt->close();
+
+    // 4) Aplicación según tipo
+    if ($tipo_factura === 1) {
+        // CONTADO: pagar cada factura completa con TARJETA + marcar muestra
+        foreach ($facturas_sel as $fid) {
+            $totalFactura = totalFactura($mysqli, $fid);
+            if ($totalFactura <= 0) continue;
+
+            insertarPagoFacturaTarjeta(
+                $mysqli, $fid, 1/*contado*/, $fecha_factura, $totalFactura,
+                $usuario, $empresa_id, $fecha_reg, $tipo_pago_id, $banco_id, $ref1, $ref2, $ref3
+            );
+
+            // marcar muestra atendida
+            marcarMuestraAtendidaPorFactura($mysqli, $fid);
+
+            // factura pagada
+            $updF = "UPDATE facturas SET estado = ? WHERE facturas_id = ?";
+            $stmt = $mysqli->prepare($updF);
+            $stmt->bind_param("ii", $estado_pagada, $fid);
+            $stmt->execute(); $stmt->close();
+        }
+
+        // grupal pagado
+        $updFG = "UPDATE facturas_grupal SET estado = ? WHERE facturas_grupal_id = ?";
+        $stmt = $mysqli->prepare($updFG);
+        $stmt->bind_param("ii", $estado_pagada, $facturas_id);
+        $stmt->execute(); $stmt->close();
+
+        // atención (si existe)
+        $sqlAt = "SELECT atencion_id
+                  FROM atenciones_medicas
+                  WHERE pacientes_id = ? AND servicio_id = ? AND colaborador_id = ? AND fecha = ?
+                  LIMIT 1";
+        $stmt = $mysqli->prepare($sqlAt);
+        $stmt->bind_param("iiis", $pacientes_id, $servicio_id, $colaborador_id, $fecha_factura);
+        $stmt->execute();
+        $resAt = $stmt->get_result();
+        $rowAt = $resAt ? $resAt->fetch_assoc() : null;
+        $stmt->close();
+        if ($rowAt && !empty($rowAt['atencion_id'])) {
+            $atencion_id = (int)$rowAt['atencion_id'];
+            $updAt = "UPDATE atenciones_medicas SET estado = ? WHERE atencion_id = ?";
+            $stmt = $mysqli->prepare($updAt);
+            $stmt->bind_param("ii", $estado_atenc, $atencion_id);
+            $stmt->execute(); $stmt->close();
+        }
+
+        // CxC grupal
+        $sqlSaldo = "SELECT saldo FROM cobrar_clientes_grupales WHERE facturas_id = ?";
+        $stmt = $mysqli->prepare($sqlSaldo);
+        $stmt->bind_param("i", $facturas_id);
+        $stmt->execute();
+        $resSaldo = $stmt->get_result();
+        $rowSaldo = $resSaldo ? $resSaldo->fetch_assoc() : null;
+        $stmt->close();
+        if ($rowSaldo) {
+            $saldo_cxc   = (float)$rowSaldo['saldo'];
+            $nuevo_saldo = $saldo_cxc - $monto_grupal;
+            $estado_cxc  = (abs($nuevo_saldo) < 0.0001) ? 2 : 1;
+            $updCxc = "UPDATE cobrar_clientes_grupales SET saldo = ?, estado = ? WHERE facturas_id = ?";
+            $stmt = $mysqli->prepare($updCxc);
+            $stmt->bind_param("dii", $nuevo_saldo, $estado_cxc, $facturas_id);
+            $stmt->execute(); $stmt->close();
+            if ($estado_cxc === 2) $tipoLabel = "PagosCXCGrupal";
+        }
+
+    } else {
+        // CRÉDITO: abono secuencial con TARJETA — y marcar muestra si saldada
+        $abono_rest = $efectivo_bill;
+        foreach ($facturas_sel as $fid) {
+            if ($abono_rest <= 0) break;
+            $total  = totalFactura($mysqli, $fid);
+            $pagado = pagosPreviosFactura($mysqli, $fid);
+            $pend   = max(0.0, $total - $pagado);
+            if ($pend <= 0) continue;
+
+            $aPagar = min($abono_rest, $pend);
+            if ($aPagar > 0) {
+                insertarPagoFacturaTarjeta(
+                    $mysqli, $fid, 2/*crédito*/, $fecha_factura, $aPagar,
+                    $usuario, $empresa_id, $fecha_reg, $tipo_pago_id, $banco_id, $ref1, $ref2, $ref3
+                );
+
+                // si quedó saldada: marcar muestra y poner pagada
+                $pagadoNuevo = pagosPreviosFactura($mysqli, $fid);
+                $pendNuevo   = max(0.0, $total - $pagadoNuevo);
+                if ($pendNuevo <= 0.0001) {
+                    marcarMuestraAtendidaPorFactura($mysqli, $fid);
+                    $updF = "UPDATE facturas SET estado = 2 WHERE facturas_id = ?";
+                    $stmt = $mysqli->prepare($updF);
+                    $stmt->bind_param("i", $fid);
+                    $stmt->execute(); $stmt->close();
+                }
+
+                $abono_rest -= $aPagar;
+            }
+        }
+
+        // CxC grupal
+        $sqlSaldo = "SELECT saldo FROM cobrar_clientes_grupales WHERE facturas_id = ? AND estado = 1";
+        $stmt = $mysqli->prepare($sqlSaldo);
+        $stmt->bind_param("i", $facturas_id);
+        $stmt->execute();
+        $resSaldo = $stmt->get_result();
+        $rowSaldo = $resSaldo ? $resSaldo->fetch_assoc() : null;
+        $stmt->close();
+        if (!$rowSaldo) throw new Exception("No existe un cobro pendiente para este cliente");
+
+        $saldo_cxc   = (float)$rowSaldo['saldo'];
+        $nuevo_saldo = $saldo_cxc - $efectivo_bill;
+        $estado_cxc  = (abs($nuevo_saldo) < 0.0001) ? 2 : 1;
+        $updCxc = "UPDATE cobrar_clientes_grupales SET saldo = ?, estado = ? WHERE facturas_id = ?";
+        $stmt = $mysqli->prepare($updCxc);
+        $stmt->bind_param("dii", $nuevo_saldo, $estado_cxc, $facturas_id);
+        $stmt->execute(); $stmt->close();
+        if ($estado_cxc === 2) $tipoLabel = "PagosCXCGrupal";
+    }
+
+    // COMMIT
+    $mysqli->commit();
+    $datos = array(
+        0=>"Almacenado",1=>"Pago Realizado Correctamente, ¿Desea enviar esta factura por correo electrónico?",
+        2=>"info",3=>"btn-primary",4=>"formTarjetaBillGrupal",5=>"Registro",
+        6=>$tipoLabel,7=>"modal_grupo_pagos",8=>$facturas_id,9=>$numero,10=>"Guardar"
+    );
+
+} catch (Exception $e) {
+    $mysqli->rollback();
+    $datos = array(0=>"Error",1=>$e->getMessage(),2=>"error",3=>"btn-danger",4=>"",5=>"");
+}
 echo json_encode($datos);
