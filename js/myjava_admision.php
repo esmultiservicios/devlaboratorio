@@ -283,17 +283,19 @@ function pagination(partida, firstLoad){
 
 function paginationMuestras(partida){
   var url = '<?php echo SERVERURL; ?>php/admision/paginarMuestras.php';
-  var estado = $('#form_main_admision_muestras #estado').val() || 2;
+
+  // NO pongas 2 como fallback. Si no hay selección, no filtres por estado.
+  var estado = $('#form_main_admision_muestras #estado').val(); // puede venir "", null o "0/1/2"
   var cliente = $('#form_main_admision_muestras #cliente').val() || '';
   var tipo_muestra = $('#form_main_admision_muestras #tipo_muestra').val() || '';
   var fecha_i = $('#form_main_admision_muestras #fecha_i').val() || '';
   var fecha_f = $('#form_main_admision_muestras #fecha_f').val() || '';
-  var	dato = $('#form_main_admision_muestras #bs_regis').val() || '';
+  var dato = $('#form_main_admision_muestras #bs_regis').val() || '';
 
   $.ajax({
     type:'POST',
     url:url,
-    data:'partida='+partida+'&estado='+estado+'&cliente='+cliente+'&tipo_muestra='+tipo_muestra+'&fecha_i='+fecha_i+'&fecha_f='+fecha_f+'&dato='+dato,
+    data:'partida='+partida+'&estado='+encodeURIComponent(estado ?? '')+'&cliente='+cliente+'&tipo_muestra='+tipo_muestra+'&fecha_i='+fecha_i+'&fecha_f='+fecha_f+'&dato='+encodeURIComponent(dato),
     beforeSend: function(){ if (typeof showLoading === 'function') showLoading("Por favor espere..."); },
     success:function(data){
       try{
@@ -309,14 +311,8 @@ function paginationMuestras(partida){
     error : function(){
       if (typeof hideLoading === 'function') hideLoading();
       if (typeof swal === 'function'){
-        swal({
-          title: 'Error',
-          text: 'No se enviaron los datos, favor corregir',
-          icon: "error",
-          dangerMode: true,
-          closeOnEsc: false,
-          closeOnClickOutside: false
-        });
+        swal({ title:'Error', text:'No se enviaron los datos, favor corregir', icon:'error',
+          dangerMode:true, closeOnEsc:false, closeOnClickOutside:false });
       }
     }
   });
