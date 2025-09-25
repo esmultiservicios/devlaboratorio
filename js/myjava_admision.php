@@ -122,7 +122,8 @@ function initPage(){
     getHospitales(),
     getCategorias(),
     getClientesAdmision(),
-    getTipo()
+    getTipo(),
+    getServicio()
   ];
 
   $.when.apply($, essentials).always(function(){
@@ -1056,7 +1057,9 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, m
           $('#formulario_facturacion #fecha').val(getFechaActual());
           $('#formulario_facturacion #colaborador_id').val(datos[3]);
           $('#formulario_facturacion #colaborador_nombre').val(datos[4]);
-          $('#formulario_facturacion #servicio_id').val(datos[5]); safeRefresh($('#formulario_facturacion #servicio_id'));
+          $('#formulario_facturacion #servicio_id').val(datos[5]); 
+          $('#formulario_facturacion #servicio_id').selectpicker('refresh');
+          //safeRefresh($('#formulario_facturacion #servicio_id'));
           $('#formulario_facturacion #material_enviado_muestra').val(datos[6]);
           $('#formulario_facturacion #paciente_muestra_codigo').val(datos[7]);
           $('#formulario_facturacion #paciente_muestra').val(datos[8]);
