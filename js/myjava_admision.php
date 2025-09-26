@@ -1021,6 +1021,7 @@ function getEstadoFactura(muestras_id){
 }
 
 function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, isv){
+
   if($('#form_main_admision_muestras #estado').val() == 0){
     if(getEstadoFactura(muestras_id) === ""){
       createBill(muestras_id, producto, nombre_producto, precio_venta, isv);

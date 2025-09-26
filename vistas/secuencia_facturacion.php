@@ -66,137 +66,190 @@ $mysqli->close();//CERRAR CONEXIÓN
 
 <!--INICIO MODAL-->
 <div class="modal fade" id="secuenciaFacturacion">
-	<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Secuencia de Facturación</h4>
-			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-			  <span aria-hidden="true">&times;</span>
-			</button>
-        </div>
-        <div class="modal-body">
-			<form class="FormularioAjax" id="formularioSecuenciaFacturacion" data-async data-target="#rating-modal" action="" method="POST" data-form="" autocomplete="off" enctype="multipart/form-data">
-				<div class="form-row">
-					<div class="col-md-12 mb-3">
-					    <input type="hidden" id="secuencia_facturacion_id" name="secuencia_facturacion_id" class="form-control">
-						<div class="input-group mb-3">
-							<input type="text" required readonly id="pro" name="pro" class="form-control"/>
-							<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fa fa-plus-square"></i></span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="form-row">
-          			<div class="col-md-3 mb-3">
-					    <label for="empresa">Empresa <span class="priority">*<span/></label>
-						<div class="input-group mb-3">
-							<select class="selectpicker" id="empresa" name="empresa" required data-live-search="true" title="Empresa">
-							</select>
-						</div>
-					</div>
-					<div class="col-md-3 mb-3">
-					    <label for="documento_id">Documento <span class="priority">*<span/></label>
-						<div class="input-group mb-3">
-							<select class="selectpicker" id="documento_id" name="documento_id" required data-live-search="true" title="Documento">
-							</select>
-						</div>
-					</div>					
-					<div class="col-md-6 mb-3">
-					  <label for="cai">CAI</label>
-					  <div class="input-group mb-3">
-						  <input type="text" name="cai" id="cai" class="form-control" placeholder="CAI" data-toggle="tooltip" data-placement="top" title="Este es el número entregado en la documentación solicitada el cual tendrá el siguiente formato: CAI: 57606A-B57ED1-224B98-7DA363-38B33B-B1">
-						  	<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="far fa-id-card fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="col-md-4 mb-3">
-					  <label for="prefijo">Prefijo</label>
-					  <div class="input-group mb-3">
-						  <input type="text" name="prefijo" id="prefijo" class="form-control" placeholder="Prefijo" data-toggle="tooltip" data-placement="top" title="Este es el número incial de la facturación según el documento entregado el cual inicia por ejemplo: 000-001-01-">
-							<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fab fa-autoprefixer fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-					<div class="col-md-4 mb-3">
-					  <label for="relleno">Relleno <span class="priority">*<span/></label>
-					  <div class="input-group mb-3">
-						  <input type="number" name="relleno" id="relleno" class="form-control" placeholder="Relleno" required data-toggle="tooltip" data-placement="top" title="Esta es la cantidad de ceros que se agregaran antes del número para completar el valor total necesario">
-						  	<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-fill fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-					<div class="col-md-4 mb-3">
-					  <label for="nombre">Incremento <span class="priority">*<span/></label>
-					  <div class="input-group mb-3">
-						  <input type="incremento" name="incremento" id="incremento" class="form-control" placeholder="Incremento" required data-toggle="tooltip" data-placement="top" title="Esta opción se refiere a la cantidad de números en lo cual el numero en la casilla siguiente se va a incrementar, por ejemplo: Sí agregar el número 1 se incrementará de uno en uno, si agrega 2, de dos en dos y así |sucesivamente el número que agregué">
-						  	<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-arrow-right fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="col-md-4 mb-3">
-					  <label for="nombre">Siguiente <span class="priority">*<span/></label>
-					  <div class="input-group mb-3">
-						  <input type="siguiente" name="siguiente" id="siguiente" class="form-control" data-toggle="tooltip" data-placement="top" title="Número Siguiente" placeholder="Siguiente" required data-toggle="tooltip" data-placement="top" title="Este campo hace referencia al siguiente número que continua en el correlativo">
-						  	<div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-caret-right fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-					<div class="col-md-4 mb-3">
-					  <label for="rango_inicial">Rango Inicial <span class="priority">*<span/></label>
-					  <div class="input-group mb-3">
-						  <input type="text" name="rango_inicial" id="rango_inicial" class="form-control" placeholder="Rango Inicial" required="required">
-						  <div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-list-ol fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-					<div class="col-md-4 mb-3">
-					  <label for="rango_final">Rango Final <span class="priority">*<span/></label>
-					  <div class="input-group mb-3">
-						  <input type="number" name="rango_final" id="rango_final" class="form-control" placeholder="Rango Final" required="required">
-						  <div class="input-group-append">
-								<span class="input-group-text"><div class="sb-nav-link-icon"></div><i class="fas fa-list-ol fa-lg"></i></span>
-							</div>
-					   </div>
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="col-md-4 mb-3">
-					  <label for="fecha_activacion">Fecha de Activación <span class="priority">*<span/></label>
-					  <input type="date" required="required" id="fecha_activacion" name="fecha_activacion" value="<?php echo date ("Y-m-d");?>" class="form-control"/>
-					</div>
-					<div class="col-md-4 mb-3">
-					  <label for="fecha_limite">Fecha Límite <span class="priority">*<span/></label>
-					  <input type="date" required="required" id="fecha_limite" name="fecha_limite" value="<?php echo date ("Y-m-d");?>" class="form-control"/>
-					</div>
-          			<div class="col-md-3 mb-3">
-					    <label for="estado">Estado <span class="priority">*<span/></label>
-						<div class="input-group mb-3">
-							<select class="selectpicker" id="estado" name="estado" required data-live-search="true" title="Estado">
-							</select>
-						</div>
-					</div>
-				</div>
-			</form>
-        </div>
-		<div class="modal-footer">
-			<button class="btn btn-primary ml-2" form="formularioSecuenciaFacturacion" type="submit" id="reg"><div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Registrar</button>
-			<button class="btn btn-warning ml-2" form="formularioSecuenciaFacturacion" type="submit" id="edi"><div class="sb-nav-link-icon"></div><i class="fas fa-edit fa-lg"></i> Modificar</button>
-			<button class="btn btn-danger ml-2" form="formularioSecuenciaFacturacion" type="submit" id="delete"><div class="sb-nav-link-icon"></div><i class="fas fa-trash fa-lg"></i> Eliminar</button>
-		</div>
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Secuencia de Facturación</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form class="FormularioAjax" id="formularioSecuenciaFacturacion" data-async data-target="#rating-modal" action="" method="POST" data-form="" autocomplete="off" enctype="multipart/form-data">
+          <div class="form-row">
+            <div class="col-md-12 mb-3">
+              <input type="hidden" id="secuencia_facturacion_id" name="secuencia_facturacion_id" class="form-control">
+              <div class="input-group mb-1">
+                <input type="text" required readonly id="pro" name="pro" class="form-control"/>
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fa fa-plus-square"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Indica si es registro, edición o eliminación.</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Empresa -->
+            <div class="col-md-3 mb-3">
+              <label for="empresa">Empresa <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <select class="selectpicker" id="empresa" name="empresa" required data-live-search="true" title="Empresa"></select>
+              </div>
+              <small class="form-text text-muted">Empresa a la que aplicará esta secuencia.</small>
+            </div>
+
+            <!-- Documento -->
+            <div class="col-md-3 mb-3">
+              <label for="documento_id">Documento <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <select class="selectpicker" id="documento_id" name="documento_id" required data-live-search="true" title="Documento"></select>
+              </div>
+              <small class="form-text text-muted">Tipo de documento que usará esta numeración.</small>
+            </div>
+
+            <!-- CAI -->
+            <div class="col-md-6 mb-3">
+              <label for="cai">CAI</label>
+              <div class="input-group mb-1">
+                <input type="text" name="cai" id="cai" class="form-control" placeholder="CAI"
+                       data-toggle="tooltip" data-placement="top"
+                       title="Formato ejemplo: 57606A-B57ED1-224B98-7DA363-38B33B-B1">
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="far fa-id-card fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Obligatorio solo para <em>Factura Electrónica</em>.</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Prefijo -->
+            <div class="col-md-4 mb-3">
+              <label for="prefijo">Prefijo</label>
+              <div class="input-group mb-1">
+                <input type="text" name="prefijo" id="prefijo" class="form-control" placeholder="Prefijo"
+                       data-toggle="tooltip" data-placement="top"
+                       title="Prefijo autorizado. Ej.: 000-001-01-">
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fab fa-autoprefixer fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Opcional. Se antepone al número mostrado.</small>
+            </div>
+
+            <!-- Relleno -->
+            <div class="col-md-4 mb-3">
+              <label for="relleno">Relleno <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <input type="number" min="1" step="1" name="relleno" id="relleno" class="form-control" placeholder="Relleno" required
+                       data-toggle="tooltip" data-placement="top"
+                       title="Cantidad total de dígitos del número, completando con ceros a la izquierda.">
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fas fa-fill fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Ej.: con <strong>8</strong>, el 1 se mostrará como <code>00000001</code>.</small>
+            </div>
+
+            <!-- Incremento -->
+            <div class="col-md-4 mb-3">
+              <label for="incremento">Incremento <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <input type="number" min="1" step="1" name="incremento" id="incremento" class="form-control" placeholder="Incremento" required
+                       data-toggle="tooltip" data-placement="top"
+                       title="Cantidad en que aumenta el correlativo cada vez.">
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fas fa-arrow-right fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Normalmente <strong>1</strong> (de uno en uno).</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Siguiente -->
+            <div class="col-md-4 mb-3">
+              <label for="siguiente">Siguiente <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <input type="number" min="1" step="1" name="siguiente" id="siguiente" class="form-control"
+                       placeholder="Siguiente" required
+                       data-toggle="tooltip" data-placement="top" title="Próximo número real a emitir (entero).">
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fas fa-caret-right fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Debe estar dentro del rango y no existir ya en <em>Facturas</em> para esta empresa/documento.</small>
+            </div>
+
+            <!-- Rango Inicial -->
+            <div class="col-md-4 mb-3">
+              <label for="rango_inicial">Rango Inicial <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <input type="text" name="rango_inicial" id="rango_inicial" class="form-control" placeholder="Rango Inicial" required>
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fas fa-list-ol fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Escribe solo el número (sin ceros). Se rellenará según el <strong>Relleno</strong>.</small>
+            </div>
+
+            <!-- Rango Final -->
+            <div class="col-md-4 mb-3">
+              <label for="rango_final">Rango Final <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <input type="number" min="1" step="1" name="rango_final" id="rango_final" class="form-control" placeholder="Rango Final" required>
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="fas fa-list-ol fa-lg"></i></span>
+                </div>
+              </div>
+              <small class="form-text text-muted">Solo número (sin ceros). El sistema completará con ceros por el <strong>Relleno</strong>.</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Fecha de Activación -->
+            <div class="col-md-4 mb-3">
+              <label for="fecha_activacion">Fecha de Activación <span class="priority">*</span></label>
+              <input type="date" required id="fecha_activacion" name="fecha_activacion" value="<?php echo date('Y-m-d');?>" class="form-control"/>
+              <small class="form-text text-muted">Desde cuándo se pueden emitir documentos con esta numeración.</small>
+            </div>
+
+            <!-- Fecha Límite -->
+            <div class="col-md-4 mb-3">
+              <label for="fecha_limite">Fecha Límite <span class="priority">*</span></label>
+              <input type="date" required id="fecha_limite" name="fecha_limite" value="<?php echo date('Y-m-d');?>" class="form-control"/>
+              <small class="form-text text-muted">Fecha máxima de validez de esta autorización.</small>
+            </div>
+
+            <!-- Estado -->
+            <div class="col-md-3 mb-3">
+              <label for="estado">Estado <span class="priority">*</span></label>
+              <div class="input-group mb-1">
+                <select class="selectpicker" id="estado" name="estado" required data-live-search="true" title="Estado"></select>
+              </div>
+              <small class="form-text text-muted">Define si la secuencia queda activa o inactiva.</small>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary ml-2" form="formularioSecuenciaFacturacion" type="submit" id="reg">
+          <i class="far fa-save fa-lg"></i> Registrar
+        </button>
+        <button class="btn btn-warning ml-2" form="formularioSecuenciaFacturacion" type="submit" id="edi">
+          <i class="fas fa-edit fa-lg"></i> Modificar
+        </button>
+        <button class="btn btn-danger ml-2" form="formularioSecuenciaFacturacion" type="submit" id="delete">
+          <i class="fas fa-trash fa-lg"></i> Eliminar
+        </button>
       </div>
     </div>
+  </div>
 </div>
+
    <?php include("modals/modals.php");?>
 
    <!--Fin Ventanas Modales-->

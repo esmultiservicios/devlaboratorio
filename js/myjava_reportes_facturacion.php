@@ -307,62 +307,55 @@ function modal_rollback(facturas_id, pacientes_id){
 	}
 }
 
-function rollback(facturas_id,comentario){
-	var fecha = getFechaFactura(facturas_id);
+function rollback(facturas_id, comentario) {
+  try {
+    var fecha = getFechaFactura(facturas_id); // tu función
     var hoy = new Date();
-    fecha_actual = convertDate(hoy);
+    var fecha_actual = convertDate(hoy);      // tu función
 
-	var url = '<?php echo SERVERURL; ?>php/reporte_facturacion/rollback.php';
+    var url = '<?php echo SERVERURL; ?>php/reporte_facturacion/rollback.php';
 
-	if ( fecha <= fecha_actual){
-	   $.ajax({
-		  type:'POST',
-		  url:url,
-		  data:'facturas_id='+facturas_id+'&comentario='+comentario,
-		  success: function(registro){
-			  if(registro == 1){
-			    listar_reporte_facturacion();
-				swal({
-					title: "Success",
-					text: "Factura cancelada correctamente",
-					icon: "success",
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
-				});
-			    return false;
-			  }else if(registro == 2){
-				swal({
-					title: "Error",
-					text: "Error al cancelar la factura",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
-			    return false;
-			  }else{
-				swal({
-					title: "Error",
-					text: "Error al ejecutar esta acción",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
-			  }
-		  }
-	   });
-	   return false;
-	}else{
-		swal({
-			title: "Error",
-			text: "No se puede ejecutar esta acción fuera de esta fecha",
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-		});
-	}
+    // Validación básica previa (igual que tenías)
+    if (fecha > fecha_actual) {
+      showNotify("error", "Error", "No se puede ejecutar esta acción fuera de esta fecha");
+      return false;
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: url,
+      dataType: 'json',
+      data: {
+        facturas_id: facturas_id,
+        comentario: comentario
+      },
+      success: function (resp) {
+        // Se espera {status, code, title, message, data?}
+        if (resp && resp.status === true) {
+          // Éxito
+          listar_reporte_facturacion(); // refrescar tabla
+          showNotify("success", "Success", resp.message || "Registro anulado correctamente");
+        } else {
+          // Error controlado desde PHP
+          var title = (resp && resp.title) ? resp.title : "Error";
+          var msg   = (resp && resp.message) ? resp.message : "Error al ejecutar esta acción";
+          // Si quieres distinguir por resp.code:
+          // switch(resp.code) { case 'NOT_FOUND': ...; break; }
+          showNotify("error", title, msg);
+        }
+      },
+      error: function (xhr, status, err) {
+        // Error no controlado (red, parse, 500 sin JSON, etc.)
+        let info = (xhr && xhr.responseText) ? xhr.responseText.toString().slice(0, 300) + "..." : String(err || status);
+        showNotify("error", "Error", "Error al ejecutar la solicitud. " + info);
+      }
+    });
+
+    return false;
+  } catch (e) {
+    showNotify("error", "Error", "Excepción no controlada: " + (e && e.message ? e.message : e));
+    return false;
+  }
 }
 
 function consultarNombre(pacientes_id){

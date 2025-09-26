@@ -1535,3 +1535,52 @@ function getTablesDB(){
 	return $result;
 }
 /*INICIO CONVERTIR NUMEROS A LETRAS*/  
+
+// Retorna true si $date (Y-m-d) es fin de semana (sábado o domingo)
+function isWeekend($dateYmd) {
+    $d = new DateTime($dateYmd);
+    $w = (int)$d->format('N'); // 1=lun .. 7=dom
+    return ($w >= 6); // 6=sáb, 7=dom
+}
+
+// Avanza al próximo lunes si $date cae en sábado o domingo
+function nextBusinessDayIfWeekend($dateYmd) {
+    $d = new DateTime($dateYmd);
+    $w = (int)$d->format('N');
+    if ($w == 6) {      // sábado
+        $d->modify('+2 days'); // lunes
+    } elseif ($w == 7) { // domingo
+        $d->modify('+1 day'); // lunes
+    }
+    return $d->format('Y-m-d');
+}
+
+// Calcula la fecha límite SAR: día 10 del mes siguiente,
+// ajustado al siguiente día hábil si cae en fin de semana.
+function getFechaLimiteDeclaracion($fechaFacturaYmd, $cutoffDay = 10) {
+    $f = new DateTime($fechaFacturaYmd);
+    // Ir al primer día del mes siguiente
+    $f->modify('first day of next month');
+    // Fijar el día 10 (o el que indiques en $cutoffDay)
+    $f->setDate(
+        (int)$f->format('Y'), 
+        (int)$f->format('m'), 
+        (int)$cutoffDay
+    );
+    $limite = $f->format('Y-m-d');
+    // Mover a lunes si es fin de semana
+    return nextBusinessDayIfWeekend($limite);
+}
+
+// ¿Se permite anulación? (hoy <= fecha_límite) y (opcional: período no declarado)
+function anulacionPermitidaSegunSAR($fechaFacturaYmd, $hoyYmd = null, $periodoDeclarado = false) {
+    if ($hoyYmd === null) $hoyYmd = date('Y-m-d');
+    $limite = getFechaLimiteDeclaracion($fechaFacturaYmd, 10);
+    $permitida = (strcmp($hoyYmd, $limite) <= 0) && !$periodoDeclarado;
+    return [
+        "permitida"     => $permitida,
+        "fecha_limite"  => $limite,
+        "hoy"           => $hoyYmd,
+        "periodo_cerrado" => (bool)$periodoDeclarado,
+    ];
+}
