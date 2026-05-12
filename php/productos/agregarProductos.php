@@ -1,179 +1,271 @@
 <?php
 session_start();
+header('Content-Type: application/json; charset=utf-8');
+
 include "../funtions.php";
 
-//CONEXION A DB
-$mysqli = connect_mysqli();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$usuario = $_SESSION['colaborador_id'];
-$nombre = cleanStringStrtolower($_POST['nombre']);
-
-if(isset($_POST['categoria'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['categoria'] == ""){
-		$categoria = 0;
-	}else{
-		$categoria = $_POST['categoria'];
-	}
-}else{
-	$categoria = 0;
+function responder($datos) {
+	echo json_encode($datos);
+	exit;
 }
 
-if(isset($_POST['medida'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['medida'] == ""){
-		$medida = 0;
-	}else{
-		$medida = $_POST['medida'];
+function post_int($key, $default = 0) {
+	if (!isset($_POST[$key]) || trim($_POST[$key]) === "") {
+		return $default;
 	}
-}else{
-	$medida = 0;
+	return (int)$_POST[$key];
 }
 
-if(isset($_POST['almacen'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['almacen'] == ""){
-		$almacen = 0;
-	}else{
-		$almacen = $_POST['almacen'];
+function post_float($key, $default = 0) {
+	if (!isset($_POST[$key]) || trim($_POST[$key]) === "") {
+		return $default;
 	}
-}else{
-	$almacen = 0;
+
+	$valor = trim($_POST[$key]);
+	$valor = str_replace(",", "", $valor);
+
+	return (float)$valor;
 }
 
-if(isset($_POST['categoria_producto'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['categoria_producto'] == ""){
-		$tipo_muestra_id = 0;
-	}else{
-		$tipo_muestra_id = $_POST['categoria_producto'];
+function post_string($key, $default = "") {
+	if (!isset($_POST[$key])) {
+		return $default;
 	}
-}else{
-	$tipo_muestra_id = 0;
+	return trim($_POST[$key]);
 }
 
-if(isset($_POST['cantidad'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['cantidad'] == ""){
-		$cantidad = 0;
-	}else{
-		$cantidad = $_POST['cantidad'];
-	}
-}else{
-	$cantidad = 0;
-}
+try {
+	$mysqli = connect_mysqli();
+	$mysqli->set_charset("utf8");
 
-$concentracion = $_POST['concentracion'];
-$precio_compra = $_POST['precio_compra'];
-$precio_venta = $_POST['precio_venta'];
-$precio_venta2 = $_POST['precio_venta2'];
-$precio_venta3 = $_POST['precio_venta3'];
-$precio_venta4 = $_POST['precio_venta4'];
-$cantidad_minima = $_POST['cantidad_minima'];
-$cantidad_maxima = $_POST['cantidad_maxima'];
-
-if(isset($_POST['producto_activo'])){
-	if(isset($_POST['producto_activo'])){
-		$estado = $_POST['producto_activo'];
-	}else{
-		$estado = 2;
-	}
-}else{
-	$estado = 2;
-}
-
-if(isset($_POST['producto_isv_factura'])){
-	if(isset($_POST['producto_isv_factura'])){
-		$isv = $_POST['producto_isv_factura'];
-	}else{
-		$isv = 2;
-	}
-}else{
-	$isv = 2;
-}
-
-$descripcion = cleanStringStrtolower($_POST['descripcion']);
-$fecha_registro = date("Y-m-d H:i:s");
-$fecha = date("Y-m-d");
-
-//VERIFICAMOS QUE NO EXISTA EL REGISTRO
-$query = "SELECT productos_id
-	FROM productos
-	WHERE nombre = '$nombre'";
-
-$result = $mysqli->query($query) or die($mysqli->error);
-
-if($result->num_rows==0){
-	$productos_id  = correlativo('productos_id  ', 'productos');
-	$insert = "INSERT INTO productos
-		VALUES('$productos_id','$almacen','$medida','$concentracion','$nombre','$descripcion','$categoria','$cantidad','$precio_compra','$precio_venta','$precio_venta2','$precio_venta3','$precio_venta4','$cantidad_minima','$cantidad_maxima','$estado','$isv','$usuario','$fecha_registro','$tipo_muestra_id')";
-
-	$query = $mysqli->query($insert) or die($mysqli->error);
-
-    if($query){
-		$datos = array(
-			0 => "Almacenado",
-			1 => "Registro Almacenado Correctamente",
-			2 => "success",
-			3 => "btn-primary",
-			4 => "formulario_productos",
-			5 => "Registro",
-			6 => "Productos",//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
-			7 => "modal_productos", //Modals Para Cierre Automatico
-		);
-
-		//CONSULTAMOS LA CATEGORIA DEL PRODUCTOS
-		$query_categoria = "SELECT nombre
-			FROM categoria_producto
-			WHERE categoria_producto_id  = '$categoria'";
-		$result_categoria = $mysqli->query($query_categoria) or die($mysqli->error);
-
-		$categoria_producto = "";
-
-		if($result_categoria->num_rows > 0){
-			$valores2 = $result_categoria->fetch_assoc();
-
-			$categoria_producto = $valores2['nombre'];
-		}
-
-		//ACTUALIZAMOS LOS MOVIMIENTOS DE LOS PRODUCTOS
-		if ($categoria_producto == "Producto" || $categoria_producto == "Insumos"){
-			$movimientos_id  = correlativo('movimientos_id  ', 'movimientos');
-			$documento = "Entrada Productos ".$movimientos_id;
-			$comentario_movimientos = "Ingreso de Producto";
-
-			if($cantidad>0){
-				$insert = "INSERT INTO movimientos VALUES('$movimientos_id','$productos_id','$documento','$cantidad','$0','$cantidad','$fecha_registro', '$comentario_movimientos')";
-				$mysqli->query($insert) or die($mysqli->error);
-			}
-		}
-
-		/*********************************************************************************************************************************************************************/
-		/*********************************************************************************************************************************************************************/
-		//INGRESAR REGISTROS EN LA ENTIDAD HISTORIAL
-		$historial_numero = historial();
-		$estado_historial = "Agregar";
-		$observacion_historial = "Se ha agregado un nuevo producto: $nombre con codigo: $productos_id";
-		$modulo = "Productos";
-		$insert = "INSERT INTO historial
-		   VALUES('$historial_numero','0','0','$modulo','$productos_id','$usuario','0','$fecha','$estado_historial','$observacion_historial','$usuario','$fecha_registro')";
-		$mysqli->query($insert) or die($mysqli->error);
-		/*********************************************************************************************************************************************************************/
-	}else{
-		$datos = array(
+	if (!isset($_SESSION['colaborador_id'])) {
+		responder(array(
 			0 => "Error",
-			1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir",
+			1 => "La sesión ha expirado. Por favor, inicie sesión nuevamente.",
 			2 => "error",
 			3 => "btn-danger",
 			4 => "",
 			5 => "",
-		);
+		));
 	}
-}else{
-	$datos = array(
+
+	$usuario = (int)$_SESSION['colaborador_id'];
+
+	$nombre = cleanString(post_string('nombre'));
+	$descripcion = cleanString(post_string('descripcion'));
+
+	$categoria = post_int('categoria', 0);
+	$medida = post_int('medida', 0);
+	$almacen = post_int('almacen', 0);
+	$tipo_muestra_id = post_int('categoria_producto', 0);
+
+	$concentracion = post_int('concentracion', 0);
+	$cantidad = post_float('cantidad', 0);
+	$precio_compra = post_float('precio_compra', 0);
+	$precio_venta = post_float('precio_venta', 0);
+	$precio_venta2 = post_float('precio_venta2', 0);
+	$precio_venta3 = post_float('precio_venta3', 0);
+	$precio_venta4 = post_float('precio_venta4', 0);
+
+	$cantidad_minima = post_int('cantidad_minima', 0);
+	$cantidad_maxima = post_int('cantidad_maxima', 0);
+
+	$estado = isset($_POST['producto_activo']) ? 1 : 2;
+	$isv = isset($_POST['producto_isv_factura']) ? 1 : 2;
+
+	$fecha_registro = date("Y-m-d H:i:s");
+	$fecha = date("Y-m-d");
+
+	if ($nombre == "") {
+		responder(array(
+			0 => "Error",
+			1 => "Debe ingresar el nombre del producto.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	if ($categoria <= 0 || $medida <= 0 || $almacen <= 0 || $tipo_muestra_id <= 0) {
+		responder(array(
+			0 => "Error",
+			1 => "Debe completar tipo, categoría, medida y almacén.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	// VERIFICAR SI YA EXISTE
+	$stmt = $mysqli->prepare("SELECT productos_id FROM productos WHERE nombre = ? LIMIT 1");
+	$stmt->bind_param("s", $nombre);
+	$stmt->execute();
+	$result = $stmt->get_result();
+
+	if ($result->num_rows > 0) {
+		responder(array(
+			0 => "Error",
+			1 => "Lo sentimos, este registro ya existe no se puede almacenar.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	// IMPORTANTE: sin espacios en productos_id
+	$productos_id = correlativo('productos_id', 'productos');
+
+	$stmt = $mysqli->prepare("
+		INSERT INTO productos (
+			productos_id,
+			almacen_id,
+			medida_id,
+			concentracion,
+			nombre,
+			descripcion,
+			categoria_producto_id,
+			cantidad,
+			precio_compra,
+			precio_venta,
+			precio_venta2,
+			precio_venta3,
+			precio_venta4,
+			cantidad_minima,
+			cantidad_maxima,
+			estado,
+			isv,
+			colaborador_id,
+			fecha_registro,
+			tipo_muestra_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	");
+
+	$stmt->bind_param(
+		"iiiissiddddddiiiiisi",
+		$productos_id,
+		$almacen,
+		$medida,
+		$concentracion,
+		$nombre,
+		$descripcion,
+		$categoria,
+		$cantidad,
+		$precio_compra,
+		$precio_venta,
+		$precio_venta2,
+		$precio_venta3,
+		$precio_venta4,
+		$cantidad_minima,
+		$cantidad_maxima,
+		$estado,
+		$isv,
+		$usuario,
+		$fecha_registro,
+		$tipo_muestra_id
+	);
+
+	$stmt->execute();
+
+	// CONSULTAR CATEGORÍA DEL PRODUCTO
+	$categoria_producto = "";
+
+	$stmt_categoria = $mysqli->prepare("
+		SELECT nombre
+		FROM categoria_producto
+		WHERE categoria_producto_id = ?
+		LIMIT 1
+	");
+	$stmt_categoria->bind_param("i", $categoria);
+	$stmt_categoria->execute();
+	$result_categoria = $stmt_categoria->get_result();
+
+	if ($result_categoria->num_rows > 0) {
+		$valores2 = $result_categoria->fetch_assoc();
+		$categoria_producto = $valores2['nombre'];
+	}
+
+	// ACTUALIZAR MOVIMIENTOS SI APLICA
+	if ($categoria_producto == "Producto" || $categoria_producto == "Insumos") {
+		if ($cantidad > 0) {
+			$movimientos_id = correlativo('movimientos_id', 'movimientos');
+			$documento = "Entrada Productos " . $movimientos_id;
+			$comentario_movimientos = "Ingreso de Producto";
+			$cero = 0;
+
+			$stmt_mov = $mysqli->prepare("
+				INSERT INTO movimientos
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			");
+
+			$stmt_mov->bind_param(
+				"iisdddss",
+				$movimientos_id,
+				$productos_id,
+				$documento,
+				$cantidad,
+				$cero,
+				$cantidad,
+				$fecha_registro,
+				$comentario_movimientos
+			);
+
+			$stmt_mov->execute();
+		}
+	}
+
+	// HISTORIAL
+	$historial_numero = historial();
+	$estado_historial = "Agregar";
+	$observacion_historial = "Se ha agregado un nuevo producto: $nombre con codigo: $productos_id";
+	$modulo = "Productos";
+	$cero = 0;
+
+	$stmt_historial = $mysqli->prepare("
+		INSERT INTO historial
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	");
+
+	$stmt_historial->bind_param(
+		"iiisiiisssis",
+		$historial_numero,
+		$cero,
+		$cero,
+		$modulo,
+		$productos_id,
+		$usuario,
+		$cero,
+		$fecha,
+		$estado_historial,
+		$observacion_historial,
+		$usuario,
+		$fecha_registro
+	);
+
+	$stmt_historial->execute();
+
+	responder(array(
+		0 => "Almacenado",
+		1 => "Registro almacenado correctamente.",
+		2 => "success",
+		3 => "btn-primary",
+		4 => "formulario_productos",
+		5 => "Registro",
+		6 => "Productos",
+		7 => "modal_productos",
+	));
+
+} catch (Throwable $e) {
+	responder(array(
 		0 => "Error",
-		1 => "Lo sentimos este registro ya existe no se puede almacenar",
+		1 => "No se pudo almacenar el producto. Detalle técnico: " . $e->getMessage(),
 		2 => "error",
 		3 => "btn-danger",
 		4 => "",
 		5 => "",
-	);
+	));
 }
-
-echo json_encode($datos);
-?>

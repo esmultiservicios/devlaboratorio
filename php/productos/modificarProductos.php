@@ -1,106 +1,233 @@
 <?php
-session_start();   
+session_start();
+header('Content-Type: application/json; charset=utf-8');
+
 include "../funtions.php";
-	
-//CONEXION A DB
-$mysqli = connect_mysqli();
 
-$usuario = $_SESSION['colaborador_id'];
-$nombre = $_POST['nombre'];
-$productos_id = $_POST['productos_id'];
-$cantidad = $_POST['cantidad'];
-$precio_compra = $_POST['precio_compra'];
-$precio_venta = $_POST['precio_venta'];
-$precio_venta2 = $_POST['precio_venta2'];
-$precio_venta3 = $_POST['precio_venta3'];
-$precio_venta4 = $_POST['precio_venta4'];
-$cantidad_minima = $_POST['cantidad_minima'];
-$cantidad_maxima = $_POST['cantidad_maxima'];
-$descripcion = cleanStringStrtolower($_POST['descripcion']);
-$fecha_registro = date("Y-m-d H:i:s");
-$fecha = date("Y-m-d");
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if(isset($_POST['producto_activo'])){
-	if(isset($_POST['producto_activo'])){
-		$estado = $_POST['producto_activo'];
-	}else{
-		$estado = 2;
-	}	
-}else{
-	$estado = 2;
+function responder($datos) {
+	echo json_encode($datos);
+	exit;
 }
 
-if(isset($_POST['producto_isv_factura'])){
-	if(isset($_POST['producto_isv_factura'])){
-		$isv = $_POST['producto_isv_factura'];
-	}else{
-		$isv = 2;
-	}	
-}else{
-	$isv = 2;
-}
-
-if(isset($_POST['categoria_producto'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['categoria_producto'] == ""){
-		$tipo_muestra_id = 0;
-	}else{
-		$tipo_muestra_id = $_POST['categoria_producto'];
+function post_int($key, $default = 0) {
+	if (!isset($_POST[$key]) || trim($_POST[$key]) === "") {
+		return $default;
 	}
-}else{
-	$tipo_muestra_id = 0;
+	return (int)$_POST[$key];
 }
 
-$update = "UPDATE productos
-	SET
-		nombre = '$nombre',
-		cantidad = '$cantidad',
-		precio_compra = '$precio_compra',
-		precio_venta = '$precio_venta',
-		precio_venta2 = '$precio_venta2',
-		precio_venta3 = '$precio_venta3',
-		precio_venta4 = '$precio_venta4',		
-		estado = '$estado',
-		isv = '$isv',
-		descripcion = '$descripcion',
-		cantidad_minima = '$cantidad_minima',
-		cantidad_maxima = '$cantidad_maxima',
-		tipo_muestra_id = '$tipo_muestra_id'
-	WHERE productos_id = '$productos_id'";
-$query = $mysqli->query($update) or die($mysqli->error);
+function post_float($key, $default = 0) {
+	if (!isset($_POST[$key]) || trim($_POST[$key]) === "") {
+		return $default;
+	}
 
-if($query){
-	$datos = array(
-		0 => "Editado", 
-		1 => "Registro Editado Correctamente", 
+	$valor = trim($_POST[$key]);
+	$valor = str_replace(",", "", $valor);
+
+	return (float)$valor;
+}
+
+function post_string($key, $default = "") {
+	if (!isset($_POST[$key])) {
+		return $default;
+	}
+	return trim($_POST[$key]);
+}
+
+try {
+	$mysqli = connect_mysqli();
+	$mysqli->set_charset("utf8");
+
+	if (!isset($_SESSION['colaborador_id'])) {
+		responder(array(
+			0 => "Error",
+			1 => "La sesión ha expirado. Por favor, inicie sesión nuevamente.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	$usuario = (int)$_SESSION['colaborador_id'];
+
+	$productos_id = post_int('productos_id', 0);
+	$nombre = cleanString(post_string('nombre'));
+	$descripcion = cleanString(post_string('descripcion'));
+
+	$cantidad = post_float('cantidad', 0);
+	$precio_compra = post_float('precio_compra', 0);
+	$precio_venta = post_float('precio_venta', 0);
+	$precio_venta2 = post_float('precio_venta2', 0);
+	$precio_venta3 = post_float('precio_venta3', 0);
+	$precio_venta4 = post_float('precio_venta4', 0);
+
+	$cantidad_minima = post_int('cantidad_minima', 0);
+	$cantidad_maxima = post_int('cantidad_maxima', 0);
+	$tipo_muestra_id = post_int('categoria_producto', 0);
+
+	$estado = isset($_POST['producto_activo']) ? 1 : 2;
+	$isv = isset($_POST['producto_isv_factura']) ? 1 : 2;
+
+	$fecha_registro = date("Y-m-d H:i:s");
+	$fecha = date("Y-m-d");
+
+	if ($productos_id <= 0) {
+		responder(array(
+			0 => "Error",
+			1 => "No se encontró el código del producto a modificar.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	if ($nombre == "") {
+		responder(array(
+			0 => "Error",
+			1 => "Debe ingresar el nombre del producto.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	// Verificar que exista el producto
+	$stmt_existe = $mysqli->prepare("
+		SELECT productos_id 
+		FROM productos 
+		WHERE productos_id = ? 
+		LIMIT 1
+	");
+	$stmt_existe->bind_param("i", $productos_id);
+	$stmt_existe->execute();
+	$result_existe = $stmt_existe->get_result();
+
+	if ($result_existe->num_rows == 0) {
+		responder(array(
+			0 => "Error",
+			1 => "El producto que intenta modificar no existe.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	// Evitar duplicar nombre con otro producto
+	$stmt_duplicado = $mysqli->prepare("
+		SELECT productos_id 
+		FROM productos 
+		WHERE nombre = ? 
+		AND productos_id <> ?
+		LIMIT 1
+	");
+	$stmt_duplicado->bind_param("si", $nombre, $productos_id);
+	$stmt_duplicado->execute();
+	$result_duplicado = $stmt_duplicado->get_result();
+
+	if ($result_duplicado->num_rows > 0) {
+		responder(array(
+			0 => "Error",
+			1 => "Ya existe otro producto registrado con ese nombre.",
+			2 => "error",
+			3 => "btn-danger",
+			4 => "",
+			5 => "",
+		));
+	}
+
+	$stmt = $mysqli->prepare("
+		UPDATE productos
+		SET
+			nombre = ?,
+			cantidad = ?,
+			precio_compra = ?,
+			precio_venta = ?,
+			precio_venta2 = ?,
+			precio_venta3 = ?,
+			precio_venta4 = ?,
+			estado = ?,
+			isv = ?,
+			descripcion = ?,
+			cantidad_minima = ?,
+			cantidad_maxima = ?,
+			tipo_muestra_id = ?
+		WHERE productos_id = ?
+	");
+
+	$stmt->bind_param(
+		"sddddddiisiiii",
+		$nombre,
+		$cantidad,
+		$precio_compra,
+		$precio_venta,
+		$precio_venta2,
+		$precio_venta3,
+		$precio_venta4,
+		$estado,
+		$isv,
+		$descripcion,
+		$cantidad_minima,
+		$cantidad_maxima,
+		$tipo_muestra_id,
+		$productos_id
+	);
+
+	$stmt->execute();
+
+	// HISTORIAL
+	$historial_numero = historial();
+	$estado_historial = "Editar";
+	$observacion_historial = "Se ha modificado el producto: $nombre con codigo: $productos_id";
+	$modulo = "Productos";
+	$cero = 0;
+
+	$stmt_historial = $mysqli->prepare("
+		INSERT INTO historial
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	");
+
+	$stmt_historial->bind_param(
+		"iiisiiisssis",
+		$historial_numero,
+		$cero,
+		$cero,
+		$modulo,
+		$productos_id,
+		$usuario,
+		$cero,
+		$fecha,
+		$estado_historial,
+		$observacion_historial,
+		$usuario,
+		$fecha_registro
+	);
+
+	$stmt_historial->execute();
+
+	responder(array(
+		0 => "Editado",
+		1 => "Registro editado correctamente.",
 		2 => "success",
 		3 => "btn-primary",
 		4 => "",
 		5 => "Editar",
-		6 => "Productos",//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
-		7 => "modal_productos", //Modals Para Cierre Automatico
-	);	
-	
-	/*********************************************************************************************************************************************************************/
-	//INGRESAR REGISTROS EN LA ENTIDAD HISTORIAL
-	$historial_numero = historial();
-	$estado_historial = "Agregar";
-	$observacion_historial = "Se ha modificado el producto producto: $nombre con codigo: $productos_id";
-	$modulo = "Productos";
-	$insert = "INSERT INTO historial 
-	   VALUES('$historial_numero','0','0','$modulo','$productos_id','$usuario','0','$fecha','$estado_historial','$observacion_historial','$usuario','$fecha_registro')";	 
-	$mysqli->query($insert) or die($mysqli->error);
-	/*********************************************************************************************************************************************************************/		
-	/*********************************************************************************************************************************************************************/		
-}else{
-	$datos = array(
-		0 => "Error", 
-		1 => "No se puedo modificar este registro, los datos son incorrectos por favor corregir", 
+		6 => "Productos",
+		7 => "modal_productos",
+	));
+
+} catch (Throwable $e) {
+	responder(array(
+		0 => "Error",
+		1 => "No se pudo modificar el producto. Detalle técnico: " . $e->getMessage(),
 		2 => "error",
 		3 => "btn-danger",
 		4 => "",
-		5 => "",			
-	);	
+		5 => "",
+	));
 }
-
-echo json_encode($datos);
-?>

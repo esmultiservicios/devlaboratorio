@@ -1362,32 +1362,41 @@ function milmillon($nummierod){
 }
 
 /*Funcion que permite limpiar valores de los string (Inyección SQL)*/
-function cleanString($string){
-	//Limpia espacios al inicio y al final
-	$string =  trim($string);
+function cleanString($string) {
+	if ($string === null) {
+		return "";
+	}
 
-	//Quita las barras de un string con comillas escapadas
-	$string = stripslashes($string); 
+	$string = trim((string)$string);
+	$string = stripslashes($string);
 
-	//Limpiar etiquetas de JavaScript o Instrucciones SQL entre otros
-	$string = str_ireplace("<script>", "", $string);
-	$string = str_ireplace("</script>", "", $string);
-	$string = str_ireplace("<script src>", "", $string);
-	$string = str_ireplace("<script type>", "", $string);
-	$string = str_ireplace("SELECT * FROM", "", $string);
-	$string = str_ireplace("DELETE FROM", "", $string);
-	$string = str_ireplace("INSERT INTO", "", $string);
-	$string = str_ireplace("UPDATE", "", $string);
-	$string = str_ireplace("--", "", $string);
-	$string = str_ireplace("^", "", $string);
-	$string = str_ireplace("]", "", $string);
-	$string = str_ireplace("[", "", $string);  
-	$string = str_ireplace("{", "", $string);
-	$string = str_ireplace("}", "", $string);               
-	$string = str_ireplace("==", "", $string);
-	$string = str_ireplace("'", "", $string);		
-	
-	return $string;
+	// Elimina etiquetas HTML y PHP
+	$string = strip_tags($string);
+
+	// Elimina caracteres de control invisibles
+	$string = preg_replace('/[\x00-\x1F\x7F]/u', '', $string);
+
+	// Normaliza espacios múltiples
+	$string = preg_replace('/\s+/', ' ', $string);
+
+	// Caracteres peligrosos o innecesarios
+	$buscar = array(
+		"--",
+		"/*",
+		"*/",
+		"#",
+		";",
+		"^",
+		"[",
+		"]",
+		"{",
+		"}",
+		"=="
+	);
+
+	$string = str_replace($buscar, "", $string);
+
+	return trim($string);
 }
 
 function cleanStringStrtolower($string){
