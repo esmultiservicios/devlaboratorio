@@ -1,328 +1,275 @@
 <script>
-$('#botones_citas #tipo_muestra').on('change',function(){
-	actualizarEventos();
+console.clear();
+console.log("myjava_citas.php CARGADO - FULLCALENDAR 3.10.2");
+
+$(document).ready(function () {
+
+    console.log("jQuery:", $.fn.jquery);
+    console.log("Moment:", typeof moment);
+    console.log("FullCalendar:", typeof $.fn.fullCalendar);
+
+    if (typeof moment === 'undefined') {
+        console.error("ERROR: Moment.js no está cargado.");
+        return false;
+    }
+
+    if (typeof $.fn.fullCalendar !== 'function') {
+        console.error("ERROR: FullCalendar no está cargado. Revisa que no exista bloqueo de CDN o jQuery duplicado.");
+        return false;
+    }
+
+    $("#form-addevent #color").css("pointer-events", "none");
+    $("#ModalEdit #color").css("pointer-events", "none");
+
+    inicializarCalendarioCitas();
+    getTipoMuestra();
+    configurarEventosCitas();
+    configurarFocusModalesCitas();
 });
 
-$(document).ready(function() {
-	getTipoMuestra();
-	actualizarEventos();
-	var hoy = new Date();
-    fecha_actual = convertDate(hoy);
-	$("#form-addevent #color").css("pointer-events","none");
-	$("#ModalEdit #color").css("pointer-events","none");
+function inicializarCalendarioCitas() {
+    if ($('#calendar').length === 0) {
+        console.error("No existe el div #calendar en la vista.");
+        return false;
+    }
 
-	$('#calendar').fullCalendar({
-	    header: {
-			left: 'prev,next today',
-			center: 'title',
-			right: 'month,agendaWeek,agendaDay'
-		},
-		defaultView: 'agendaWeek',
-		height: 792,
-		width: 990,
-		dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-		dayNamesShort: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-		dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'],
-        monthNames:
-            ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
-            "Agosto", "Septiembre", 	"Octubre", "Noviembre", "Diciembre"],
-        monthNamesShort: ['Ene','Feb','Mar','Abr', 'May','Jun','Jul','Ago','Sep', 'Oct','Nov','Dic'],
-		defaultDate: fecha_actual,
-		slotLabelInterval: '00:20:00',
+    $('#calendar').fullCalendar('destroy');
+
+    $('#calendar').fullCalendar({
+        locale: 'es',
+
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+
+        defaultView: 'agendaWeek',
+        defaultDate: moment().format('YYYY-MM-DD'),
+
+        height: 792,
+
+        editable: true,
+        eventLimit: true,
+        selectable: true,
+        selectHelper: true,
+        displayEventTime: true,
+
         minTime: "07:00:00",
         maxTime: "23:59:59",
         slotDuration: "00:40:00",
-		editable: true,
-		eventLimit: true, // allow "more" link when too many events
-		selectable: true,
-		selectHelper: true,
-		//eventDurationEditable: false,
-		displayEventTime: true,
-	    businessHours: {
-          start: '08:00:00', // hora final
-          end: '23:59:59', // hora inicial
-          dow: [ 1, 2, 3, 4, 5, 6 ] // dias de semana, 0=Domingo
+        slotLabelInterval: "00:20:00",
+
+        allDayText: 'Todo el día',
+
+        buttonText: {
+            today: 'Hoy',
+            month: 'Mes',
+            week: 'Semana',
+            day: 'Día'
         },
 
-		select: function(start, end) {
-		  /*if(getFechaAusencias(moment(start).format('YYYY-MM-DD HH:mm:ss'), $('#botones_citas #medico_general').val()) == 2){
-			if (getUsuarioSistema() == 1 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4){
-                 $("#ModalAdd_enviar").attr('disabled', false);
-			     if ($('#medico_general').val()!="" && $('#servicio').val()!=""){
-				     $('#form-addevent')[0].reset();
-			         if (moment(start).format('YYYY-MM-DD HH:mm:ss') >= fecha_actual){
-					    $('#ModalAdd #fecha_cita').val(moment(start).format('YYYY-MM-DD HH:mm:ss'));
-			            $('#ModalAdd #fecha_cita_end').val(moment(end).format('YYYY-MM-DD HH:mm:ss'));
-			            $('#ModalAdd #medico').val($('#botones_citas #medico_general').val());
-						$('#ModalAdd #unidad').val($('#botones_citas #unidad').val());
-					    $('#ModalAdd #serv').val($('#botones_citas #servicio').val());
-						$('#form-addevent #profesional_citas').val(getProfesionalName($('#botones_citas #medico_general').val()));
+        businessHours: {
+            start: '08:00:00',
+            end: '23:59:59',
+            dow: [1, 2, 3, 4, 5, 6]
+        },
 
-		                $('#ModalAdd').modal({
-							show:true,
-							keyboard: false,
-							backdrop:'static'
-		                });
-                        $('#mensaje_ModalAdd').removeClass('error');
-					    $('#mensaje_ModalAdd').removeClass('bien');
-					    $('#mensaje_ModalAdd').hide();
-					    $('#mensaje_ModalAdd').html("");
-			         }else{
-						swal({
-							title: "Error",
-							text: "No se puede agregar una cita en esta fecha",
-							icon: "error",
-							dangerMode: true,
-							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-						});
-			         }
-			         }else{
-						swal({
-							title: "Error",
-							text: "Debe seleccionar un médico y un servcicio antes de agendar una cita",
-							icon: "error",
-							dangerMode: true,
-							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-						});
-		             }
-			   }else{
-					swal({
-						title: "Acceso Denegado",
-						text: "No tiene permisos para ejecutar esta acción",
-						icon: "error",
-						dangerMode: true,
-						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-					});
-		       }
-		  }else{
-				swal({
-					title: "Error",
-					text: "El médico se encuentra ausente, no se le puede agendar una cita. " + getComentarioAusencia(moment(start).format('YYYY-MM-DD HH:mm:ss'))+ "",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
-		  }	*/
-		},
-		eventRender: function(event, element) {
-		  element.bind('dblclick', function() {
-              /*if (getUsuarioSistema() == 1 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4){
-				 $("#ModalEdit_enviar").attr('disabled', false);
-	             $("#ModalImprimir_enviar").attr('disabled', false);
-		         $('#form-editevent')[0].reset();
-		         var palabras = event.title.split("-");
-                 var fecha = moment(event.start).format('YYYY-MM-DD HH:mm:ss').split(" ");
-		         $('#ModalEdit #paciente').val(palabras[1]);
-		         $('#ModalEdit #fecha_citaedit1').val(moment(event.start).format('YYYY-MM-DD HH:mm:ss'));
-		         $('#ModalEdit #fecha_citaeditend').val(moment(event.end).format('YYYY-MM-DD HH:mm:ss'));
-		         $('#ModalEdit #color').val(event.color);
-                 getColaborador_id(event.id);
-				 getComentario(event.id);
-				 getComentario1(event.id);
-				 getHora(event.id);
-				 getFechaInicio(event.id);
-				 getHoraInicio(event.id);
-				 getExpediente(event.id);
-		         $('#ModalEdit #id').val(event.id);
-		         $('#ModalEdit').modal({
-					show:true,
-					keyboard: false,
-					backdrop:'static'
-		         });
-			  }else{
-					swal({
-						title: "Acceso Denegado",
-						text: "No tiene permisos para ejecutar esta acción",
-						icon: "error",
-						dangerMode: true,
-						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-					});
-		      }*/
-		    });
-		},
-		eventDrop: function(event, delta, revertFunc) { // si changement de position
-		   /*if(getFechaAusencias(moment(event.start).format('YYYY-MM-DD HH:mm:ss')) == 2){
-		       if (getUsuarioSistema() == 1 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4){
-		           if (moment(event.start).format('YYYY-MM-DD HH:mm:ss') >= fecha_actual){
-			          edit(event);
-		           }else{
-						swal({
-							title: "Error",
-							text: "No se puede mover una cita en esta fecha",
-							icon: "error",
-							dangerMode: true,
-							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-						});
-			       }
-		        }else{
-					swal({
-						title: "Acceso Denegado",
-						text: "No tiene permisos para ejecutar esta acción",
-						icon: "error",
-						dangerMode: true,
-						closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-						closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-					});
-		        }
-		   }else{
-				swal({
-					title: "Error",
-					text: "El médico se encuentra ausente, no se le puede agendar una cita. " + getComentarioAusencia(moment(event.start).format('YYYY-MM-DD HH:mm:ss')) + "",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
-		   }*/
-		},
-		eventResize: function(event,dayDelta,minuteDelta,revertFunc) { // si changement de longueur
-			/*if(getFechaAusencias(moment(start).format('YYYY-MM-DD HH:mm:ss')) == 2){
-				if (getUsuarioSistema() == 1){
-					edit(event);
-				}else{
-						swal({
-							title: "Acceso Denegado",
-							text: "No tiene permisos para ejecutar esta acción",
-							icon: "error",
-							dangerMode: true,
-							closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-							closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-						});
-				}
-			}else{
-				swal({
-					title: "Error",
-					text: "El médico se encuentra ausente, no se le puede agendar una cita",
-					icon: "error",
-					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-				});
-		    }*/
-		}
-		//, events: "<?php echo SERVERURL; ?>php/citas/getCalendar.php",
+        events: function (start, end, timezone, callback) {
+            cargarEventosCalendario(callback);
+        },
+
+        select: function (start, end) {
+            /*
+            Aquí va tu lógica para agregar cita.
+            */
+        },
+
+        eventRender: function (event, element) {
+            element.off('dblclick').on('dblclick', function () {
+                /*
+                Aquí va tu lógica para editar cita.
+                */
+            });
+        },
+
+        eventDrop: function (event, delta, revertFunc) {
+            /*
+            Aquí va tu lógica para mover cita.
+            */
+        },
+
+        eventResize: function (event, dayDelta, minuteDelta, revertFunc) {
+            /*
+            Aquí va tu lógica para cambiar duración de cita.
+            */
+        }
     });
-});
 
-/*INICIO DE FUNCIONES PARA ESTABLECER EL FOCUS PARA LAS VENTANAS MODALES*/
-$(document).ready(function(){
-    $("#ModalAdd").on('shown.bs.modal', function(){
+    return true;
+}
+
+function cargarEventosCalendario(callback) {
+    var tipo_muestra = $('#botones_citas #tipo_muestra').val();
+
+    if (tipo_muestra === null || tipo_muestra === undefined) {
+        tipo_muestra = '';
+    }
+
+    $.ajax({
+        type: "POST",
+        url: '<?php echo SERVERURL; ?>php/citas/getCalendar.php',
+        dataType: "json",
+        cache: false,
+        data: {
+            tipo_muestra: tipo_muestra
+        },
+        success: function (respuesta) {
+            console.log("Respuesta getCalendar.php:", respuesta);
+
+            if (respuesta === null || respuesta === undefined) {
+                respuesta = [];
+            }
+
+            if (!Array.isArray(respuesta)) {
+                console.error("getCalendar.php no devolvió un array JSON válido:", respuesta);
+                respuesta = [];
+            }
+
+            callback(respuesta);
+        },
+        error: function (xhr, status, error) {
+            console.error("Error AJAX en getCalendar.php");
+            console.error("Status:", status);
+            console.error("Error:", error);
+            console.error("Respuesta servidor:", xhr.responseText);
+
+            callback([]);
+        }
+    });
+}
+
+function configurarEventosCitas() {
+    $('#botones_citas #tipo_muestra').off('change').on('change', function () {
+        refrescarCalendarioCitas();
+    });
+
+    $('#botones_citas').off('submit').on('submit', function (e) {
+        e.preventDefault();
+        refrescarCalendarioCitas();
+    });
+
+    $('#ModalImprimir_enviar').off('click').on('click', function (e) {
+        e.preventDefault();
+
+        if ($('#fecha_citaedit').val() === "" || $('#fecha_citaeditend').val() === "") {
+            if ($('#form-editevent').length > 0) {
+                $('#form-editevent')[0].reset();
+            }
+
+            swal({
+                title: "Error",
+                text: "No se pueden enviar los datos, los campos están vacíos",
+                icon: "error",
+                dangerMode: true,
+                closeOnEsc: false,
+                closeOnClickOutside: false
+            });
+
+            return false;
+        }
+
+        reportePDF($('#form-editevent #id').val());
+    });
+}
+
+function refrescarCalendarioCitas() {
+    if ($('#calendar').length === 0) {
+        return false;
+    }
+
+    if (typeof $.fn.fullCalendar !== 'function') {
+        console.error("No se puede refrescar: FullCalendar no está disponible.");
+        return false;
+    }
+
+    $('#calendar').fullCalendar('refetchEvents');
+
+    return true;
+}
+
+function getTipoMuestra() {
+    $.ajax({
+        type: "POST",
+        url: '<?php echo SERVERURL; ?>php/citas/getTipoMuestra.php',
+        cache: false,
+        success: function (data) {
+            $('#botones_citas #tipo_muestra').html(data);
+
+            if ($.fn.selectpicker) {
+                $('#botones_citas #tipo_muestra').selectpicker('refresh');
+            }
+
+            refrescarCalendarioCitas();
+        },
+        error: function (xhr, status, error) {
+            console.error("Error AJAX en getTipoMuestra.php");
+            console.error("Status:", status);
+            console.error("Error:", error);
+            console.error("Respuesta servidor:", xhr.responseText);
+        }
+    });
+}
+
+function configurarFocusModalesCitas() {
+    $("#ModalAdd").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#form-addevent #expediente').focus();
     });
-});
 
-$(document).ready(function(){
-    $("#buscarCita").on('shown.bs.modal', function(){
+    $("#buscarCita").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#form-buscarcita #bs-regis').focus();
     });
-});
 
-$(document).ready(function(){
-    $("#buscarHistorial").on('shown.bs.modal', function(){
+    $("#buscarHistorial").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#form-buscarhistorial #bs-regis').focus();
     });
-});
 
-$(document).ready(function(){
-    $("#buscarHistorialReprogramaciones").on('shown.bs.modal', function(){
+    $("#buscarHistorialReprogramaciones").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#form_buscarhistorial_reprogramaciones #bs-regis').focus();
     });
-});
 
-$(document).ready(function(){
-    $("#buscarHistorialNo").on('shown.bs.modal', function(){
+    $("#buscarHistorialNo").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#form-buscarhistorialno #bs-regis').focus();
     });
-});
 
-$(document).ready(function(){
-    $("#modal_busqueda_colaboradores").on('shown.bs.modal', function(){
+    $("#modal_busqueda_colaboradores").off('shown.bs.modal').on('shown.bs.modal', function () {
         $(this).find('#formulario_busqueda_coloboradores #buscar').focus();
     });
-});
-/*FIN DE FUNCIONES PARA ESTABLECER EL FOCUS PARA LAS VENTANAS MODALES*/
+}
 
-$('#ModalImprimir_enviar').on('click', function(e){ // delete event clicked // We don't want this to act as a link so cancel the link action
-	 if ($('#fecha_citaedit').val() == "" || $('#fecha_citaeditend').val() == "" ){
-		$('#form-editevent')[0].reset();
-		swal({
-			title: "Error",
-			text: "No se pueden enviar los datos, los campos estan vacíos",
-			icon: "error",
-			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
-		});
-		return false;
-	 }else{
-        e.preventDefault();
-		reportePDF($('#form-editevent #id').val());
-	 }
-});
-
-$(document).ready(function() {
-	setInterval('actualizarEventos()',1000);
-});
-
-function actualizarEventos(){
-	var tipo_muestra = "";
-
-	if($('#botones_citas #tipo_muestra').val() != null || $('#botones_citas #tipo_muestra').val() != ""){
-		tipo_muestra = $('#botones_citas #tipo_muestra').val()
-	}
-
-	var url = '<?php echo SERVERURL; ?>php/citas/getCalendar.php';
-
-	$.ajax({
-		type: "POST",
-		url: url,
-		async: true,
-		data:'tipo_muestra='+tipo_muestra,
-		success: function(events){
-			$('#calendar').fullCalendar('removeEvents');
-			$('#calendar').fullCalendar('addEventSource', events);
-			$('#calendar').fullCalendar('rerenderEvents');
-		}
-	});
+function actualizarEventos() {
+    return refrescarCalendarioCitas();
 }
 
 function convertDate(inputFormat) {
-     function pad(s) { return (s < 10) ? '0' + s : s; }
-     var d = new Date(inputFormat);
-     return [d.getFullYear(), pad(d.getMonth()+1), pad(d.getDate())].join('-');
+    function pad(s) {
+        return s < 10 ? '0' + s : s;
+    }
+
+    var d = new Date(inputFormat);
+
+    return [
+        d.getFullYear(),
+        pad(d.getMonth() + 1),
+        pad(d.getDate())
+    ].join('-');
 }
 
-//BOOSTRAP SELECT
-function reportePDF(agenda_id){
-	window.open('<?php echo SERVERURL; ?>php/citas/tickets.php?agenda_id='+agenda_id);
+function reportePDF(agenda_id) {
+    window.open('<?php echo SERVERURL; ?>php/citas/tickets.php?agenda_id=' + agenda_id);
 }
 
-function pagination(partida){
+function pagination(partida) {
 
 }
-
-function getTipoMuestra(){
-    var url = '<?php echo SERVERURL; ?>php/citas/getTipoMuestra.php';
-
-	$.ajax({
-        type: "POST",
-        url: url,
-	    async: true,
-        success: function(data){
-		    $('#botones_citas #tipo_muestra').html("");
-			$('#botones_citas #tipo_muestra').html(data);
-			$('#botones_citas #tipo_muestra').selectpicker('refresh');
-        }
-     });
-}
-
-$(document).ready(function() {
-	actualizarEventos();
-});
 </script>

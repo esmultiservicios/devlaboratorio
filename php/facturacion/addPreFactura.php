@@ -1,167 +1,419 @@
 <?php
-session_start();   
+// addPrefactura.php
+session_start();
 include "../funtions.php";
-	
-//CONEXION A DB
-$mysqli = connect_mysqli(); 
 
-$pacientes_id = $_POST['pacientes_id'];
-$muestras_id = $_POST['muestras_id'];
-$fecha = $_POST['fecha'];
-$colaborador_id = $_POST['colaborador_id'];
-$servicio_id = $_POST['servicio_id'];
-$notes = cleanStringStrtolower($_POST['notes']);
-$usuario = $_SESSION['colaborador_id'];
-$fecha_registro = date("Y-m-d H:i:s");
-$activo = 1;
-$estado = 1;
-$numero = 0;
-$secuencia_facturacion_id = 1;
-$cierre = 2;
-$importe = 0;
-$tipo = "";
-$empresa_id = $_SESSION['empresa_id'];
+header('Content-Type: application/json; charset=utf-8');
 
-if(isset($_POST['facturas_activo'])){//COMPRUEBO SI LA VARIABLE ESTA DIFINIDA
-	if($_POST['facturas_activo'] == ""){
-		$tipo_factura = 2;
-		$tipo = "FacturacionCredito";
-	}else{
-		$tipo_factura = $_POST['facturas_activo'];
-		$tipo = "Facturacion";
-	}
-}else{
-	$tipo_factura = 2;
-	$tipo = "FacturacionCredito";
-}
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
-//OBTENEMOS EL TAMAÑO DE LA TABLA
-if(isset($_POST['productName'])){	
-	if($_POST['productName'][0] != "" && $_POST['quantity'][0] && $_POST['price'][0]){
-		$tamano_tabla = count( $_POST['productName']);
-	}else{
-		$tamano_tabla = 0;
-	}
-}else{
-	$tamano_tabla = 0;
-}
+$mysqli = connect_mysqli();
+$mysqli->set_charset("utf8");
 
-if($pacientes_id != "" && $colaborador_id != "" && $servicio_id != ""){
-	if($tamano_tabla >0){
-		//INSERTAMOS LOS DATOS EN LA ENTIDAD FACTURA
-		$facturas_id = correlativo("facturas_id","facturas");
-		$insert = "INSERT INTO facturas 
-			VALUES('$facturas_id','$secuencia_facturacion_id','$muestras_id','$numero','$tipo_factura','$pacientes_id','$colaborador_id','$servicio_id','$importe','$notes','$fecha','$estado','$cierre','$usuario','$empresa_id','$fecha_registro')";
+$facturas_id_creada = 0;
 
-		$query = $mysqli->query($insert);
+try {
+    if (!isset($_SESSION['colaborador_id']) || !isset($_SESSION['empresa_id'])) {
+        throw new Exception("La sesión expiró. Por favor, inicie sesión nuevamente.");
+    }
 
-		if($query){	
-			$total_valor = 0;
-			$descuentos = 0;
-			$isv_neto = 0;
-			$total_despues_isv = 0;	
-				
-			//ALMACENAMOS EL DETALLE DE LA FACTURA EN LA ENTIDAD FACTURAS DETALLE
-			for ($i = 0; $i < count( $_POST['productName']); $i++) {//INICIO CICLO FOR
-				$facturas_detalle_id = correlativo("facturas_detalle_id","facturas_detalle");
-				$productoID = $_POST['productoID'][$i];
-				$productName = $_POST['productName'][$i];
-				$quantity = $_POST['quantity'][$i];
-				$price = $_POST['price'][$i];
-				$discount = $_POST['discount'][$i];
-				$total = $_POST['total'][$i];
-				$isv_valor = 0;			
-					
-				if($productoID != "" && $productName != "" && $quantity != "" && $price != "" && $discount != "" && $total != ""){
-					//OBTENER EL ISV
-					$query_isv = "SELECT nombre
-						FROM isv";
-					$result_isv = $mysqli->query($query_isv) or die($mysqli->error);
-					
-					$porcentajeISV = 0;
-					
-					if($result_isv->num_rows>0){
-						$consulta_isv_valor = $result_isv->fetch_assoc();
-						$porcentajeISV = $consulta_isv_valor["nombre"];						
-					}
-				
-					//CONSULTAMOS EL ISV ACTIVO EN EL PRODUCTO
-					$query_isv_activo = "SELECT isv
-						FROM productos
-						WHERE productos_id  = '$productoID'";
-					$result_productos_isv_activo = $mysqli->query($query_isv_activo) or die($mysqli->error);
-					$aplica_isv = 0;
-					
-					if($result_productos_isv_activo->num_rows>0){
-						$consulta_aplica_isv_productos = $result_productos_isv_activo->fetch_assoc();
-						$aplica_isv = $consulta_aplica_isv_productos["isv"];						
-					}
+    $pacientes_id = isset($_POST['pacientes_id']) ? (int)$_POST['pacientes_id'] : 0;
+    $muestras_id = isset($_POST['muestras_id']) ? (int)$_POST['muestras_id'] : 0;
+    $fecha = isset($_POST['fecha']) && $_POST['fecha'] != '' ? $_POST['fecha'] : date('Y-m-d');
+    $colaborador_id = isset($_POST['colaborador_id']) ? (int)$_POST['colaborador_id'] : 0;
+    $servicio_id = isset($_POST['servicio_id']) ? (int)$_POST['servicio_id'] : 0;
+    $notes = isset($_POST['notes']) ? cleanStringStrtolower($_POST['notes']) : '';
+    $usuario = (int)$_SESSION['colaborador_id'];
+    $fecha_registro = date("Y-m-d H:i:s");
+    $estado = 1;
+    $numero = 0;
+    $secuencia_facturacion_id = 1;
+    $cierre = 2;
+    $tipo = "";
+    $empresa_id = (int)$_SESSION['empresa_id'];
 
-					$porcentaje_isv = 0;
-					
-					if($aplica_isv == 1){
-						$porcentaje_isv = ($porcentajeISV / 100);
-						$isv_valor = $price * $quantity * $porcentaje_isv;
-					}
-						
-					$insert_detalle = "INSERT INTO facturas_detalle 
-						VALUES('$facturas_detalle_id','$facturas_id','$productoID','$quantity','$price','$isv_valor','$discount')";
-					$mysqli->query($insert_detalle);	
-					
-					$total_valor += ($price * $quantity);
-					$descuentos += $discount;
-					$isv_neto += $isv_valor;				
-				}
-			}//FIN CICLO FOR
+    if (isset($_POST['facturas_activo'])) {
+        if ($_POST['facturas_activo'] == "") {
+            $tipo_factura = 2;
+            $tipo = "FacturacionCredito";
+        } else {
+            $tipo_factura = (int)$_POST['facturas_activo'];
+            $tipo = "Facturacion";
+        }
+    } else {
+        $tipo_factura = 2;
+        $tipo = "FacturacionCredito";
+    }
 
-			$total_despues_isv = ($total_valor + $isv_neto) - $descuentos;
-			
-			//ACTUALIZAMOS EL IMPORTE DE LA FACTURA
-			$update = "UPDATE facturas
-				SET
-					importe = '$total_despues_isv'
-				WHERE facturas_id = '$facturas_id'";
-			$mysqli->query($update);
-			
-			$datos = array(
-				0 => "Almacenado", 
-				1 => "Registro Almacenado Correctamente", 
-				2 => "success",
-				3 => "btn-primary",
-				4 => "formulario_facturacion",
-				5 => "Registro",
-				6 => "FacturaAtenciones",//FUNCION DE LA TABLA QUE LLAMAREMOS PARA QUE ACTUALICE (DATATABLE BOOSTRAP)
-				7 => "", //Modals Para Cierre Automatico
-			);
-		}else{//NO SE PUEDO ALMACENAR ESTE REGISTRO
-			$datos = array(
-				0 => "Error", 
-				1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir", 
-				2 => "error",
-				3 => "btn-danger",
-				4 => "",
-				5 => "",			
-			);
-		}
-	}else{
-		$datos = array(
-			0 => "Error", 
-			1 => "No se puedo almacenar este registro, los datos son incorrectos por favor corregir, verifique si hay registros en blanco antes de enviar los datos de la factura, se le recuerda que el detalle de la factura no puede quedar vacío", 
-			2 => "error",
-			3 => "btn-danger",
-			4 => "",
-			5 => "",			
-		);	
-	}
-}else{
-	$datos = array(
-		0 => "Error", 
-		1 => "Lo sentimos, el Paciente, Profesional o Servicio no pueden quedar en blanco, por favor corregir", 
-		2 => "error",
-		3 => "btn-danger",
-		4 => "",
-		5 => "",			
-	);		
+    if ($pacientes_id <= 0 || $colaborador_id <= 0 || $servicio_id <= 0) {
+        throw new Exception("Lo sentimos, el Paciente, Profesional o Servicio no pueden quedar en blanco, por favor corregir.");
+    }
+
+    $porcentaje_isv = obtenerPorcentajeISVPrefactura($mysqli);
+    $detalles = prepararDetallesPrefactura($mysqli, $_POST, $porcentaje_isv);
+
+    if (count($detalles) <= 0) {
+        throw new Exception("El detalle de la factura no puede quedar vacío.");
+    }
+
+    $total_valor = 0;
+    $descuentos = 0;
+    $isv_neto = 0;
+
+    foreach ($detalles as $detalle) {
+        $total_valor += ($detalle['precio'] * $detalle['cantidad']);
+        $descuentos += $detalle['descuento'];
+        $isv_neto += $detalle['isv_valor'];
+    }
+
+    $total_despues_isv = round(($total_valor + $isv_neto) - $descuentos, 2);
+
+    if ($total_despues_isv <= 0) {
+        throw new Exception("El total de la prefactura debe ser mayor a cero.");
+    }
+
+    $mysqli->begin_transaction();
+
+    $facturas_id = correlativo("facturas_id", "facturas");
+    $facturas_id_creada = $facturas_id;
+
+    $insert_factura = "INSERT INTO facturas
+        (facturas_id, secuencia_facturacion_id, muestras_id, number, tipo_factura, pacientes_id, colaborador_id, servicio_id, importe, notas, fecha, estado, cierre, usuario, empresa_id, fecha_registro)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmtFactura = $mysqli->prepare($insert_factura);
+
+    if (!$stmtFactura) {
+        throw new Exception("Error al preparar registro de prefactura: " . $mysqli->error);
+    }
+
+    $stmtFactura->bind_param(
+        "iiiiiiiidssiiiis",
+        $facturas_id,
+        $secuencia_facturacion_id,
+        $muestras_id,
+        $numero,
+        $tipo_factura,
+        $pacientes_id,
+        $colaborador_id,
+        $servicio_id,
+        $total_despues_isv,
+        $notes,
+        $fecha,
+        $estado,
+        $cierre,
+        $usuario,
+        $empresa_id,
+        $fecha_registro
+    );
+
+    if (!$stmtFactura->execute()) {
+        $errorStmt = $stmtFactura->error;
+        $stmtFactura->close();
+        throw new Exception("No se pudo almacenar este registro: " . $errorStmt);
+    }
+
+    $stmtFactura->close();
+
+    $resultMaxDetalle = $mysqli->query("SELECT IFNULL(MAX(facturas_detalle_id), 0) AS max_id FROM facturas_detalle");
+
+    if (!$resultMaxDetalle) {
+        throw new Exception("Error al obtener correlativo del detalle: " . $mysqli->error);
+    }
+
+    $rowMaxDetalle = $resultMaxDetalle->fetch_assoc();
+    $siguienteDetalleID = ((int)$rowMaxDetalle['max_id']) + 1;
+
+    $insert_detalle = "INSERT INTO facturas_detalle
+        (facturas_detalle_id, facturas_id, productos_id, cantidad, precio, isv_valor, descuento)
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    $stmtDetalle = $mysqli->prepare($insert_detalle);
+
+    if (!$stmtDetalle) {
+        throw new Exception("Error al preparar detalle de prefactura: " . $mysqli->error);
+    }
+
+    foreach ($detalles as $detalle) {
+        $facturas_detalle_id = $siguienteDetalleID++;
+        $productoID = (int)$detalle['productos_id'];
+        $cantidad = (int)$detalle['cantidad'];
+        $precio = (float)$detalle['precio'];
+        $isv_valor = (float)$detalle['isv_valor'];
+        $descuento = (float)$detalle['descuento'];
+
+        $stmtDetalle->bind_param(
+            "iiiiddd",
+            $facturas_detalle_id,
+            $facturas_id,
+            $productoID,
+            $cantidad,
+            $precio,
+            $isv_valor,
+            $descuento
+        );
+
+        if (!$stmtDetalle->execute()) {
+            $errorStmt = $stmtDetalle->error;
+            $stmtDetalle->close();
+            throw new Exception("Error al registrar detalle de prefactura: " . $errorStmt);
+        }
+    }
+
+    $stmtDetalle->close();
+
+    $query_total_detalle = "SELECT 
+                                ROUND(IFNULL(SUM((cantidad * precio) + isv_valor - descuento), 0), 2) AS total_detalle,
+                                COUNT(*) AS cantidad_lineas
+                            FROM facturas_detalle
+                            WHERE facturas_id = ?";
+
+    $stmtTotal = $mysqli->prepare($query_total_detalle);
+
+    if (!$stmtTotal) {
+        throw new Exception("Error al preparar validación final de total: " . $mysqli->error);
+    }
+
+    $stmtTotal->bind_param("i", $facturas_id);
+    $stmtTotal->execute();
+    $resultTotal = $stmtTotal->get_result();
+    $rowTotal = $resultTotal ? $resultTotal->fetch_assoc() : null;
+    $stmtTotal->close();
+
+    if (!$rowTotal) {
+        throw new Exception("No se pudo validar el total final del detalle.");
+    }
+
+    $total_detalle_bd = round((float)$rowTotal['total_detalle'], 2);
+    $cantidad_lineas_bd = (int)$rowTotal['cantidad_lineas'];
+
+    if ($cantidad_lineas_bd != count($detalles)) {
+        throw new Exception(
+            "La prefactura no se guardó completa. Productos enviados: " . count($detalles) .
+            ", productos guardados: " . $cantidad_lineas_bd . "."
+        );
+    }
+
+    if (abs($total_detalle_bd - $total_despues_isv) > 0.01) {
+        throw new Exception(
+            "La prefactura no cuadra. Encabezado: " . number_format($total_despues_isv, 2, '.', '') .
+            ", detalle: " . number_format($total_detalle_bd, 2, '.', '') . "."
+        );
+    }
+
+    $mysqli->commit();
+
+    $datos = array(
+        0  => "Almacenado",
+        1  => "Registro Almacenado Correctamente",
+        2  => "success",
+        3  => "btn-primary",
+        4  => "formulario_facturacion",
+        5  => "Registro",
+        6  => "FacturaAtenciones",
+        7  => "",
+        8  => $facturas_id,
+        9  => number_format($total_despues_isv, 2, '.', ''),
+        10 => count($detalles)
+    );
+
+} catch (Exception $e) {
+    $mysqli->rollback();
+
+    if ($facturas_id_creada > 0) {
+        try {
+            $stmtCleanDetalle = $mysqli->prepare("DELETE FROM facturas_detalle WHERE facturas_id = ?");
+            if ($stmtCleanDetalle) {
+                $stmtCleanDetalle->bind_param("i", $facturas_id_creada);
+                $stmtCleanDetalle->execute();
+                $stmtCleanDetalle->close();
+            }
+
+            $stmtCleanFactura = $mysqli->prepare("DELETE FROM facturas WHERE facturas_id = ?");
+            if ($stmtCleanFactura) {
+                $stmtCleanFactura->bind_param("i", $facturas_id_creada);
+                $stmtCleanFactura->execute();
+                $stmtCleanFactura->close();
+            }
+        } catch (Exception $cleanupException) {
+            error_log("Error limpiando prefactura fallida: " . $cleanupException->getMessage());
+        }
+    }
+
+    error_log("Error addPrefactura.php: " . $e->getMessage());
+
+    $datos = array(
+        0 => "Error",
+        1 => $e->getMessage(),
+        2 => "error",
+        3 => "btn-danger",
+        4 => "",
+        5 => ""
+    );
 }
 
 echo json_encode($datos);
+exit;
+
+
+function obtenerPorcentajeISVPrefactura($conexion) {
+    $query = "SELECT nombre FROM isv LIMIT 1";
+    $result = $conexion->query($query);
+
+    if (!$result) {
+        throw new Exception("Error al obtener el ISV general: " . $conexion->error);
+    }
+
+    if ($result->num_rows <= 0) {
+        return 0;
+    }
+
+    $row = $result->fetch_assoc();
+    return ((float)$row['nombre']) / 100;
+}
+
+
+function prepararDetallesPrefactura($conexion, $post, $porcentaje_isv) {
+    if (
+        !isset($post['productoID']) ||
+        !isset($post['productName']) ||
+        !isset($post['quantity']) ||
+        !isset($post['price'])
+    ) {
+        throw new Exception("El detalle de la prefactura no fue recibido correctamente.");
+    }
+
+    if (
+        !is_array($post['productoID']) ||
+        !is_array($post['productName']) ||
+        !is_array($post['quantity']) ||
+        !is_array($post['price'])
+    ) {
+        throw new Exception("El detalle de la prefactura tiene un formato inválido.");
+    }
+
+    $productoIDArray = $post['productoID'];
+    $productNameArray = $post['productName'];
+    $quantityArray = $post['quantity'];
+    $priceArray = $post['price'];
+    $discountArray = isset($post['discount']) && is_array($post['discount']) ? $post['discount'] : array();
+
+    $countProductos = count($productoIDArray);
+    $countNombres = count($productNameArray);
+    $countCantidad = count($quantityArray);
+    $countPrecios = count($priceArray);
+
+    if ($countProductos <= 0) {
+        throw new Exception("El detalle de la prefactura no puede quedar vacío.");
+    }
+
+    if (
+        $countProductos != $countNombres ||
+        $countProductos != $countCantidad ||
+        $countProductos != $countPrecios
+    ) {
+        throw new Exception("El detalle de la prefactura llegó incompleto. Por favor, vuelva a cargar los productos antes de guardar.");
+    }
+
+    $detalles = array();
+
+    for ($i = 0; $i < $countProductos; $i++) {
+        $linea = $i + 1;
+
+        $productoID = isset($productoIDArray[$i]) ? (int)$productoIDArray[$i] : 0;
+        $productName = isset($productNameArray[$i]) ? trim($productNameArray[$i]) : '';
+        $quantityRaw = isset($quantityArray[$i]) ? trim((string)$quantityArray[$i]) : '';
+        $priceRaw = isset($priceArray[$i]) ? trim((string)$priceArray[$i]) : '';
+        $discountRaw = isset($discountArray[$i]) ? trim((string)$discountArray[$i]) : '0';
+
+        $filaVacia = ($productoID <= 0 && $productName === '' && $quantityRaw === '' && $priceRaw === '');
+
+        if ($filaVacia) {
+            continue;
+        }
+
+        if ($productoID <= 0) {
+            throw new Exception("Hay un producto sin código interno en la línea " . $linea . ".");
+        }
+
+        if ($productName === '') {
+            throw new Exception("Hay un producto sin nombre en la línea " . $linea . ".");
+        }
+
+        if ($quantityRaw === '' || !is_numeric($quantityRaw)) {
+            throw new Exception("La cantidad del producto " . $productName . " no es válida.");
+        }
+
+        if ($priceRaw === '' || !is_numeric($priceRaw)) {
+            throw new Exception("El precio del producto " . $productName . " no es válido.");
+        }
+
+        if ($discountRaw === '') {
+            $discountRaw = '0';
+        }
+
+        if (!is_numeric($discountRaw)) {
+            throw new Exception("El descuento del producto " . $productName . " no es válido.");
+        }
+
+        $quantity = (int)$quantityRaw;
+        $price = (float)$priceRaw;
+        $discount = (float)$discountRaw;
+
+        if ($quantity <= 0) {
+            throw new Exception("La cantidad del producto " . $productName . " debe ser mayor a cero.");
+        }
+
+        if ($price < 0) {
+            throw new Exception("El precio del producto " . $productName . " no puede ser negativo.");
+        }
+
+        if ($discount < 0) {
+            throw new Exception("El descuento del producto " . $productName . " no puede ser negativo.");
+        }
+
+        $subtotal = $price * $quantity;
+
+        if ($discount > $subtotal) {
+            throw new Exception("El descuento del producto " . $productName . " no puede ser mayor al subtotal.");
+        }
+
+        $query_producto = "SELECT productos_id, isv FROM productos WHERE productos_id = ? LIMIT 1";
+        $stmt = $conexion->prepare($query_producto);
+
+        if (!$stmt) {
+            throw new Exception("Error al preparar validación de producto: " . $conexion->error);
+        }
+
+        $stmt->bind_param("i", $productoID);
+        $stmt->execute();
+        $resultProducto = $stmt->get_result();
+
+        if (!$resultProducto || $resultProducto->num_rows <= 0) {
+            $stmt->close();
+            throw new Exception("El producto " . $productName . " no existe o fue eliminado.");
+        }
+
+        $rowProducto = $resultProducto->fetch_assoc();
+        $aplica_isv = (int)$rowProducto['isv'];
+        $stmt->close();
+
+        $isv_valor = ($aplica_isv == 1) ? round($subtotal * $porcentaje_isv, 2) : 0.00;
+
+        $detalles[] = array(
+            'productos_id' => $productoID,
+            'nombre' => $productName,
+            'cantidad' => $quantity,
+            'precio' => $price,
+            'isv_valor' => $isv_valor,
+            'descuento' => $discount
+        );
+    }
+
+    if (count($detalles) <= 0) {
+        throw new Exception("No hay productos válidos para guardar en la prefactura.");
+    }
+
+    return $detalles;
+}

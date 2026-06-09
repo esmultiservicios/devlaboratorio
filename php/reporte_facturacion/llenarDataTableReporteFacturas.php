@@ -2,16 +2,29 @@
 session_start();
 include '../funtions.php';
 
+header('Content-Type: application/json; charset=UTF-8');
+
 // CONEXIÓN A DB
 $mysqli = connect_mysqli();
 
 $colaborador_id = $_SESSION['colaborador_id'];
 $type = $_SESSION['type'];
-$fechai = $_POST['fechai'];
-$fechaf = $_POST['fechaf'];
-$pacientesIDGrupo = $_POST['pacientesIDGrupo'];
-$estado = $_POST['estado'];
+
+$fechai = isset($_POST['fechai']) ? $_POST['fechai'] : '';
+$fechaf = isset($_POST['fechaf']) ? $_POST['fechaf'] : '';
+$pacientesIDGrupo = isset($_POST['pacientesIDGrupo']) ? $_POST['pacientesIDGrupo'] : '';
+$estado = isset($_POST['estado']) ? $_POST['estado'] : 1;
 $usuario = $_SESSION['colaborador_id'];
+
+$dato = '';
+
+if (isset($_POST['dato'])) {
+    $dato = trim($_POST['dato']);
+}
+
+if (isset($_POST['search']['value']) && trim($_POST['search']['value']) != '') {
+    $dato = trim($_POST['search']['value']);
+}
 
 if ($estado == 1) {
     $in = 'IN(2,4)';
@@ -21,10 +34,64 @@ if ($estado == 1) {
     $in = 'IN(3)';
 }
 
+function obtenerNumeroFacturaBuscado($texto) {
+    $texto = trim($texto);
+
+    if ($texto == '') {
+        return '';
+    }
+
+    preg_match_all('/\d+/', $texto, $matches);
+
+    if (!isset($matches[0]) || count($matches[0]) == 0) {
+        return '';
+    }
+
+    $ultimo = end($matches[0]);
+
+    return strval(intval($ultimo));
+}
+
 $busqueda_paciente = '';
+$consulta_fecha = '';
+$consulta_datos = '';
+$consulta_usuario = '';
 
 if ($pacientesIDGrupo != '') {
+    $pacientesIDGrupo = $mysqli->real_escape_string($pacientesIDGrupo);
     $busqueda_paciente = "AND f.pacientes_id = '$pacientesIDGrupo'";
+}
+
+if ($dato == '') {
+    $fechai = $mysqli->real_escape_string($fechai);
+    $fechaf = $mysqli->real_escape_string($fechaf);
+
+    $consulta_fecha = "AND f.fecha BETWEEN '$fechai' AND '$fechaf'";
+} else {
+    $dato_esc = $mysqli->real_escape_string($dato);
+    $dato_like = '%' . $dato_esc . '%';
+    $dato_inicio = $dato_esc . '%';
+
+    $numero_factura_buscado = obtenerNumeroFacturaBuscado($dato);
+    $numero_factura_buscado = ($numero_factura_buscado != '') ? intval($numero_factura_buscado) : -1;
+
+    $consulta_datos = "
+        AND (
+            CONCAT(p.nombre, ' ', p.apellido) LIKE '$dato_like'
+            OR p.nombre LIKE '$dato_inicio'
+            OR p.apellido LIKE '$dato_inicio'
+            OR p.identidad LIKE '$dato_inicio'
+            OR m.number LIKE '$dato_like'
+            OR f.number LIKE '$dato_inicio'
+            OR f.number = '$numero_factura_buscado'
+            OR CONCAT(sc.prefijo, LPAD(f.number, sc.relleno, '0')) LIKE '$dato_like'
+        )
+    ";
+}
+
+if (!($type == 1 || $type == 2 || $type == 4)) {
+    $usuario = $mysqli->real_escape_string($usuario);
+    $consulta_usuario = "AND f.usuario = '$usuario'";
 }
 
 $consulta = "
@@ -58,8 +125,8 @@ SELECT
     END) AS 'tipo_factura_agrupada',
 
     (CASE 
-        WHEN pay.estado IS NULL THEN 'Pago Pendiente' 
-        WHEN pay.estado = 1 THEN 'Pagada'
+        WHEN MAX(pay.estado) IS NULL THEN 'Pago Pendiente' 
+        WHEN MAX(pay.estado) = 1 THEN 'Pagada'
         ELSE 'Cancelada'
     END) AS 'estado_pago'
 
@@ -70,12 +137,17 @@ INNER JOIN servicios AS s ON f.servicio_id = s.servicio_id
 INNER JOIN colaboradores AS c ON f.colaborador_id = c.colaborador_id
 INNER JOIN muestras AS m ON f.muestras_id = m.muestras_id
 INNER JOIN facturas_detalle AS fd ON f.facturas_id = fd.facturas_id
--- Cambié el alias de la tabla pagos a 'pay'
 LEFT JOIN pagos AS pay ON f.facturas_id = pay.facturas_id
-WHERE f.fecha BETWEEN '$fechai' AND '$fechaf' 
-AND f.estado $in
+
+WHERE f.estado $in
+$consulta_fecha
 $busqueda_paciente
-GROUP BY f.number;
+$consulta_usuario
+$consulta_datos
+
+GROUP BY f.number
+
+ORDER BY f.number DESC;
 ";
 
 $result = $mysqli->query($consulta) or die($mysqli->error);
@@ -83,27 +155,34 @@ $result = $mysqli->query($consulta) or die($mysqli->error);
 $arreglo = array('data' => []);
 
 while ($data = $result->fetch_assoc()) {
-    $facturas_id = $data['facturas_id'];
-
     $numero = $data['numero'] == 0 ? 'Aún no se ha generado' : $data['prefijo'] . rellenarDigitos($data['numero'], $data['relleno']);
     $data['factura'] = $numero;
 
-    $estado_ = match ($estado) {
-        1 => 'Borrador',
-        2 => 'Pagada',
-        3 => 'Cancelada',
-        4 => 'Crédito',
-        default => ''
-    };
+    if ($estado == 1) {
+        $estado_ = 'Borrador';
+    } else if ($estado == 2) {
+        $estado_ = 'Pagada';
+    } else if ($estado == 3) {
+        $estado_ = 'Cancelada';
+    } else if ($estado == 4) {
+        $estado_ = 'Crédito';
+    } else {
+        $estado_ = '';
+    }
 
     $data['estado'] = $estado_;
+
+    $data['precio'] = number_format(floatval($data['precio']), 2, '.', '');
+    $data['isv_neto'] = number_format(floatval($data['isv_neto']), 2, '.', '');
+    $data['descuento'] = number_format(floatval($data['descuento']), 2, '.', '');
+    $data['total'] = number_format(floatval($data['total']), 2, '.', '');
 
     $arreglo['data'][] = $data;
 }
 
 echo json_encode([
     'data' => $arreglo['data'],
-]);
+], JSON_UNESCAPED_UNICODE);
 
 $result->free();
 $mysqli->close();

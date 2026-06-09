@@ -1,4 +1,5 @@
 <?php
+//getPacienteGrupo
 session_start();
 include "../funtions.php";
 
@@ -26,4 +27,3 @@ if($result->num_rows>0){
 
 $result->free();//LIMPIAR RESULTADO
 $mysqli->close();//CERRAR CONEXIÓN
-?>

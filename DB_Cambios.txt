@@ -1,3 +1,23 @@
+####22/05/2025####
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_estado_tipo_id (estado, tipo_paciente_id, pacientes_id);
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_expediente (expediente);
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_nombre (nombre);
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_apellido (apellido);
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_identidad (identidad);
+
+ALTER TABLE pacientes 
+ADD INDEX idx_pacientes_telefono1 (telefono1);
+
 ####25/07/2023####
 tabla => cobrar_clientes
 cobrar_clientes_id      int

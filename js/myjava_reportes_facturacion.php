@@ -465,181 +465,610 @@ $('#form_main_facturacion_reportes #tipo_paciente_grupo').on('change',function()
 	getPacienteGrupo($('#form_main_facturacion_reportes #tipo_paciente_grupo').val());
 });
 
+var table_reporte_facturacion_global = null;
+
+function initReporteFacturacionStyles() {
+	if ($('#reporteFacturacionStyles').length > 0) {
+		return;
+	}
+
+	$('head').append(`
+		<style id="reporteFacturacionStyles">
+			#dataTableReporteFacturacionMain {
+				width: 100% !important;
+				border-collapse: separate !important;
+				border-spacing: 0 !important;
+				font-size: 14px;
+			}
+
+			#dataTableReporteFacturacionMain thead th {
+				background: #129aaa !important;
+				color: #fff !important;
+				font-weight: 700 !important;
+				padding: 14px 12px !important;
+				vertical-align: middle !important;
+				border: none !important;
+				white-space: nowrap !important;
+			}
+
+			#dataTableReporteFacturacionMain tbody td {
+				padding: 14px 12px !important;
+				vertical-align: middle !important;
+				border-top: 1px solid #e8edf2 !important;
+				color: #222 !important;
+			}
+
+			#dataTableReporteFacturacionMain tbody tr:nth-child(even) {
+				background: #f4f6f8 !important;
+			}
+
+			#dataTableReporteFacturacionMain tbody tr:hover {
+				background: #eef9fb !important;
+			}
+
+			.rf-link-fecha {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #f7f7f7;
+				border: 1px solid #d8dde3;
+				color: #007bff !important;
+				border-radius: 12px;
+				padding: 6px 10px;
+				font-weight: 700;
+				text-decoration: none !important;
+				white-space: nowrap;
+			}
+
+			.rf-badge {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				border-radius: 14px;
+				padding: 7px 12px;
+				font-weight: 700;
+				line-height: 1;
+				white-space: nowrap;
+			}
+
+			.rf-badge-contado {
+				background: #ffc107;
+				color: #111;
+				border: 1px solid #e0a800;
+			}
+
+			.rf-badge-credito {
+				background: #17a2b8;
+				color: #fff;
+				border: 1px solid #138496;
+			}
+
+			.rf-badge-individual {
+				background: #eef7ff;
+				border: 2px solid #006992;
+				color: #006992;
+			}
+
+			.rf-badge-grupal {
+				background: #eaf8ee;
+				border: 2px solid #198754;
+				color: #198754;
+			}
+
+			.rf-muestra {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #eef7ff;
+				border: 1px solid #b8dcff;
+				color: #006992;
+				border-radius: 12px;
+				padding: 6px 10px;
+				font-weight: 700;
+				white-space: nowrap;
+			}
+
+			.rf-factura {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #fff7e6;
+				border: 1px solid #ffd98a;
+				color: #9a6500;
+				border-radius: 12px;
+				padding: 6px 10px;
+				font-weight: 700;
+				white-space: nowrap;
+			}
+
+			.rf-cliente {
+				font-weight: 700;
+				color: #243447;
+				line-height: 1.35;
+			}
+
+			.rf-identidad {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #f3f7fa;
+				border: 1px solid #d9e4ec;
+				color: #333;
+				border-radius: 12px;
+				padding: 6px 10px;
+				font-weight: 600;
+				white-space: nowrap;
+			}
+
+			.rf-profesional {
+				font-weight: 600;
+				color: #333;
+				line-height: 1.35;
+			}
+
+			.rf-money {
+				font-weight: 700;
+				white-space: nowrap;
+			}
+
+			.rf-money-normal {
+				color: #333;
+			}
+
+			.rf-money-isv {
+				color: #006992;
+			}
+
+			.rf-money-descuento {
+				color: #cc2936;
+			}
+
+			.rf-money-neto {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 86px;
+				border: 2px solid #a5bf13;
+				color: #7f960c;
+				border-radius: 12px;
+				padding: 6px 10px;
+				font-weight: 800;
+				white-space: nowrap;
+				cursor: help;
+			}
+
+			.rf-btn-acciones {
+				background: #0d6efd !important;
+				border-color: #0d6efd !important;
+				color: #fff !important;
+				font-weight: 700 !important;
+				border-radius: 7px !important;
+				padding: 7px 12px !important;
+				box-shadow: 0 2px 5px rgba(13, 110, 253, .20);
+				white-space: nowrap;
+				line-height: 1.2;
+			}
+
+			.rf-btn-acciones:hover {
+				background: #0b5ed7 !important;
+				border-color: #0b5ed7 !important;
+				color: #fff !important;
+			}
+
+			.rf-dropdown-menu {
+				border: 0 !important;
+				border-radius: 10px !important;
+				box-shadow: 0 10px 25px rgba(0,0,0,.12) !important;
+				overflow: hidden;
+				min-width: 180px;
+			}
+
+			.rf-dropdown-menu .dropdown-item {
+				padding: 10px 14px !important;
+				font-weight: 600 !important;
+				color: #333;
+			}
+
+			.rf-dropdown-menu .dropdown-item:hover {
+				background: #f2f7ff !important;
+			}
+
+			#dataTableReporteFacturacionMain tfoot th,
+			#dataTableReporteFacturacionMain tfoot td {
+				background: #129aaa !important;
+				color: #fff !important;
+				font-weight: 800 !important;
+				padding: 13px 12px !important;
+				border: none !important;
+			}
+
+			.dataTables_wrapper .dt-buttons .btn {
+				border-radius: 7px !important;
+				font-weight: 600 !important;
+				padding: 8px 13px !important;
+				margin-right: 4px !important;
+				box-shadow: 0 2px 5px rgba(0,0,0,.10);
+			}
+
+			.dataTables_filter input {
+				border: 1px solid #b8dcff !important;
+				border-radius: 7px !important;
+				padding: 7px 10px !important;
+				outline: none !important;
+			}
+
+			.dataTables_filter input:focus {
+				border-color: #0d6efd !important;
+				box-shadow: 0 0 0 2px rgba(13,110,253,.15) !important;
+			}
+		</style>
+	`);
+}
+
+function rfEscapeHtml(value) {
+	if (value === null || value === undefined) {
+		return '';
+	}
+
+	return String(value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
+function rfToNumber(value) {
+	if (value === null || value === undefined || value === '') {
+		return 0;
+	}
+
+	var limpio = String(value).replace(/,/g, '');
+	var numero = parseFloat(limpio);
+
+	return isNaN(numero) ? 0 : numero;
+}
+
+function rfMoney(value, claseExtra) {
+	var numero = rfToNumber(value);
+
+	return '<span class="rf-money ' + claseExtra + '">' + numero.toFixed(2) + '</span>';
+}
+
 var listar_reporte_facturacion = function(){
-	var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
-	var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();
-	var pacientesIDGrupo = $('#form_main_facturacion_reportes #pacientesIDGrupo').val() || '';
-	var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
+	initReporteFacturacionStyles();
+
+	if ($.fn.DataTable.isDataTable("#dataTableReporteFacturacionMain")) {
+		table_reporte_facturacion_global.ajax.reload(null, false);
+		return false;
+	}
 	
-	var table_reporte_facturacion  = $("#dataTableReporteFacturacionMain").DataTable({
-		"destroy":true,	
-		"ajax":{
-			"method":"POST",
+	table_reporte_facturacion_global = $("#dataTableReporteFacturacionMain").DataTable({
+		"destroy": true,
+		"processing": true,
+		"ajax": {
+			"method": "POST",
 			"url": "<?php echo SERVERURL; ?>php/reporte_facturacion/llenarDataTableReporteFacturas.php",
-            "data": function(d) {
-                d.fechai = fechai;
-                d.fechaf = fechaf;
-                d.pacientesIDGrupo = pacientesIDGrupo;			
-				d.estado = estado;
-            }		
-		},		
-		"columns":[
+			"data": function(d) {
+				d.fechai = $('#form_main_facturacion_reportes #fecha_b').val();
+				d.fechaf = $('#form_main_facturacion_reportes #fecha_f').val();
+				d.pacientesIDGrupo = $('#form_main_facturacion_reportes #pacientesIDGrupo').val() || '';
+				d.estado = $('#form_main_facturacion_reportes #estado').val() || 1;
+				d.dato = $('#dataTableReporteFacturacionMain_filter input').val() || '';
+			}
+		},
+		"columns": [
 			{
 				"data": "fecha",
 				"render": function(data, type, row) {
-					return '<a href="#" class="showInvoiceDetail">' + data + '</a>';
+					if (type !== 'display') {
+						return data;
+					}
+
+					return '<a href="#" class="showInvoiceDetail rf-link-fecha">' +
+						'<i class="fas fa-calendar-alt"></i>' +
+						'<span>' + rfEscapeHtml(data) + '</span>' +
+					'</a>';
 				}
-			},									
+			},
 			{
 				"data": "tipo_documento",
 				"render": function(data, type, row) {
-					var color = data === 'Contado' ? '#119FB8' : '#FF781E'; // Naranja para "Contado" y morado para "Crédito"
-					return '<span class="tipo-documento" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
+					if (type !== 'display') {
+						return data;
+					}
+
+					if (data === 'Contado') {
+						return '<span class="rf-badge rf-badge-contado">' +
+							'<i class="fas fa-file-invoice-dollar"></i>' +
+							'<span>Contado</span>' +
+						'</span>';
+					}
+
+					return '<span class="rf-badge rf-badge-credito">' +
+						'<i class="fas fa-credit-card"></i>' +
+						'<span>Crédito</span>' +
+					'</span>';
 				}
 			},
-			{"data": "muestra"},
-			{"data": "factura"},
-			{"data": "paciente"},
-			{"data": "identidad"},										
-			{"data": "profesional"},
-			{"data": "precio"},
-			{"data": "isv_neto"},	
-			{"data": "descuento"},
+			{
+				"data": "muestra",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					if (!data) {
+						return '<span class="rf-badge" style="background:#f2f2f2; color:#888;">Sin muestra</span>';
+					}
+
+					return '<span class="rf-muestra">' +
+						'<i class="fas fa-vial"></i>' +
+						'<span>' + rfEscapeHtml(data) + '</span>' +
+					'</span>';
+				}
+			},
+			{
+				"data": "factura",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					if (!data || data === 'Aún no se ha generado') {
+						return '<span class="rf-badge" style="background:#f2f2f2; color:#888;">Aún no se ha generado</span>';
+					}
+
+					return '<span class="rf-factura">' +
+						'<i class="fas fa-file-invoice"></i>' +
+						'<span>' + rfEscapeHtml(data) + '</span>' +
+					'</span>';
+				}
+			},
+			{
+				"data": "paciente",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					return '<div class="rf-cliente">' +
+						'<i class="fas fa-user text-info"></i> ' + rfEscapeHtml(data) +
+					'</div>';
+				}
+			},
+			{
+				"data": "identidad",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					return '<span class="rf-identidad">' +
+						'<i class="fas fa-id-card"></i>' +
+						'<span>' + rfEscapeHtml(data) + '</span>' +
+					'</span>';
+				}
+			},
+			{
+				"data": "profesional",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					return '<div class="rf-profesional">' +
+						'<i class="fas fa-user-md text-primary"></i> ' + rfEscapeHtml(data) +
+					'</div>';
+				}
+			},
+			{
+				"data": "precio",
+				"className": "text-right",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return rfToNumber(data);
+					}
+
+					return rfMoney(data, 'rf-money-normal');
+				}
+			},
+			{
+				"data": "isv_neto",
+				"className": "text-right",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return rfToNumber(data);
+					}
+
+					return rfMoney(data, 'rf-money-isv');
+				}
+			},
+			{
+				"data": "descuento",
+				"className": "text-right",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return rfToNumber(data);
+					}
+
+					return rfMoney(data, 'rf-money-descuento');
+				}
+			},
 			{
 				"data": "total",
+				"className": "text-right",
 				"render": function(data, type, row) {
-					var estadoPago = row.estado_pago;  // Obtenemos el estado_pago desde la fila
-					var color = 'black';  // Color por defecto
-					var tooltip = 'Estado desconocido'; // Mensaje por defecto
+					if (type !== 'display') {
+						return rfToNumber(data);
+					}
 
-					// Cambiar el color según el estado_pago
+					var estadoPago = row.estado_pago;
+					var tooltip = 'Estado desconocido';
+
 					if (estadoPago === 'Pago Pendiente') {
-						color = '#CC2936';  // Rojo si está pendiente
 						tooltip = 'Pago Pendiente.';
 					} else if (estadoPago === 'Pagada') {
-						color = '#A5BF13';  // Verde si está pagada
 						tooltip = 'Pago Realizado.';
 					}
 
-					// Retornar el total con el color correspondiente
-					return '<span data-toggle="tooltip" data-placement="top" title="' + tooltip + '" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + '; font-weight: bold; cursor: help;">' + data + '</span>';
+					return '<span class="rf-money-neto" data-toggle="tooltip" data-placement="top" title="' + tooltip + '">' +
+						rfToNumber(data).toFixed(2) +
+					'</span>';
 				}
 			},
-			{"data": "servicio"},						
-            {
-                "data": "tipo_factura_agrupada",
-                "render": function(data, type, row) {
-                    var color = data === 'Grupal' ? 'green' : '#006992'; // Cambiar a los colores deseados
-                    return '<span class="tipo-factura" style="border: 2px solid ' + color + '; border-radius: 12px; padding: 5px 10px; color: ' + color + ';">' + data + '</span>';
-                }
-            },
+			{
+				"data": "servicio",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					return '<span style="font-weight:600; color:#333;">' + rfEscapeHtml(data) + '</span>';
+				}
+			},
+			{
+				"data": "tipo_factura_agrupada",
+				"render": function(data, type, row) {
+					if (type !== 'display') {
+						return data;
+					}
+
+					if (data === 'Grupal') {
+						return '<span class="rf-badge rf-badge-grupal">' +
+							'<i class="fas fa-layer-group"></i>' +
+							'<span>Grupal</span>' +
+						'</span>';
+					}
+
+					return '<span class="rf-badge rf-badge-individual">' +
+						'<i class="fas fa-user"></i>' +
+						'<span>Individual</span>' +
+					'</span>';
+				}
+			},
 			{
 				"data": null,
+				"orderable": false,
+				"className": "text-center",
 				"defaultContent": 
 					'<div class="btn-group">' +
-						'<button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
-							'<i class="fas fa-cog"></i>' +
+						'<button type="button" class="btn btn-primary btn-sm dropdown-toggle rf-btn-acciones" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+							'<i class="fas fa-cog"></i> Acciones' +
 						'</button>' +
-						'<div class="dropdown-menu">' +
-							'<a class="dropdown-item printBill" href="#"><i class="fas fa-print fa-lg"></i> Imprimir</a>' +
-							'<a class="dropdown-item closeBill" href="#"><i class="fas fa-calculator fa-lg"></i> Cierre</a>' +
-							'<a class="dropdown-item deleteBill" href="#"><i class="fas fa-download fa-lg"></i> Anular</a>' +
+						'<div class="dropdown-menu dropdown-menu-right rf-dropdown-menu">' +
+							'<a class="dropdown-item printBill" href="#"><i class="fas fa-print text-primary mr-2"></i> Imprimir</a>' +
+							'<a class="dropdown-item closeBill" href="#"><i class="fas fa-calculator text-success mr-2"></i> Cierre</a>' +
+							'<div class="dropdown-divider"></div>' +
+							'<a class="dropdown-item deleteBill text-danger" href="#"><i class="fas fa-undo mr-2"></i> Anular</a>' +
 						'</div>' +
 					'</div>'
 			}
-		],	
+		],
 		"footerCallback": function(row, data, start, end, display) {
-            var api = this.api();
+			var api = this.api();
 
-            // Limpiar el contenido del footer
-            $('#footer-importe').html('');
-            $('#footer-isv').html('');
-            $('#footer-descuento').html('');
-            $('#footer-neto').html('');
-            $('#tipo_pago').html('');
-            $('#total_pago').html('');
+			$('#footer-importe').html('');
+			$('#footer-isv').html('');
+			$('#footer-descuento').html('');
+			$('#footer-neto').html('');
+			$('#tipo_pago').html('');
+			$('#total_pago').html('');
 
-            // Función para calcular la suma de una columna específica
-            var sumaColumna = function(index) {
-                return api.column(index, { page: 'current' })
-                    .data()
-                    .reduce(function(a, b) {
-                        return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-                    }, 0);
-            };
+			var sumaColumna = function(index) {
+				return api.column(index, { page: 'current' })
+					.data()
+					.reduce(function(a, b) {
+						return rfToNumber(a) + rfToNumber(b);
+					}, 0);
+			};
 
-            // Calcular totales para las columnas específicas
-            var totalImporte = sumaColumna(7);
-            var totalISV = sumaColumna(8);
-            var totalDescuento = sumaColumna(9);
-            var totalNeto = sumaColumna(10);
+			var totalImporte = sumaColumna(7);
+			var totalISV = sumaColumna(8);
+			var totalDescuento = sumaColumna(9);
+			var totalNeto = sumaColumna(10);
 
-            var formatter = new Intl.NumberFormat('es-HN', {
-                style: 'currency',
-                currency: 'HNL',
-                minimumFractionDigits: 2,
-            });
+			var formatter = new Intl.NumberFormat('es-HN', {
+				style: 'currency',
+				currency: 'HNL',
+				minimumFractionDigits: 2
+			});
 
-            // Mostrar totales de las columnas
-            $('#footer-importe').html(formatter.format(totalImporte));
-            $('#footer-isv').html(formatter.format(totalISV));
-            $('#footer-descuento').html(formatter.format(totalDescuento));
-            $('#footer-neto').html(formatter.format(totalNeto));
-        },	
-		"order": [],	
-        "lengthMenu": lengthMenu20,
+			$('#footer-importe').html(formatter.format(totalImporte));
+			$('#footer-isv').html(formatter.format(totalISV));
+			$('#footer-descuento').html(formatter.format(totalDescuento));
+			$('#footer-neto').html(formatter.format(totalNeto));
+		},
+		"createdRow": function(row, data, dataIndex) {
+			$(row).find('td').css('vertical-align', 'middle');
+		},
+		"order": [],
+		"lengthMenu": lengthMenu20,
 		"stateSave": true,
-		"bDestroy": true,		
-		"language": idioma_español,//esta se encuenta en el archivo main.js
-		"dom": dom,			
-		"buttons":[		
+		"bDestroy": true,
+		"language": idioma_español,
+		"dom": dom,
+		"buttons": [
 			{
-				text:      '<i class="fas fa-sync-alt fa-lg"></i> Actualizar',
+				text: '<i class="fas fa-sync-alt fa-lg"></i> Actualizar',
 				titleAttr: 'Actualizar Facturas',
 				className: 'btn btn-info',
-				action: 	function(){
-					listar_reporte_facturacion();
+				action: function(){
+					if (table_reporte_facturacion_global !== null) {
+						table_reporte_facturacion_global.ajax.reload(null, false);
+					}
 				}
-			},		
+			},
 			{
-				text:      '<i class="fas fa-calculator fa-lg"></i> Cierre',
+				text: '<i class="fas fa-calculator fa-lg"></i> Cierre',
 				titleAttr: 'Cierre de Caja',
 				className: 'btn btn-primary',
-				action: 	function(){
+				action: function(){
 					cierreBill();
 				}
-			},		
+			},
 			{
-				text:      '<i class="fa-solid fa-file-pdf fa-lg"></i> Reporte PDF',
+				text: '<i class="fa-solid fa-file-pdf fa-lg"></i> Reporte PDF',
 				titleAttr: 'Reporte de Facturación PDF',
 				className: 'btn btn-danger',
-				action: 	function(){
+				action: function(){
 					reporteFacturacion();
 				}
 			},
 			{
-				text:      '<i class="fa-solid fa-file-excel fa-lg"></i> Reporte Excel',
+				text: '<i class="fa-solid fa-file-excel fa-lg"></i> Reporte Excel',
 				titleAttr: 'Reporte de Facturación Excel',
 				className: 'btn btn-success',
-				action: 	function(){
+				action: function(){
 					reporteFacturacionExcel();
 				}
 			}
-		]		
-	});	 
+		]
+	});
 
-	// Inicializar tooltips después de cada redibujado de la tabla
-	$('#dataTableReporteFacturacionMain').on('draw.dt', function() {
+	$('#dataTableReporteFacturacionMain').off('draw.dt').on('draw.dt', function() {
 		$('[data-toggle="tooltip"]').tooltip();
 	});
 
-	table_reporte_facturacion.search('').draw();
+	$(document).off('keyup', '#dataTableReporteFacturacionMain_filter input').on('keyup', '#dataTableReporteFacturacionMain_filter input', function(){
+		clearTimeout(window.timerBusquedaFacturaReporte);
+
+		window.timerBusquedaFacturaReporte = setTimeout(function(){
+			if (table_reporte_facturacion_global !== null) {
+				table_reporte_facturacion_global.ajax.reload(null, true);
+			}
+		}, 500);
+	});
+
 	$('#buscar').focus();
 
-	show_invoice_detail_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);
-	print_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);
-	close_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);
-	delete_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion);	
+	show_invoice_detail_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion_global);
+	print_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion_global);
+	close_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion_global);
+	delete_bill_dataTable("#dataTableReporteFacturacionMain tbody", table_reporte_facturacion_global);
+
+	return false;
 }
 
 var show_invoice_detail_dataTable = function(tbody, table){
@@ -718,6 +1147,7 @@ function reporteFacturacion() {
         "fechaf": fechaf,
         "clientes": clientes,
         "profesional": profesional,
+		"documento_id": 1,
         "db": "<?php echo DB; ?>"
     };
 
@@ -740,6 +1170,7 @@ function reporteFacturacionExcel() {
         "clientes": clientes,
         "profesional": profesional,
 		"tipo": "Excel",
+		"documento_id": 1,
         "db": "<?php echo DB; ?>"
     };
 

@@ -731,39 +731,171 @@ function getMaterialEnviado(muestras_id){
 	return material_enviado;
 }
 
+/****************************************************************************************************************************************************************/
+// INICIO TIPO CLIENTE / CLIENTE GRUPO
+/****************************************************************************************************************************************************************/
+
+var requestPacienteGrupo = null;
+var ultimoTipoPacienteGrupo = null;
+
+function refrescarSelectPicker(selector){
+	if ($(selector).hasClass('selectpicker')) {
+		$(selector).selectpicker('refresh');
+	}
+}
+
+function limpiarSelectPacienteGrupo(mensaje){
+	var texto = mensaje || 'Seleccione un cliente';
+
+	$('#form_main_facturas #pacientesIDGrupo')
+		.html('<option value="">' + texto + '</option>')
+		.val('');
+
+	refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+}
+
+function bloquearSelectPacienteGrupo(bloquear){
+	$('#form_main_facturas #pacientesIDGrupo').prop('disabled', bloquear);
+	refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+}
+
 function getTipoPacienteGrupo(){
-    var url = '<?php echo SERVERURL; ?>php/facturacion/getTipoPaciente.php';
+	var url = '<?php echo SERVERURL; ?>php/facturacion/getTipoPaciente.php';
 
 	$.ajax({
-        type: "POST",
-        url: url,
-        success: function(data){
-		    $('#form_main_facturas #tipo_paciente_grupo').html("");
-			  $('#form_main_facturas #tipo_paciente_grupo').html(data);
-			  $('#form_main_facturas #tipo_paciente_grupo').selectpicker('refresh');
-			getPacienteGrupo(1);
+		type: 'POST',
+		url: url,
+		cache: false,
+		beforeSend: function(){
+			$('#form_main_facturas #tipo_paciente_grupo')
+				.html('<option value="">Cargando...</option>')
+				.val('');
+
+			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+
+			limpiarSelectPacienteGrupo('Seleccione primero un tipo de cliente');
+			bloquearSelectPacienteGrupo(true);
+		},
+		success: function(data){
+			$('#form_main_facturas #tipo_paciente_grupo').html(data);
+
+			var tipoInicial = $('#form_main_facturas #tipo_paciente_grupo option:first').val();
+
+			if (tipoInicial === '' || tipoInicial === null || typeof tipoInicial === 'undefined') {
+				tipoInicial = '1';
+			}
+
+			$('#form_main_facturas #tipo_paciente_grupo').val(tipoInicial);
+			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+
+			getPacienteGrupo(tipoInicial);
+		},
+		error: function(xhr, status, error){
+			console.error('Error al cargar tipos de cliente:', error);
+
+			$('#form_main_facturas #tipo_paciente_grupo')
+				.html('<option value="">Error al cargar</option>')
+				.val('');
+
+			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+
+			limpiarSelectPacienteGrupo('No se pudieron cargar los clientes');
+			bloquearSelectPacienteGrupo(false);
 		}
-     });
+	});
 }
 
 function getPacienteGrupo(tipo_paciente){
-    var url = '<?php echo SERVERURL; ?>php/facturacion/getPacienteGrupo.php';
+	var url = '<?php echo SERVERURL; ?>php/facturacion/getPacienteGrupo.php';
 
-	$.ajax({
-		type: "POST",
+	tipo_paciente = $.trim(tipo_paciente);
+
+	if (tipo_paciente === '' || tipo_paciente === null || typeof tipo_paciente === 'undefined') {
+		limpiarSelectPacienteGrupo('Seleccione primero un tipo de cliente');
+		bloquearSelectPacienteGrupo(false);
+		return false;
+	}
+
+	ultimoTipoPacienteGrupo = tipo_paciente;
+
+	if (requestPacienteGrupo !== null) {
+		requestPacienteGrupo.abort();
+		requestPacienteGrupo = null;
+	}
+
+	requestPacienteGrupo = $.ajax({
+		type: 'POST',
 		url: url,
-		data:'tipo_paciente='+tipo_paciente,
+		cache: false,
+		data: {
+			tipo_paciente: tipo_paciente
+		},
+		beforeSend: function(){
+			$('#form_main_facturas #pacientesIDGrupo')
+				.html('<option value="">Cargando clientes...</option>')
+				.val('');
+
+			bloquearSelectPacienteGrupo(true);
+		},
 		success: function(data){
-			$('#form_main_facturas #pacientesIDGrupo').html("");
-			$('#form_main_facturas #pacientesIDGrupo').html(data);
-			$('#form_main_facturas #pacientesIDGrupo').selectpicker('refresh');
+			if (tipo_paciente !== ultimoTipoPacienteGrupo) {
+				return false;
+			}
+
+			$('#form_main_facturas #pacientesIDGrupo')
+				.html(data)
+				.val('');
+
+			refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+		},
+		error: function(xhr, status, error){
+			if (status === 'abort') {
+				return false;
+			}
+
+			console.error('Error al cargar clientes:', error);
+
+			if (tipo_paciente === ultimoTipoPacienteGrupo) {
+				limpiarSelectPacienteGrupo('Error al cargar clientes');
+			}
+		},
+		complete: function(xhr, status){
+			if (tipo_paciente === ultimoTipoPacienteGrupo) {
+				bloquearSelectPacienteGrupo(false);
+			}
+
+			requestPacienteGrupo = null;
 		}
-     });
+	});
+
+	return requestPacienteGrupo;
 }
 
-$('#form_main_facturas #tipo_paciente_grupo').on('change',function(){
-	getPacienteGrupo($('#form_main_facturas #tipo_paciente_grupo').val());
+$(document).ready(function(){
+	$('#form_main_facturas #tipo_paciente_grupo').off('change').on('change', function(){
+		var tipoPaciente = $(this).val();
+
+		limpiarSelectPacienteGrupo('Cargando clientes...');
+		getPacienteGrupo(tipoPaciente);
+
+		$('#form_main_facturas #pacientesIDGrupo').val('');
+		refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+
+		$('#main_facturacion #factura_manual').hide();
+		$('#checkAllFactura').prop('checked', false);
+		$('.itemRowFactura').prop('checked', false);
+	});
+
+	$('#form_main_facturas #pacientesIDGrupo').off('change').on('change', function(){
+		$('#main_facturacion #factura_manual').hide();
+		$('#checkAllFactura').prop('checked', false);
+		$('.itemRowFactura').prop('checked', false);
+	});
 });
+
+/****************************************************************************************************************************************************************/
+// FIN TIPO CLIENTE / CLIENTE GRUPO
+/****************************************************************************************************************************************************************/
 
 function cierreCaja(){
 	$('#formularioCierreCaja #pro').val("Cierre de Caja");
