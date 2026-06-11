@@ -1,3 +1,29 @@
+####junio 11, 2026####
+CREATE TABLE `facturas_cambio_fecha` (
+  `facturas_cambio_fecha_id` int(11) NOT NULL AUTO_INCREMENT,
+  `facturas_id_referencia` int(11) NOT NULL,
+  `secuencia_facturacion_id` int(11) NOT NULL,
+  `numero` int(11) NOT NULL,
+  `prefijo` varchar(20) DEFAULT NULL,
+  `factura` varchar(50) DEFAULT NULL,
+  `fecha_anterior` date NOT NULL,
+  `fecha_nueva` date NOT NULL,
+  `comentario` varchar(500) NOT NULL,
+  `facturas_ids_afectadas` text NOT NULL,
+  `total_facturas_afectadas` int(11) NOT NULL DEFAULT 1,
+  `tiene_pago` tinyint(1) NOT NULL DEFAULT 0,
+  `colaborador_id` int(11) NOT NULL,
+  `usuario` int(11) NOT NULL,
+  `ip` varchar(60) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_registro` datetime NOT NULL,
+  PRIMARY KEY (`facturas_cambio_fecha_id`),
+  KEY `idx_factura_ref` (`facturas_id_referencia`),
+  KEY `idx_numero_secuencia` (`numero`, `secuencia_facturacion_id`),
+  KEY `idx_fecha_registro` (`fecha_registro`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci;
+
 ####22/05/2025####
 
 ALTER TABLE pacientes 

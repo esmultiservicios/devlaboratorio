@@ -1,4 +1,5 @@
 <?php
+//llenarDataTableReporteFacturas.php
 session_start();
 include '../funtions.php';
 
@@ -94,10 +95,56 @@ if (!($type == 1 || $type == 2 || $type == 4)) {
     $consulta_usuario = "AND f.usuario = '$usuario'";
 }
 
+/*
+    IMPORTANTE:
+    Validamos si existe la tabla facturas_cambio_fecha.
+    Si no existe, el reporte NO debe fallar.
+*/
+$existe_tabla_cambio_fecha = false;
+
+$check_table = $mysqli->query("SHOW TABLES LIKE 'facturas_cambio_fecha'");
+
+if ($check_table && $check_table->num_rows > 0) {
+    $existe_tabla_cambio_fecha = true;
+}
+
+$select_cambio_fecha = "
+    0 AS 'cantidad_cambios_fecha',
+    '' AS 'ultima_modificacion_fecha'
+";
+
+$join_cambio_fecha = "";
+
+if ($existe_tabla_cambio_fecha) {
+    $select_cambio_fecha = "
+        IFNULL(hcf.cantidad_cambios, 0) AS 'cantidad_cambios_fecha',
+        DATE_FORMAT(hcf.ultima_modificacion, '%d/%m/%Y %H:%i:%s') AS 'ultima_modificacion_fecha'
+    ";
+
+    $join_cambio_fecha = "
+        LEFT JOIN (
+            SELECT 
+                secuencia_facturacion_id,
+                numero,
+                COUNT(*) AS cantidad_cambios,
+                MAX(fecha_registro) AS ultima_modificacion
+            FROM facturas_cambio_fecha
+            WHERE estado = 1
+            GROUP BY secuencia_facturacion_id, numero
+        ) AS hcf 
+        ON hcf.secuencia_facturacion_id = f.secuencia_facturacion_id
+        AND hcf.numero = f.number
+    ";
+}
+
 $consulta = "
 SELECT 
     f.facturas_id AS 'facturas_id', 
+    f.secuencia_facturacion_id AS 'secuencia_facturacion_id',
+
     DATE_FORMAT(f.fecha, '%d/%m/%Y') AS 'fecha', 
+    DATE_FORMAT(f.fecha, '%Y-%m-%d') AS 'fecha_iso',
+
     p.identidad AS 'identidad', 
     CONCAT(p.nombre, ' ', p.apellido) AS 'paciente', 
     sc.prefijo AS 'prefijo', 
@@ -110,6 +157,8 @@ SELECT
     (CASE WHEN f.tipo_factura = 1 THEN 'Contado' ELSE 'Crédito' END) AS 'tipo_documento', 
     f.tipo_factura,
     m.number AS 'muestra',
+
+    GROUP_CONCAT(f.facturas_id ORDER BY f.facturas_id ASC) AS 'facturas_ids_grupo',
     
     CAST(SUM(fd.precio * fd.cantidad) AS DECIMAL(12,2)) AS 'total_precio',
     CAST(SUM(fd.cantidad) AS DECIMAL(12,2)) AS 'cantidad',
@@ -128,7 +177,9 @@ SELECT
         WHEN MAX(pay.estado) IS NULL THEN 'Pago Pendiente' 
         WHEN MAX(pay.estado) = 1 THEN 'Pagada'
         ELSE 'Cancelada'
-    END) AS 'estado_pago'
+    END) AS 'estado_pago',
+
+    $select_cambio_fecha
 
 FROM facturas AS f
 INNER JOIN pacientes AS p ON f.pacientes_id = p.pacientes_id
@@ -139,13 +190,15 @@ INNER JOIN muestras AS m ON f.muestras_id = m.muestras_id
 INNER JOIN facturas_detalle AS fd ON f.facturas_id = fd.facturas_id
 LEFT JOIN pagos AS pay ON f.facturas_id = pay.facturas_id
 
+$join_cambio_fecha
+
 WHERE f.estado $in
 $consulta_fecha
 $busqueda_paciente
 $consulta_usuario
 $consulta_datos
 
-GROUP BY f.number
+GROUP BY f.secuencia_facturacion_id, f.number
 
 ORDER BY f.number DESC;
 ";
@@ -176,6 +229,12 @@ while ($data = $result->fetch_assoc()) {
     $data['isv_neto'] = number_format(floatval($data['isv_neto']), 2, '.', '');
     $data['descuento'] = number_format(floatval($data['descuento']), 2, '.', '');
     $data['total'] = number_format(floatval($data['total']), 2, '.', '');
+
+    $data['cantidad_cambios_fecha'] = intval($data['cantidad_cambios_fecha']);
+
+    if (!isset($data['ultima_modificacion_fecha']) || $data['ultima_modificacion_fecha'] == null) {
+        $data['ultima_modificacion_fecha'] = '';
+    }
 
     $arreglo['data'][] = $data;
 }
