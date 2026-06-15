@@ -40,19 +40,19 @@ if ($search !== '' && strlen($search) >= 2) {
     $consulta = "
         SELECT 
             pacientes_id,
-            COALESCE(nombre, '') AS nombre,
-            COALESCE(apellido, '') AS apellido,
-            COALESCE(identidad, '') AS identidad,
-            COALESCE(expediente, '') AS expediente
+            TRIM(COALESCE(nombre, '')) AS nombre,
+            TRIM(COALESCE(apellido, '')) AS apellido,
+            TRIM(COALESCE(identidad, '')) AS identidad,
+            TRIM(COALESCE(expediente, '')) AS expediente
         FROM pacientes
         WHERE estado = 1
           AND expediente > 0
           AND (
-                nombre LIKE ?
-                OR apellido LIKE ?
-                OR identidad LIKE ?
-                OR expediente LIKE ?
-                OR CONCAT(COALESCE(nombre, ''), ' ', COALESCE(apellido, '')) LIKE ?
+                TRIM(COALESCE(nombre, '')) LIKE ?
+                OR TRIM(COALESCE(apellido, '')) LIKE ?
+                OR TRIM(COALESCE(identidad, '')) LIKE ?
+                OR TRIM(COALESCE(expediente, '')) LIKE ?
+                OR TRIM(CONCAT(TRIM(COALESCE(nombre, '')), ' ', TRIM(COALESCE(apellido, '')))) LIKE ?
           )
         ORDER BY nombre ASC
         LIMIT 100
@@ -74,18 +74,27 @@ if ($search !== '' && strlen($search) >= 2) {
         $result = $stmt->get_result();
 
         while ($row = $result->fetch_assoc()) {
-            $nombre = trim($row['nombre'] . ' ' . $row['apellido']);
+            $nombre = trim($row['nombre']);
+            $apellido = trim($row['apellido']);
+            $identidad = trim($row['identidad']);
+            $expediente = trim($row['expediente']);
 
-            if ($nombre === '') {
-                $nombre = 'Sin nombre';
+            if ($apellido !== '') {
+                $nombre_completo = trim($nombre . ' ' . $apellido);
+            } else {
+                $nombre_completo = trim($nombre);
+            }
+
+            if ($nombre_completo === '') {
+                $nombre_completo = 'Sin nombre';
             }
 
             $results[] = array(
                 'id' => (int)$row['pacientes_id'],
-                'text' => $nombre . ' - RTN: ' . $row['identidad'],
-                'nombre' => $nombre,
-                'identidad' => $row['identidad'],
-                'expediente' => $row['expediente']
+                'text' => $nombre_completo . ' - RTN: ' . $identidad,
+                'nombre' => $nombre_completo,
+                'identidad' => $identidad,
+                'expediente' => $expediente
             );
         }
 
@@ -95,10 +104,10 @@ if ($search !== '' && strlen($search) >= 2) {
     $consulta = "
         SELECT 
             pacientes_id,
-            COALESCE(nombre, '') AS nombre,
-            COALESCE(apellido, '') AS apellido,
-            COALESCE(identidad, '') AS identidad,
-            COALESCE(expediente, '') AS expediente
+            TRIM(COALESCE(nombre, '')) AS nombre,
+            TRIM(COALESCE(apellido, '')) AS apellido,
+            TRIM(COALESCE(identidad, '')) AS identidad,
+            TRIM(COALESCE(expediente, '')) AS expediente
         FROM pacientes
         WHERE estado = 1
           AND expediente > 0
@@ -111,18 +120,27 @@ if ($search !== '' && strlen($search) >= 2) {
     $result = $mysqli->query($consulta) or die($mysqli->error);
 
     while ($row = $result->fetch_assoc()) {
-        $nombre = trim($row['nombre'] . ' ' . $row['apellido']);
+        $nombre = trim($row['nombre']);
+        $apellido = trim($row['apellido']);
+        $identidad = trim($row['identidad']);
+        $expediente = trim($row['expediente']);
 
-        if ($nombre === '') {
-            $nombre = 'Sin nombre';
+        if ($apellido !== '') {
+            $nombre_completo = trim($nombre . ' ' . $apellido);
+        } else {
+            $nombre_completo = trim($nombre);
+        }
+
+        if ($nombre_completo === '') {
+            $nombre_completo = 'Sin nombre';
         }
 
         $results[] = array(
             'id' => (int)$row['pacientes_id'],
-            'text' => $nombre . ' - RTN: ' . $row['identidad'],
-            'nombre' => $nombre,
-            'identidad' => $row['identidad'],
-            'expediente' => $row['expediente']
+            'text' => $nombre_completo . ' - RTN: ' . $identidad,
+            'nombre' => $nombre_completo,
+            'identidad' => $identidad,
+            'expediente' => $expediente
         );
     }
 
