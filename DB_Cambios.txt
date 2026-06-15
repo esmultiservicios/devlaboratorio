@@ -1,3 +1,31 @@
+####junio 15, 2026####
+CREATE TABLE `secuencia_factura_fallida` (
+  `secuencia_factura_fallida_id` int NOT NULL,
+  `empresa_id` int NOT NULL,
+  `secuencia_facturacion_id` int NOT NULL,
+  `documento_id` int NOT NULL COMMENT '1 Factura, 4 Proforma u otro documento según secuencia',
+  `numero` int NOT NULL,
+  `prefijo` char(15) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `relleno` int NOT NULL DEFAULT 8,
+  `estado` int NOT NULL DEFAULT 1 COMMENT '1 Disponible, 2 Reutilizado, 3 Anulado/Bloqueado',
+  `motivo` varchar(255) COLLATE utf8mb4_spanish_ci DEFAULT NULL,
+  `origen` varchar(80) COLLATE utf8mb4_spanish_ci DEFAULT NULL COMMENT 'addFactura, addFacturaporUsuario, addGrupoFactura',
+  `facturas_id` int DEFAULT NULL,
+  `facturas_grupal_id` int DEFAULT NULL,
+  `usuario` int NOT NULL,
+  `fecha_registro` datetime NOT NULL,
+  `usuario_reutilizo` int DEFAULT NULL,
+  `fecha_reutilizado` datetime DEFAULT NULL,
+  PRIMARY KEY (`secuencia_factura_fallida_id`),
+  UNIQUE KEY `uk_numero_disponible` (`empresa_id`, `documento_id`, `numero`, `estado`),
+  KEY `idx_buscar_disponible` (`empresa_id`, `documento_id`, `estado`, `numero`),
+  KEY `idx_secuencia` (`secuencia_facturacion_id`),
+  KEY `idx_fecha` (`fecha_registro`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+ALTER TABLE `secuencia_factura_fallida`
+  MODIFY `secuencia_factura_fallida_id` int NOT NULL AUTO_INCREMENT;
+
 ####junio 11, 2026####
 CREATE TABLE `facturas_cambio_fecha` (
   `facturas_cambio_fecha_id` int(11) NOT NULL AUTO_INCREMENT,

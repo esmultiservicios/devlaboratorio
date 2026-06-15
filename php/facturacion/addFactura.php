@@ -16,6 +16,10 @@ $documento_tipo = 0;
 $empresa_id = 0;
 $numeroFacturaObtenido = false;
 $facturaActualizada = false;
+$detalleFacturaTocado = false;
+$lockSecuenciaNombre = '';
+$lockSecuenciaAdquirido = false;
+$numeroFacturaData = null;
 
 try {
     if (!isset($_SESSION['colaborador_id']) || !isset($_SESSION['empresa_id'])) {
@@ -75,13 +79,19 @@ try {
         throw new Exception("El total de la factura debe ser mayor a cero.");
     }
 
-    $numeroFactura = obtenerNumeroFactura($mysqli, $empresa_id, $documento_tipo);
+    $lockSecuenciaNombre = adquirirLockSecuenciaFactura($mysqli, $empresa_id, $documento_tipo, 20);
+    $lockSecuenciaAdquirido = true;
+
+    $numeroFactura = obtenerNumeroFacturaConRecuperacion($mysqli, $empresa_id, $documento_tipo, $usuario, 'addFactura');
 
     if (!isset($numeroFactura['error']) || $numeroFactura['error']) {
         $mensajeNumero = isset($numeroFactura['mensaje']) ? $numeroFactura['mensaje'] : 'No se pudo obtener el número de factura.';
         throw new Exception($mensajeNumero);
     }
 
+    $numeroFactura['empresa_id'] = $empresa_id;
+    $numeroFactura['documento_id'] = $documento_tipo;
+    $numeroFacturaData = $numeroFactura;
     $numeroFacturaObtenido = true;
 
     $secuencia_facturacion_id = (int)$numeroFactura['data']['secuencia_facturacion_id'];
@@ -108,6 +118,7 @@ try {
     }
 
     $stmt->close();
+    $detalleFacturaTocado = true;
 
     $resultMaxDetalle = $mysqli->query("SELECT IFNULL(MAX(facturas_detalle_id), 0) AS max_id FROM facturas_detalle");
 
@@ -422,7 +433,14 @@ try {
         $stmtInsertCxc->close();
     }
 
+    confirmarNumeroReutilizado($mysqli, $numeroFacturaData, $usuario, $facturas_id, null);
+
     $mysqli->commit();
+
+    if ($lockSecuenciaAdquirido) {
+        liberarLockSecuenciaFactura($mysqli, $lockSecuenciaNombre);
+        $lockSecuenciaAdquirido = false;
+    }
 
     $datos = array(
         0  => 'Almacenado',
@@ -443,8 +461,19 @@ try {
 } catch (Exception $e) {
     $mysqli->rollback();
 
+    // MyISAM no revierte cambios. Si ya tocamos el detalle y no se emitió la factura,
+    // limpiamos para no dejar una factura con encabezado y detalle incompleto.
+    if (!$facturaActualizada && isset($facturas_id) && (int)$facturas_id > 0 && isset($detalleFacturaTocado) && $detalleFacturaTocado) {
+        limpiarDetalleFacturaFallida($mysqli, (int)$facturas_id);
+    }
+
     if ($numeroFacturaObtenido && !$facturaActualizada && $numero > 0 && $empresa_id > 0 && $documento_tipo > 0) {
-        registrarNumeroFallido($mysqli, $empresa_id, $documento_tipo, $numero);
+        registrarNumeroFallidoCompleto($mysqli, $numeroFacturaData, $e->getMessage(), 'addFactura', $facturas_id, null, $usuario);
+    }
+
+    if ($lockSecuenciaAdquirido) {
+        liberarLockSecuenciaFactura($mysqli, $lockSecuenciaNombre);
+        $lockSecuenciaAdquirido = false;
     }
 
     error_log("Error addFactura.php: " . $e->getMessage());
@@ -626,28 +655,448 @@ function prepararDetallesFactura($conexion, $post, $porcentaje_isv) {
 
 
 /**
- * Registra un número de factura fallido para su posible reutilización.
+ * Limpia el detalle cuando MyISAM deja una operación a medias.
  */
-function registrarNumeroFallido($conexion, $empresa_id, $documento_id, $numero) {
+function limpiarDetalleFacturaFallida($conexion, $facturas_id) {
     try {
-        $insert = "INSERT INTO secuencia_factura_fallida 
-                    (empresa_id, documento_id, numero, fecha_registro)
-                   VALUES (?, ?, ?, NOW())";
-
-        $stmt = $conexion->prepare($insert);
+        $stmt = $conexion->prepare("DELETE FROM facturas_detalle WHERE facturas_id = ?");
 
         if (!$stmt) {
-            error_log("Error al preparar número fallido: " . $conexion->error);
+            error_log("Error al preparar limpieza manual de detalle: " . $conexion->error);
             return false;
         }
 
-        $stmt->bind_param("iii", $empresa_id, $documento_id, $numero);
+        $stmt->bind_param("i", $facturas_id);
         $stmt->execute();
         $stmt->close();
 
         return true;
     } catch (Exception $e) {
-        error_log("Error al registrar número fallido: " . $e->getMessage());
+        error_log("Error limpiando detalle fallido: " . $e->getMessage());
+        return false;
+    }
+}
+
+
+/**
+ * Registra un número de factura fallido para su posible reutilización.
+ */
+/**
+ * Bloqueo lógico por empresa/documento.
+ * Sirve aunque las tablas principales sean MyISAM.
+ * Evita que dos cajeros tomen el mismo número al mismo tiempo.
+ */
+function adquirirLockSecuenciaFactura($conexion, $empresa_id, $documento_id, $timeout = 20) {
+    $lockName = 'facturacion_' . (int)$empresa_id . '_' . (int)$documento_id;
+
+    $stmt = $conexion->prepare("SELECT GET_LOCK(?, ?) AS lock_obtenido");
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar bloqueo de secuencia: " . $conexion->error);
+    }
+
+    $stmt->bind_param("si", $lockName, $timeout);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_assoc() : null;
+
+    $stmt->close();
+
+    if (!$row || (int)$row['lock_obtenido'] !== 1) {
+        throw new Exception("No se pudo asegurar la secuencia de facturación. Intente nuevamente en unos segundos.");
+    }
+
+    return $lockName;
+}
+
+function liberarLockSecuenciaFactura($conexion, $lockName) {
+    if ($lockName === '' || $lockName === null) {
+        return false;
+    }
+
+    $stmt = $conexion->prepare("SELECT RELEASE_LOCK(?) AS lock_liberado");
+
+    if (!$stmt) {
+        error_log("Error al preparar liberación de bloqueo: " . $conexion->error);
+        return false;
+    }
+
+    $stmt->bind_param("s", $lockName);
+    $stmt->execute();
+    $stmt->close();
+
+    return true;
+}
+
+/**
+ * Verifica si un número ya está realmente usado.
+ * Si está en facturas o facturas_grupal, NO debe estar disponible como fallido.
+ */
+function numeroFacturaYaUsado($conexion, $secuencia_facturacion_id, $numero) {
+    $secuencia_facturacion_id = (int)$secuencia_facturacion_id;
+    $numero = (int)$numero;
+
+    if ($secuencia_facturacion_id <= 0 || $numero <= 0) {
+        return true;
+    }
+
+    $queryFactura = "SELECT facturas_id
+                     FROM facturas
+                     WHERE secuencia_facturacion_id = ?
+                       AND number = ?
+                       AND number > 0
+                     LIMIT 1";
+
+    $stmt = $conexion->prepare($queryFactura);
+
+    if (!$stmt) {
+        throw new Exception("Error al validar número en facturas: " . $conexion->error);
+    }
+
+    $stmt->bind_param("ii", $secuencia_facturacion_id, $numero);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $usado = ($res && $res->num_rows > 0);
+    $stmt->close();
+
+    if ($usado) {
+        return true;
+    }
+
+    $queryFacturaGrupal = "SELECT facturas_grupal_id
+                           FROM facturas_grupal
+                           WHERE secuencia_facturacion_id = ?
+                             AND CAST(number AS UNSIGNED) = ?
+                             AND CAST(number AS UNSIGNED) > 0
+                           LIMIT 1";
+
+    $stmt = $conexion->prepare($queryFacturaGrupal);
+
+    if (!$stmt) {
+        throw new Exception("Error al validar número en facturas grupales: " . $conexion->error);
+    }
+
+    $stmt->bind_param("ii", $secuencia_facturacion_id, $numero);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $usado = ($res && $res->num_rows > 0);
+    $stmt->close();
+
+    return $usado;
+}
+
+/**
+ * Primero intenta recuperar un número fallido disponible.
+ * Si no hay, toma el siguiente número normal con obtenerNumeroFactura().
+ */
+function obtenerNumeroFacturaConRecuperacion($conexion, $empresa_id, $documento_id, $usuario, $origen) {
+    $empresa_id = (int)$empresa_id;
+    $documento_id = (int)$documento_id;
+    $usuario = (int)$usuario;
+
+    for ($intento = 0; $intento < 50; $intento++) {
+        $queryFallida = "SELECT
+                            secuencia_factura_fallida_id,
+                            empresa_id,
+                            secuencia_facturacion_id,
+                            documento_id,
+                            numero,
+                            prefijo,
+                            relleno
+                         FROM secuencia_factura_fallida
+                         WHERE empresa_id = ?
+                           AND documento_id = ?
+                           AND estado = 1
+                         ORDER BY numero ASC, secuencia_factura_fallida_id ASC
+                         LIMIT 1";
+
+        $stmt = $conexion->prepare($queryFallida);
+
+        if (!$stmt) {
+            throw new Exception("Error al preparar búsqueda de números fallidos: " . $conexion->error);
+        }
+
+        $stmt->bind_param("ii", $empresa_id, $documento_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res ? $res->fetch_assoc() : null;
+        $stmt->close();
+
+        if (!$row) {
+            break;
+        }
+
+        $fallida_id = (int)$row['secuencia_factura_fallida_id'];
+        $secuencia_facturacion_id = (int)$row['secuencia_facturacion_id'];
+        $numero = (int)$row['numero'];
+
+        if (numeroFacturaYaUsado($conexion, $secuencia_facturacion_id, $numero)) {
+            $motivo = "Número bloqueado automáticamente porque ya existe en facturas o facturas_grupal.";
+            $estadoBloqueado = 3;
+
+            $update = "UPDATE secuencia_factura_fallida
+                       SET estado = ?,
+                           motivo = ?,
+                           usuario_reutilizo = ?,
+                           fecha_reutilizado = NOW()
+                       WHERE secuencia_factura_fallida_id = ?";
+
+            $stmtUpdate = $conexion->prepare($update);
+
+            if (!$stmtUpdate) {
+                throw new Exception("Error al bloquear número fallido ya usado: " . $conexion->error);
+            }
+
+            $stmtUpdate->bind_param("isii", $estadoBloqueado, $motivo, $usuario, $fallida_id);
+            $stmtUpdate->execute();
+            $stmtUpdate->close();
+
+            continue;
+        }
+
+        return array(
+            'error' => false,
+            'mensaje' => 'Número recuperado correctamente.',
+            'reutilizado' => true,
+            'fallida_id' => $fallida_id,
+            'data' => array(
+                'secuencia_facturacion_id' => $secuencia_facturacion_id,
+                'numero' => $numero,
+                'prefijo' => (string)$row['prefijo'],
+                'relleno' => (int)$row['relleno']
+            )
+        );
+    }
+
+    $numeroFactura = obtenerNumeroFactura($conexion, $empresa_id, $documento_id);
+
+    if (!isset($numeroFactura['error']) || $numeroFactura['error']) {
+        return $numeroFactura;
+    }
+
+    $numeroFactura['reutilizado'] = false;
+    $numeroFactura['fallida_id'] = 0;
+
+    return $numeroFactura;
+}
+
+/**
+ * Marca un número recuperado como reutilizado solo cuando la factura ya quedó guardada.
+ */
+function confirmarNumeroReutilizado($conexion, $numeroFacturaData, $usuario, $facturas_id = null, $facturas_grupal_id = null) {
+    if (!is_array($numeroFacturaData)) {
+        return false;
+    }
+
+    if (!isset($numeroFacturaData['reutilizado']) || !$numeroFacturaData['reutilizado']) {
+        return true;
+    }
+
+    $fallida_id = isset($numeroFacturaData['fallida_id']) ? (int)$numeroFacturaData['fallida_id'] : 0;
+
+    if ($fallida_id <= 0) {
+        return true;
+    }
+
+    $estado = 2;
+    $usuario = (int)$usuario;
+    $facturas_id = !is_null($facturas_id) ? (int)$facturas_id : null;
+    $facturas_grupal_id = !is_null($facturas_grupal_id) ? (int)$facturas_grupal_id : null;
+
+    $update = "UPDATE secuencia_factura_fallida
+               SET estado = ?,
+                   usuario_reutilizo = ?,
+                   fecha_reutilizado = NOW(),
+                   facturas_id = ?,
+                   facturas_grupal_id = ?
+               WHERE secuencia_factura_fallida_id = ?
+                 AND estado = 1";
+
+    $stmt = $conexion->prepare($update);
+
+    if (!$stmt) {
+        throw new Exception("Error al confirmar número reutilizado: " . $conexion->error);
+    }
+
+    $stmt->bind_param("iiiii", $estado, $usuario, $facturas_id, $facturas_grupal_id, $fallida_id);
+
+    if (!$stmt->execute()) {
+        $errorStmt = $stmt->error;
+        $stmt->close();
+        throw new Exception("Error al marcar número reutilizado: " . $errorStmt);
+    }
+
+    $stmt->close();
+
+    return true;
+}
+
+/**
+ * Registra un número como fallido solo si todavía no existe en facturas/facturas_grupal.
+ */
+function registrarNumeroFallidoCompleto($conexion, $numeroFacturaData, $motivo, $origen, $facturas_id, $facturas_grupal_id, $usuario) {
+    try {
+        if (!is_array($numeroFacturaData) || !isset($numeroFacturaData['data'])) {
+            return false;
+        }
+
+        if (isset($numeroFacturaData['reutilizado']) && $numeroFacturaData['reutilizado']) {
+            // Si era un número recuperado y falló antes de usarse, se queda disponible en estado 1.
+            return true;
+        }
+
+        $empresa_id = isset($numeroFacturaData['empresa_id']) ? (int)$numeroFacturaData['empresa_id'] : 0;
+        $documento_id = isset($numeroFacturaData['documento_id']) ? (int)$numeroFacturaData['documento_id'] : 0;
+        $secuencia_facturacion_id = isset($numeroFacturaData['data']['secuencia_facturacion_id']) ? (int)$numeroFacturaData['data']['secuencia_facturacion_id'] : 0;
+        $numero = isset($numeroFacturaData['data']['numero']) ? (int)$numeroFacturaData['data']['numero'] : 0;
+        $prefijo = isset($numeroFacturaData['data']['prefijo']) ? (string)$numeroFacturaData['data']['prefijo'] : '';
+        $relleno = isset($numeroFacturaData['data']['relleno']) ? (int)$numeroFacturaData['data']['relleno'] : 8;
+
+        if ($empresa_id <= 0 || $documento_id <= 0 || $secuencia_facturacion_id <= 0 || $numero <= 0) {
+            return false;
+        }
+
+        if (numeroFacturaYaUsado($conexion, $secuencia_facturacion_id, $numero)) {
+            return false;
+        }
+
+        $estadoDisponible = 1;
+
+        $queryExiste = "SELECT secuencia_factura_fallida_id
+                        FROM secuencia_factura_fallida
+                        WHERE empresa_id = ?
+                          AND documento_id = ?
+                          AND numero = ?
+                          AND estado = 1
+                        LIMIT 1";
+
+        $stmtExiste = $conexion->prepare($queryExiste);
+
+        if (!$stmtExiste) {
+            error_log("Error al preparar verificación de número fallido: " . $conexion->error);
+            return false;
+        }
+
+        $stmtExiste->bind_param("iii", $empresa_id, $documento_id, $numero);
+        $stmtExiste->execute();
+        $resExiste = $stmtExiste->get_result();
+        $rowExiste = $resExiste ? $resExiste->fetch_assoc() : null;
+        $stmtExiste->close();
+
+        $motivo = substr((string)$motivo, 0, 255);
+        $origen = substr((string)$origen, 0, 80);
+        $facturas_id = !is_null($facturas_id) ? (int)$facturas_id : null;
+        $facturas_grupal_id = !is_null($facturas_grupal_id) ? (int)$facturas_grupal_id : null;
+        $usuario = (int)$usuario;
+
+        if ($rowExiste) {
+            $fallida_id = (int)$rowExiste['secuencia_factura_fallida_id'];
+
+            $update = "UPDATE secuencia_factura_fallida
+                       SET motivo = ?,
+                           origen = ?,
+                           facturas_id = ?,
+                           facturas_grupal_id = ?,
+                           usuario = ?,
+                           fecha_registro = NOW()
+                       WHERE secuencia_factura_fallida_id = ?";
+
+            $stmtUpdate = $conexion->prepare($update);
+
+            if (!$stmtUpdate) {
+                error_log("Error al preparar actualización de número fallido: " . $conexion->error);
+                return false;
+            }
+
+            $stmtUpdate->bind_param("ssiiii", $motivo, $origen, $facturas_id, $facturas_grupal_id, $usuario, $fallida_id);
+            $stmtUpdate->execute();
+            $stmtUpdate->close();
+
+            return true;
+        }
+
+        $insert = "INSERT INTO secuencia_factura_fallida
+            (empresa_id, secuencia_facturacion_id, documento_id, numero, prefijo, relleno, estado, motivo, origen, facturas_id, facturas_grupal_id, usuario, fecha_registro)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+
+        $stmt = $conexion->prepare($insert);
+
+        if (!$stmt) {
+            error_log("Error al preparar número fallido completo: " . $conexion->error);
+            return false;
+        }
+
+        $stmt->bind_param(
+            "iiiisiissiii",
+            $empresa_id,
+            $secuencia_facturacion_id,
+            $documento_id,
+            $numero,
+            $prefijo,
+            $relleno,
+            $estadoDisponible,
+            $motivo,
+            $origen,
+            $facturas_id,
+            $facturas_grupal_id,
+            $usuario
+        );
+
+        $stmt->execute();
+        $stmt->close();
+
+        return true;
+    } catch (Exception $e) {
+        error_log("Error al registrar número fallido completo: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Compatibilidad con llamadas anteriores dentro del proyecto.
+ */
+function registrarNumeroFallido($conexion, $empresa_id, $documento_id, $numero) {
+    try {
+        $querySecuencia = "SELECT secuencia_facturacion_id, prefijo, relleno
+                           FROM secuencia_facturacion
+                           WHERE empresa_id = ?
+                             AND documento_id = ?
+                             AND activo = 1
+                           LIMIT 1";
+
+        $stmt = $conexion->prepare($querySecuencia);
+
+        if (!$stmt) {
+            error_log("Error al preparar secuencia para número fallido: " . $conexion->error);
+            return false;
+        }
+
+        $stmt->bind_param("ii", $empresa_id, $documento_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res ? $res->fetch_assoc() : null;
+        $stmt->close();
+
+        if (!$row) {
+            return false;
+        }
+
+        $numeroFacturaData = array(
+            'reutilizado' => false,
+            'empresa_id' => (int)$empresa_id,
+            'documento_id' => (int)$documento_id,
+            'data' => array(
+                'secuencia_facturacion_id' => (int)$row['secuencia_facturacion_id'],
+                'numero' => (int)$numero,
+                'prefijo' => (string)$row['prefijo'],
+                'relleno' => (int)$row['relleno']
+            )
+        );
+
+        return registrarNumeroFallidoCompleto($conexion, $numeroFacturaData, 'Registro de compatibilidad', 'compatibilidad', null, null, 0);
+    } catch (Exception $e) {
+        error_log("Error al registrar número fallido compatible: " . $e->getMessage());
         return false;
     }
 }
