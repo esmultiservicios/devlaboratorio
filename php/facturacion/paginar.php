@@ -1,5 +1,5 @@
 <?php
-//paginar.php - Facturacion
+// paginar.php - Facturacion
 session_start();
 include "../funtions.php";
 
@@ -11,8 +11,6 @@ $mysqli->set_charset('utf8mb4');
 
 $colaborador_id        = isset($_SESSION['colaborador_id']) ? (int)$_SESSION['colaborador_id'] : 0;
 $paginaActual          = isset($_POST['partida']) ? (int)$_POST['partida'] : 1;
-$fechai                = isset($_POST['fechai']) && $_POST['fechai'] !== '' ? $_POST['fechai'] : date('Y-m-01');
-$fechaf                = isset($_POST['fechaf']) && $_POST['fechaf'] !== '' ? $_POST['fechaf'] : date('Y-m-d');
 $dato                  = isset($_POST['dato']) ? trim($_POST['dato']) : '';
 $tipo_paciente_grupo   = isset($_POST['tipo_paciente_grupo']) && $_POST['tipo_paciente_grupo'] !== '' ? (int)$_POST['tipo_paciente_grupo'] : null;
 $pacientesIDGrupo      = isset($_POST['pacientesIDGrupo']) && $_POST['pacientesIDGrupo'] !== '' ? (int)$_POST['pacientesIDGrupo'] : null;
@@ -43,6 +41,78 @@ function bindParams(mysqli_stmt $stmt, string $types, array $params) {
     return $stmt->bind_param($types, ...$refs);
 }
 
+function normalizarFechaSistema($date) {
+    $date = trim((string)$date);
+
+    if ($date === '') {
+        return null;
+    }
+
+    $formatos = [
+        'Y-m-d',
+        'm/d/Y',
+        'd/m/Y'
+    ];
+
+    foreach ($formatos as $formato) {
+        $d = DateTime::createFromFormat($formato, $date);
+
+        if ($d && $d->format($formato) === $date) {
+            return $d->format('Y-m-d');
+        }
+    }
+
+    return null;
+}
+
+// ===============================
+// Fechas permitidas
+// ===============================
+$hoy = date('Y-m-d');
+$mesActual = (int)date('n');
+
+$fechaMinimaPermitida = date('Y-01-01');
+
+// Si estamos en enero, permitimos 4 meses atrás del año anterior
+if ($mesActual === 1) {
+    $fechaMinimaPermitida = date('Y-m-01', strtotime('-4 months'));
+}
+
+$fechaiPost = isset($_POST['fechai']) ? trim($_POST['fechai']) : '';
+$fechafPost = isset($_POST['fechaf']) ? trim($_POST['fechaf']) : '';
+
+$fechaiNormalizada = normalizarFechaSistema($fechaiPost);
+$fechafNormalizada = normalizarFechaSistema($fechafPost);
+
+// Si selecciona cliente/empresa, no lo amarramos al rango del input.
+// Buscamos todo el historial permitido del cliente, sin traer años viejos.
+if (!is_null($pacientesIDGrupo)) {
+    $fechai = $fechaMinimaPermitida;
+    $fechaf = $hoy;
+} else {
+    $fechai = $fechaiNormalizada ?: $fechaMinimaPermitida;
+    $fechaf = $fechafNormalizada ?: $hoy;
+}
+
+// No permitir fechas demasiado viejas
+if ($fechai < $fechaMinimaPermitida) {
+    $fechai = $fechaMinimaPermitida;
+}
+
+// No permitir fecha final mayor a hoy
+if ($fechaf > $hoy) {
+    $fechaf = $hoy;
+}
+
+// Si viene invertido, corregimos
+if ($fechai > $fechaf) {
+    $fechai = $fechaMinimaPermitida;
+    $fechaf = $hoy;
+}
+
+// Para que funcione bien aunque f.fecha sea DATETIME
+$fechaf_exclusive = date('Y-m-d', strtotime($fechaf . ' +1 day'));
+
 // ===============================
 // 1) Construir WHERE + binds
 // ===============================
@@ -55,14 +125,15 @@ $where[] = 'f.estado = ?';
 $types  .= 'i';
 $params[] = $estado;
 
-// Si NO hay cliente seleccionado, aplica rango de fechas.
-// Si hay cliente seleccionado, trae todo el historial del cliente sin obligarte a mover fechas.
-if (is_null($pacientesIDGrupo)) {
-    $where[] = 'f.fecha BETWEEN ? AND ?';
-    $types  .= 'ss';
-    $params[] = $fechai;
-    $params[] = $fechaf;
-}
+// Solo facturas con muestra asignada
+$where[] = 'f.muestras_id IS NOT NULL';
+$where[] = 'f.muestras_id > 0';
+
+// Rango seguro de fecha
+$where[] = 'f.fecha >= ? AND f.fecha < ?';
+$types  .= 'ss';
+$params[] = $fechai;
+$params[] = $fechaf_exclusive;
 
 // Si estado es 2 ó 4 filtrar por usuario
 if ($estado === 2 || $estado === 4) {
@@ -78,7 +149,7 @@ if (!is_null($tipo_paciente_grupo)) {
     $params[] = $tipo_paciente_grupo;
 }
 
-// Filtro por cliente
+// Filtro por cliente / empresa
 if (!is_null($pacientesIDGrupo)) {
     $where[] = 'p.pacientes_id = ?';
     $types  .= 'i';
@@ -93,12 +164,31 @@ if ($dato !== '') {
         p.expediente LIKE ?
         OR p.nombre LIKE ?
         OR p.apellido LIKE ?
+        OR p.identidad LIKE ?
         OR CONCAT(p.apellido, " ", p.nombre) LIKE ?
         OR CONCAT(p.nombre, " ", p.apellido) LIKE ?
+        OR p1.expediente LIKE ?
+        OR p1.nombre LIKE ?
+        OR p1.apellido LIKE ?
+        OR p1.identidad LIKE ?
+        OR CONCAT(p1.apellido, " ", p1.nombre) LIKE ?
+        OR CONCAT(p1.nombre, " ", p1.apellido) LIKE ?
         OR CAST(f.number AS CHAR) LIKE ?
+        OR CAST(m.number AS CHAR) LIKE ?
+        OR CONCAT(sc.prefijo, LPAD(f.number, sc.relleno, "0")) LIKE ?
     )';
 
-    $types  .= 'ssssss';
+    $types  .= 'sssssssssssssss';
+
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
@@ -143,16 +233,16 @@ INNER JOIN servicios AS s
     ON f.servicio_id = s.servicio_id
 INNER JOIN colaboradores AS c
     ON f.colaborador_id = c.colaborador_id
+LEFT JOIN muestras AS m
+    ON f.muestras_id = m.muestras_id
 LEFT JOIN muestras_hospitales AS mh
     ON f.muestras_id = mh.muestras_id
 LEFT JOIN pacientes AS p1
     ON mh.pacientes_id = p1.pacientes_id
-LEFT JOIN muestras AS m
-    ON f.muestras_id = m.muestras_id
 LEFT JOIN (
     SELECT
         facturas_id,
-        SUM(precio) AS total_precio,
+        SUM(precio * cantidad) AS total_precio,
         SUM(cantidad) AS total_cantidad,
         SUM(descuento) AS total_descuento,
         SUM(isv_valor) AS total_isv,
@@ -193,6 +283,14 @@ SELECT COUNT(*) AS total
 FROM facturas AS f
 INNER JOIN pacientes AS p
     ON f.pacientes_id = p.pacientes_id
+INNER JOIN secuencia_facturacion AS sc
+    ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
+LEFT JOIN muestras AS m
+    ON f.muestras_id = m.muestras_id
+LEFT JOIN muestras_hospitales AS mh
+    ON f.muestras_id = mh.muestras_id
+LEFT JOIN pacientes AS p1
+    ON mh.pacientes_id = p1.pacientes_id
 {$whereSQL}
 ";
 
@@ -514,7 +612,7 @@ if ($total_registros > 0) {
         $paciente    = e($r['paciente']);
 
         $muestra_html = ($muestra === '')
-            ? '<span class="factura-empty">Sin muestra</span>'
+            ? '<span class="factura-empty">Sin número</span>'
             : '<span class="factura-badge badge-muestra"><i class="fas fa-vial"></i> ' . $muestra . '</span>';
 
         $numero_badge = ($numero === "Aún no se ha generado")
@@ -538,7 +636,7 @@ if ($total_registros > 0) {
         } else if ((int)$r['estado'] === 4) {
             $estadoTxt = '<span class="badge-estado estado-credito"><i class="fas fa-credit-card"></i> Crédito</span>';
             $texto1_btn = '<a class="btn-accion-factura btn-imprimir" href="javascript:printBill(' . $facturas_id . ');void(0);"><i class="fas fa-print"></i> Imprimir</a>';
-            $texto2_btn = '<a class="btn-accion-factura btn-cobrar" href="javascript:pago(' . $facturas_id . ');void(0);"><i class="fab fa-amazon-pay"></i> Cobrar</a>';
+            $texto2_btn = '<a class="btn-accion-factura btn-cobrar" href="javascript:pago(' . $facturas_id . ', 2, \'cxc\');void(0);"><i class="fab fa-amazon-pay"></i> Cobrar</a>';
         } else if ((int)$r['estado'] === 3) {
             $estadoTxt = '<span class="badge-estado estado-cancelada"><i class="fas fa-ban"></i> Cancelada</span>';
             $texto1_btn = '<a class="btn-accion-factura btn-imprimir" href="javascript:printBill(' . $facturas_id . ');void(0);"><i class="fas fa-print"></i> Imprimir</a>';
