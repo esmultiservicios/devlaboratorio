@@ -45,7 +45,7 @@ if($result->num_rows>0){
 }
 
 $mysqli->close();//CERRAR CONEXIÓN
- ?>
+?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -61,12 +61,6 @@ $mysqli->close();//CERRAR CONEXIÓN
     <?php include("script_css.php"); ?>
 
     <style>
-        /* Estilos para feedback visual de selects */
-        .selectpicker-loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
         .loading-spinner-small {
             display: inline-block;
             width: 16px;
@@ -99,18 +93,24 @@ $mysqli->close();//CERRAR CONEXIÓN
     <div class="container-fluid">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mt-2 mb-4">
-                <li class="breadcrumb-item" id="acciones_atras"><a id="ancla_volver" class="breadcrumb-link"
-                        style="text-decoration: none;" href="#"><span id="label_acciones_volver"></a></li>
-                <li class="breadcrumb-item active" id="acciones_factura"><span id="label_acciones_factura"></span></li>
+                <li class="breadcrumb-item" id="acciones_atras">
+                    <a id="ancla_volver" class="breadcrumb-link" style="text-decoration: none;" href="#">
+                        <span id="label_acciones_volver"></span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" id="acciones_factura">
+                    <span id="label_acciones_factura"></span>
+                </li>
             </ol>
         </nav>
 
         <div class="" id="main_facturacion">
             <div class="card mb-4">
                 <div class="card-header">
-                    <i class="fas fa-search  mr-1"></i>
+                    <i class="fas fa-search mr-1"></i>
                     Búsqueda
                 </div>
+
                 <div class="card-body">
                     <form id="form_main_facturas" class="form-inline">
                         <div class="form-group mr-1">
@@ -120,11 +120,11 @@ $mysqli->close();//CERRAR CONEXIÓN
                                         <div class="sb-nav-link-icon"></div>Tipo Cliente
                                     </span>
                                 </div>
-                                <select id="tipo_paciente_grupo" name="tipo_paciente_grupo" class="selectpicker"
-                                    title="Tipo Cliente" data-live-search="true">
+                                <select id="tipo_paciente_grupo" name="tipo_paciente_grupo" style="width:170px;">
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-group mr-1">
                             <div class="input-group">
                                 <div class="input-group-append">
@@ -132,11 +132,11 @@ $mysqli->close();//CERRAR CONEXIÓN
                                         <div class="sb-nav-link-icon"></div>Cliente
                                     </span>
                                 </div>
-                                <select id="pacientesIDGrupo" name="pacientesIDGrupo" class="selectpicker"
-                                    title="Cliente" data-live-search="true">
+                                <select id="pacientesIDGrupo" name="pacientesIDGrupo" style="width:260px;">
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-group mr-1">
                             <div class="input-group">
                                 <div class="input-group-append">
@@ -144,11 +144,11 @@ $mysqli->close();//CERRAR CONEXIÓN
                                         <div class="sb-nav-link-icon"></div>Estado
                                     </span>
                                 </div>
-                                <select id="estado" name="estado" class="selectpicker" title="Estado"
-                                    data-live-search="true">
+                                <select id="estado" name="estado" style="width:150px;">
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-group mr-1">
                             <div class="input-group">
                                 <div class="input-group-append">
@@ -174,6 +174,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     ?>" class="form-control" />
                             </div>
                         </div>
+
                         <div class="form-group mr-1">
                             <div class="input-group">
                                 <div class="input-group-append">
@@ -186,23 +187,27 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     title="Fecha Final" class="form-control" />
                             </div>
                         </div>
+
                         <div class="form-group mr-1">
                             <input type="text" placeholder="Buscar por: Paciente, Identidad o Factura"
                                 data-toggle="tooltip" data-placement="top"
                                 title="Buscar por: Expediente, Nombre, Apellido, Identidad o Número de Factura"
                                 id="bs_regis" autofocus class="form-control mt-2 mr-1" size="55" />
                         </div>
+
                         <div class="form-group mr-1">
                             <button class="btn btn-primary mt-2 mr-1" type="submit" id="buscar" data-toggle="tooltip"
                                 data-placement="top" title="Buscar">
                                 <div class="sb-nav-link-icon"></div><i class="fas fa-search fa-lg"></i> Buscar
                             </button>
                         </div>
+
                         <div class="form-group" style="display:none" id="factura_manual">
                             <button class="btn btn-primary mt-2 mr-1" type="submit" id="nuevo_registro">
                                 <div class="sb-nav-link-icon"></div><i class="fas fa-file-invoice fa-lg"></i> Factura
                             </button>
                         </div>
+
                         <div class="form-group mr1-1">
                             <button class="btn btn-primary mt-2 mr-1" type="submit" id="cierre" data-toggle="tooltip"
                                 data-placement="top" title="Realizar Cierre">
@@ -211,8 +216,8 @@ $mysqli->close();//CERRAR CONEXIÓN
                         </div>
                     </form>
                 </div>
-                <div class="card-footer small text-muted">
 
+                <div class="card-footer small text-muted">
                 </div>
             </div>
 
@@ -221,24 +226,25 @@ $mysqli->close();//CERRAR CONEXIÓN
                     <i class="fab fa-sellsy mr-1"></i>
                     Resultado
                 </div>
+
                 <div class="card-body">
                     <div class="form-group">
                         <div class="col-sm-12">
                             <div class="registros overflow-auto" id="agrega-registros"></div>
                         </div>
                     </div>
+
                     <nav aria-label="Page navigation example">
                         <ul class="pagination justify-content-center" id="pagination"></ul>
                     </nav>
                 </div>
-                <div class="card-footer small text-muted">
 
+                <div class="card-footer small text-muted">
                 </div>
             </div>
         </div>
 
         <div class="container-fluid">
-
         </div>
 
         <div id="grupo_facturacion" style="display:none;">
@@ -273,12 +279,13 @@ $mysqli->close();//CERRAR CONEXIÓN
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="form-group row">
-                    <label for="inputCliente" class="col-sm-1 col-form-label-md">Empresa <span
-                            class="priority">*<span /></label>
+                    <label for="clienteNombreGrupo" class="col-sm-1 col-form-label-md">
+                        Empresa <span class="priority">*</span>
+                    </label>
+
                     <div class="col-sm-5">
                         <div class="input-group mb-3">
                             <input type="hidden" class="form-control" placeholder="Profesional" id="clienteIDGrupo"
@@ -287,7 +294,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                 name="clienteNombreGrupo" readonly required>
                             <input type="hidden" class="form-control" placeholder="Tamaño" id="tamano" name="tamano"
                                 readonly required>
-                            <div class="input-group-append" id="grupo_buscar_colaboradores">
+                            <div class="input-group-append" id="grupo_buscar_paciente">
                                 <a data-toggle="modal" href="#" class="btn btn-outline-success"
                                     id="buscar_pacienteGrupo">
                                     <div class="sb-nav-link-icon"></div><i class="fas fa-search-plus fa-lg"></i>
@@ -295,15 +302,22 @@ $mysqli->close();//CERRAR CONEXIÓN
                             </div>
                         </div>
                     </div>
-                    <label for="inputFecha" class="col-sm-1 col-form-label-md">Fecha <span
-                            class="priority">*</span></label>
+
+                    <label for="fechaGrupo" class="col-sm-1 col-form-label-md">
+                        Fecha <span class="priority">*</span>
+                    </label>
+
                     <div class="col-sm-3">
                         <input type="date" class="form-control" value="<?php echo date('Y-m-d');?>" id="fechaGrupo"
                             name="fechaGrupo">
                     </div>
                 </div>
+
                 <div class="form-group row">
-                    <label for="inputCliente" class="col-sm-1 col-form-label-md">Profesional <span class="priority">*</span></label>
+                    <label for="colaborador_nombreGrupo" class="col-sm-1 col-form-label-md">
+                        Profesional <span class="priority">*</span>
+                    </label>
+
                     <div class="col-sm-5">
                         <div class="input-group mb-3">
                             <input type="hidden" class="form-control" placeholder="Profesional" id="colaborador_idGrupo"
@@ -318,15 +332,18 @@ $mysqli->close();//CERRAR CONEXIÓN
                             </div>
                         </div>
                     </div>
-                    <label for="inputFecha" class="col-sm-1 col-form-label-md">Servicio <span
-                            class="priority">*<span /></label>
+
+                    <label for="servicio_idGrupo" class="col-sm-1 col-form-label-md">
+                        Servicio <span class="priority">*</span>
+                    </label>
+
                     <div class="col-sm-3">
                         <div class="input-group mb-3">
-                            <select class="selectpicker" id="servicio_idGrupo" name="servicio_idGrupo" data-live-search="true"
-                                title="Servicio" data-width="100%" data-size="7" required>
+                            <select id="servicio_idGrupo" name="servicio_idGrupo" style="width:100%;" required>
                             </select>
                         </div>
                     </div>
+
                     <label class="switch mb-3" data-toggle="tooltip" data-placement="top"
                         title="Tipo de Factura, Contado o Crédito">
                         <input type="checkbox" id="facturas_grupal_activo" name="facturas_grupal_activo" value="1"
@@ -335,6 +352,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                     </label>
                     <span class="question mb-2" id="label_facturas_grupal_activo"></span>
                 </div>
+
                 <div class="form-group row table-responsive-xl tableFixHead table table-hover">
                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                         <table class="table table-bordered table-hover" id="invoiceItemGrupo">
@@ -359,8 +377,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                             class="form-control" placeholder="Material Enviado" readonly
                                             autocomplete="off">
                                         <input type="hidden" name="billGrupoDescuento[]" id="billGrupoDescuento_0"
-                                            class="form-control" readonly placeholder="Descuento" readonly
-                                            autocomplete="off">
+                                            class="form-control" readonly placeholder="Descuento" autocomplete="off">
                                         <input type="hidden" name="billGrupoISV[]" id="billGrupoISV_0"
                                             class="form-control" placeholder="ISV" readonly value="0"
                                             autocomplete="off">
@@ -402,6 +419,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                 <p id="charNum_notas">255 Caracteres</p>
                             </div>
                         </div>
+
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4" style="display: none;">
                             <div class="row">
                                 <div class="col-sm-3 form-inline">
@@ -411,7 +429,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group">
                                         <div class="input-group-append mb-1">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="subTotalBillGrupo"
@@ -419,6 +437,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row" style="display: none">
                                 <div class="col-sm-3 form-inline">
                                     <label>Porcentaje:</label>
@@ -429,12 +448,13 @@ $mysqli->close();//CERRAR CONEXIÓN
                                             id="taxRateBillGrupo" step="0.01" readonly placeholder="Tasa de Impuestos">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>%</i>
+                                                <div class="sb-nav-link-icon"></div>%
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="col-sm-3 form-inline">
                                     <label>ISV:</label>
@@ -443,15 +463,15 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group mb-1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="taxAmountBillGrupo"
-                                            id="taxAmountBillGrupo" step="0.01" readonly value="0.00"
-                                            placeholder="Monto del Impuesto">
+                                            id="taxAmountBillGrupo" step="0.01" readonly placeholder="Monto del Impuesto">
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="col-sm-3 form-inline">
                                     <label>Descuento:</label>
@@ -460,15 +480,16 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group mb-1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="taxDescuentoBillGrupo"
-                                            id="taxDescuentoBillGrupo" step="0.01" readonly value="0.00"
+                                            id="taxDescuentoBillGrupo" step="0.01" readonly
                                             placeholder="Descuento Otorgado">
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="col-sm-3 form-inline">
                                     <label>Total:</label>
@@ -477,15 +498,15 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group mb-1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="totalAftertaxBillGrupo"
-                                            id="totalAftertaxBillGrupo" step="0.01" value="0.00" readonly
-                                            placeholder="Total">
+                                            id="totalAftertaxBillGrupo" step="0.01" readonly placeholder="Total">
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row" style="display: none;">
                                 <div class="col-sm-3 form-inline">
                                     <label>Cantidad pagada:</label>
@@ -494,7 +515,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group mb-1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="amountPaidBillGrupo"
@@ -502,6 +523,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row" style="display: none;">
                                 <div class="col-sm-3 form-inline">
                                     <label>Cantidad debida:</label>
@@ -510,7 +532,7 @@ $mysqli->close();//CERRAR CONEXIÓN
                                     <div class="input-group mb-1">
                                         <div class="input-group-append">
                                             <span class="input-group-text">
-                                                <div class="sb-nav-link-icon"></div>L</i>
+                                                <div class="sb-nav-link-icon"></div>L
                                             </span>
                                         </div>
                                         <input value="" type="number" class="form-control" name="amountDueBillGrupo"
@@ -524,6 +546,7 @@ $mysqli->close();//CERRAR CONEXIÓN
 
             </form>
         </div>
+
         <?php include("templates/factura.php"); ?>
 
         <?php include("templates/footer.php"); ?>

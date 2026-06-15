@@ -2871,7 +2871,6 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="cliente_admision">Cliente</label>
                                     <div class="input-group mb-3">
-                                        <!-- CAMBIADO: Select2 en lugar de Bootstrap Select -->
                                         <select id="cliente_admision" name="cliente_admision" style="width: 100%;">
                                             <option value="">Escriba para buscar un cliente...</option>
                                         </select>
@@ -2923,8 +2922,7 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="genero">Genero <span class="priority">*<span /></label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="genero" name="genero" required
-                                            data-live-search="true" title="Genero" data-width="100%">
+                                        <select id="genero" name="genero" required style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>
@@ -2971,8 +2969,7 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="empresa">Empresa</label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="empresa" name="empresa" data-live-search="true"
-                                            title="Empresa" data-size="10">
+                                        <select id="empresa" name="empresa" style="width: 100%;">
                                         </select>
                                         <div class="input-group-append" id="buscar_profesion_pacientes">
                                             <a data-toggle="modal" href="#" class="btn btn-outline-success"
@@ -2986,9 +2983,7 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="empresa">Hospital/Clínica</label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="hospital" name="hospital"
-                                            data-live-search="true" title="Hospital/Clínica" data-size="10"
-                                            data-width="100%">
+                                        <select id="hospital" name="hospital" style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>
@@ -3000,9 +2995,7 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="tipo_muestra">Tipo Muestra <span class="priority">*<span /></label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="tipo_muestra" name="tipo_muestra" required
-                                            data-live-search="true" title="Tipo Muestra" data-size="10"
-                                            data-width="100%">
+                                        <select id="tipo_muestra" name="tipo_muestra" required style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>
@@ -3012,24 +3005,21 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="remitente">Producto <span class="priority">*<span /></label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="producto" name="producto" required
-                                            data-live-search="true" title="Producto" data-size="10" data-width="100%">
+                                        <select id="producto" name="producto" required style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-3">
                                     <label for="remitente">Remitente <span class="priority">*<span /></label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="remitente" name="remitente" required
-                                            data-live-search="true" title="Remitente" data-size="10" data-width="100%">
+                                        <select id="remitente" name="remitente" required style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3" style="display:none;">
                                     <label for="categoria">Categoría</label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="categoria" name="categoria"
-                                            data-live-search="true" title="Categoría" data-size="10">
+                                        <select id="categoria" name="categoria" style="width: 100%;">
                                         </select>
                                     </div>
                                 </div>

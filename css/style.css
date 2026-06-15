@@ -730,3 +730,115 @@ Se debe agregar unos codigos que estan en myjava_facturacion.php inician con Men
         margin: 10px 0;
     }
 }
+
+/* =========================================================
+   SELECT2 GLOBAL - Bootstrap limpio
+   ========================================================= */
+
+   .select2-container {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 38px !important;
+    min-height: 38px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    background-color: #fff !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px !important;
+    color: #495057 !important;
+    padding-left: 10px !important;
+    padding-right: 28px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 4px !important;
+}
+
+/* Dropdown global */
+.select2-dropdown {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.08) !important;
+    z-index: 99999 !important;
+}
+
+.select2-search--dropdown {
+    padding: 8px !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    height: 34px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 6px 10px !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+}
+
+/* Opciones globales */
+.select2-results__option {
+    padding: 8px 10px !important;
+    color: #212529 !important;
+    background-color: #fff !important;
+}
+
+/* Seleccionado global: azul, no gris */
+.select2-container--default .select2-results__option[aria-selected=true],
+.select2-container--default .select2-results__option--selected {
+    background-color: #007bff !important;
+    color: #fff !important;
+}
+
+/* Hover global */
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: #0056b3 !important;
+    color: #fff !important;
+}
+
+/* Texto custom dentro de opciones */
+.select2-container--default .select2-results__option--highlighted strong,
+.select2-container--default .select2-results__option--highlighted small,
+.select2-container--default .select2-results__option--selected strong,
+.select2-container--default .select2-results__option--selected small {
+    color: #fff !important;
+}
+
+/* Inputs select normales mientras Select2 carga */
+select {
+    height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Evita que Select2 se aplaste dentro de input-group/form-inline */
+.input-group .select2-container,
+.form-inline .select2-container {
+    flex: 0 0 auto !important;
+}

@@ -58,26 +58,10 @@ $mysqli->close();//CERRAR CONEXIÓN
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Clientes :: <?php echo $empresa; ?></title>
 	<?php include("script_css.php"); ?>
-	
-	<style>
-		/* Ajuste de Select2 en modales */
-		.select2-container--default .select2-selection--single {
-			height: 38px;
-			border: 1px solid #ced4da;
-			border-radius: 0.25rem;
-		}
-		.select2-container--default .select2-selection--single .select2-selection__rendered {
-			line-height: 38px;
-		}
-		.select2-container--default .select2-selection--single .select2-selection__arrow {
-			height: 36px;
-		}
-	</style>
 </head>
 <body>
    <!--Ventanas Modales-->
-   <!-- Small modal -->
-  <?php include("templates/modals.php"); ?>
+   <?php include("templates/modals.php"); ?>
 
 <div class="modal fade" id="mensaje_show" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -105,9 +89,7 @@ $mysqli->close();//CERRAR CONEXIÓN
   </div>
 </div>
 
-<!--FIN MODAL PARA EL INGRESO DE Clientes-->
    <?php include("modals/modals.php");?>
-<!--FIN VENTANAS MODALES-->
 
 <?php include("templates/menu.php"); ?>
 
@@ -121,7 +103,7 @@ $mysqli->close();//CERRAR CONEXIÓN
   <div id="main_facturacion">
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-search  mr-1"></i>
+        <i class="fas fa-search mr-1"></i>
         Búsqueda
       </div>
       <div class="card-body">
@@ -131,7 +113,7 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
                 <span class="input-group-text"><div class="sb-nav-link-icon"></div>Estado</span>
               </div>
-              <select id="estado" name="estado" class="selectpicker" title="Estado" data-live-search="true">
+              <select id="estado" name="estado" style="width:130px;">
   						</select>
             </div>
           </div>
@@ -140,13 +122,13 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
                 <span class="input-group-text"><div class="sb-nav-link-icon"></div>Tipo</span>
               </div>
-              <select id="tipo" name="tipo" class="selectpicker" title="Tipo" data-live-search="true">
+              <select id="tipo" name="tipo" style="width:130px;">
   						</select>
             </div>
           </div>
           <div class="form-group mr-1">
             <div class="input-group">
-              <input type="text" placeholder="Buscar por: Nombre, Apellido, Identidad o Teléfono Principal" data-toggle="tooltip" data-placement="top" title="Buscar por: Expediente, Nombre, Apellido, Identidad o Teléfono Principal" id="bs_regis" autofocus class="form-control" size="70" autofocus />
+              <input type="text" placeholder="Buscar por: Nombre, Apellido, Identidad o Teléfono Principal" data-toggle="tooltip" data-placement="top" title="Buscar por: Expediente, Nombre, Apellido, Identidad o Teléfono Principal" id="bs_regis" autofocus class="form-control" size="70" />
             </div>
           </div>
           <div class="form-group mr-1">
@@ -163,9 +145,7 @@ $mysqli->close();//CERRAR CONEXIÓN
           </div>
         </form>
       </div>
-      <div class="card-footer small text-muted">
-
-      </div>
+      <div class="card-footer small text-muted"></div>
     </div>
 
     <div class="card mb-4">
@@ -183,16 +163,14 @@ $mysqli->close();//CERRAR CONEXIÓN
     			<ul class="pagination justify-content-center" id="pagination"></ul>
     		</nav>
       </div>
-      <div class="card-footer small text-muted">
-
-      </div>
+      <div class="card-footer small text-muted"></div>
     </div>
 </div>
 
   <div id="main_admision_muestras" style="display:none;">
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-search  mr-1"></i>
+        <i class="fas fa-search mr-1"></i>
         Búsqueda
       </div>
       <div class="card-body">
@@ -202,7 +180,7 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
                 <span class="input-group-text"><div class="sb-nav-link-icon"></div>Estado</span>
               </div>
-              <select id="estado" name="estado" class="selectpicker" title="Estado" data-live-search="true">
+              <select id="estado" name="estado" style="width:130px;">
               </select>
             </div>
           </div>
@@ -211,7 +189,7 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
                 <span class="input-group-text"><div class="sb-nav-link-icon"></div>Tipo</span>
               </div>
-              <select id="tipo" name="tipo" class="selectpicker" title="Tipo" data-live-search="true">
+              <select id="tipo" name="tipo" style="width:130px;">
               </select>
             </div>
           </div>
@@ -220,7 +198,7 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
               <span class="input-group-text"><div class="sb-nav-link-icon"></div>Cliente</span>
               </div>
-              <select id="cliente" name="cliente" class="selectpicker" title="Cliente" data-live-search="true">
+              <select id="cliente" name="cliente" style="width:100%;">
               </select>
             </div>
           </div>
@@ -229,7 +207,7 @@ $mysqli->close();//CERRAR CONEXIÓN
               <div class="input-group-append">
               <span class="input-group-text"><div class="sb-nav-link-icon"></div>Muestra</span>
               </div>
-              <select id="tipo_muestra" name="tipo_muestra" class="selectpicker" title="Muestra" data-live-search="true">
+              <select id="tipo_muestra" name="tipo_muestra" style="width:100%;">
               </select>
             </div>
           </div>
@@ -240,17 +218,12 @@ $mysqli->close();//CERRAR CONEXIÓN
               </div>
               <input type="date" required="required" id="fecha_i" name="fecha_i" style="width:160px;" data-toggle="tooltip" data-placement="top" title="Fecha Inicial" value="<?php
                   $fecha = date ("Y-m-d");
-
                   $año = date("Y", strtotime($fecha));
                   $mes = date("m", strtotime($fecha));
                   $dia = date("d", mktime(0,0,0, $mes+1, 0, $año));
-
-                  $dia1 = date('d', mktime(0,0,0, $mes, 1, $año)); //PRIMER DIA DEL MES
-                  $dia2 = date('d', mktime(0,0,0, $mes, $dia, $año)); // ULTIMO DIA DEL MES
-
+                  $dia1 = date('d', mktime(0,0,0, $mes, 1, $año));
+                  $dia2 = date('d', mktime(0,0,0, $mes, $dia, $año));
                   $fecha_inicial = date("Y-m-d", strtotime($año."-".$mes."-".$dia1));
-                  $fecha_final = date("Y-m-d", strtotime($año."-".$mes."-".$dia2));
-
                   echo $fecha_inicial;
                 ?>" class="form-control"/>
             </div>
@@ -271,9 +244,7 @@ $mysqli->close();//CERRAR CONEXIÓN
 		</div>		  
         </form>
       </div>
-      <div class="card-footer small text-muted">
-
-      </div>
+      <div class="card-footer small text-muted"></div>
     </div>
 
    <div class="card mb-4">
@@ -291,9 +262,7 @@ $mysqli->close();//CERRAR CONEXIÓN
    			<ul class="pagination justify-content-center" id="pagination_muestras"></ul>
    		</nav>
      </div>
-     <div class="card-footer small text-muted">
-
-     </div>
+     <div class="card-footer small text-muted"></div>
    </div>
 	</div>
 
@@ -303,10 +272,8 @@ $mysqli->close();//CERRAR CONEXIÓN
 	<?php include("templates/footer_facturas.php"); ?>
 </div>
 
-    <!-- add javascripts -->
-	<?php
+    <?php
 		include "script.php";
-
 		include "../js/main.php";
 		include "../js/invoice.php";
 		include "../js/myjava_productos.php";

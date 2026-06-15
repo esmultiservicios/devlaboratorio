@@ -1,45 +1,179 @@
 <script>
 /****************************************************************************************************************************************************************/
+// SELECT2 HELPERS - REEMPLAZO LIMPIO DE BOOTSTRAP SELECT
+/****************************************************************************************************************************************************************/
+
+var requestPacienteGrupo = null;
+var ultimoTipoPacienteGrupo = null;
+
+function aplicarSelect2Facturacion($select, opciones){
+	if (!$select || !$select.length) return;
+
+	if (!$.fn.select2) {
+		setTimeout(function(){
+			aplicarSelect2Facturacion($select, opciones);
+		}, 150);
+		return;
+	}
+
+	$select.each(function(){
+		var $s = $(this);
+		var valorActual = $s.val();
+
+		if ($.fn.selectpicker && $s.data('selectpicker')) {
+			try {
+				$s.selectpicker('destroy');
+			} catch(e) {}
+		}
+
+		$s.removeClass('selectpicker');
+		$s.removeAttr('data-live-search');
+		$s.removeAttr('data-size');
+		$s.removeAttr('data-width');
+		$s.removeAttr('title');
+
+		if ($s.data('select2')) {
+			$s.select2('destroy');
+		}
+
+		$s.next('.select2').remove();
+
+		var config = $.extend({
+			width: $s.attr('style') && $s.attr('style').indexOf('width') >= 0 ? 'style' : '100%',
+			placeholder: 'Seleccione',
+			minimumResultsForSearch: 0,
+			dropdownAutoWidth: false,
+			allowClear: false
+		}, opciones || {});
+
+		$s.select2(config);
+
+		if (valorActual !== null && valorActual !== undefined && valorActual !== '') {
+			$s.val(valorActual).trigger('change.select2');
+		}
+	});
+}
+
+function refrescarSelectPicker(selector){
+	var $select = $(selector);
+
+	if (!$select.length) return;
+
+	if ($.fn.selectpicker && $select.data('selectpicker')) {
+		try {
+			$select.selectpicker('destroy');
+		} catch(e) {}
+	}
+
+	$select.removeClass('selectpicker');
+	$select.removeAttr('data-live-search');
+	$select.removeAttr('data-size');
+	$select.removeAttr('data-width');
+	$select.removeAttr('title');
+
+	if ($select.attr('id') === 'tipo_paciente_grupo') {
+		aplicarSelect2Facturacion($select, {
+			width: '170px',
+			placeholder: 'Tipo Cliente',
+			minimumResultsForSearch: 0
+		});
+	} else if ($select.attr('id') === 'pacientesIDGrupo') {
+		inicializarSelect2PacienteGrupo();
+	} else if ($select.attr('id') === 'estado') {
+		aplicarSelect2Facturacion($select, {
+			width: '150px',
+			placeholder: 'Estado',
+			minimumResultsForSearch: 0
+		});
+	} else if ($select.attr('id') === 'servicio_idGrupo') {
+		aplicarSelect2Facturacion($select, {
+			width: '100%',
+			placeholder: 'Servicio',
+			minimumResultsForSearch: 0
+		});
+	} else {
+		aplicarSelect2Facturacion($select, {
+			width: '100%',
+			placeholder: 'Seleccione',
+			minimumResultsForSearch: 0
+		});
+	}
+}
+
+function reforzarSelect2Facturacion(){
+	aplicarSelect2Facturacion($('#form_main_facturas #tipo_paciente_grupo'), {
+		width: '170px',
+		placeholder: 'Tipo Cliente',
+		minimumResultsForSearch: 0
+	});
+
+	aplicarSelect2Facturacion($('#form_main_facturas #estado'), {
+		width: '150px',
+		placeholder: 'Estado',
+		minimumResultsForSearch: 0
+	});
+
+	if ($('#form_main_facturas #pacientesIDGrupo').length && !$('#form_main_facturas #pacientesIDGrupo').hasClass('select2-hidden-accessible')) {
+		inicializarSelect2PacienteGrupo();
+	}
+
+	if ($('#formGrupoFacturacion #servicio_idGrupo').length) {
+		aplicarSelect2Facturacion($('#formGrupoFacturacion #servicio_idGrupo'), {
+			width: '100%',
+			placeholder: 'Servicio',
+			minimumResultsForSearch: 0
+		});
+	}
+}
+
+$(document).on('select2:open', function(){
+	setTimeout(function(){
+		var search = document.querySelector('.select2-container--open .select2-search__field');
+		if (search) search.focus();
+	}, 50);
+});
+
+$(document).on('mousedown', '#form_main_facturas select, #formGrupoFacturacion select', function(e){
+	var $s = $(this);
+
+	if (!$.fn.select2) return;
+
+	if (!$s.hasClass('select2-hidden-accessible')) {
+		e.preventDefault();
+
+		refrescarSelectPicker('#' + $s.attr('id'));
+
+		setTimeout(function(){
+			$s.select2('open');
+		}, 50);
+	}
+});
+
+/****************************************************************************************************************************************************************/
 //INICIO CONTROLES DE ACCION
 $(document).ready(function() {
 	$('.footer').show();
     $('.footer1').hide();
 	getTotalFacturasDisponibles();
 
-	//LLAMADA A LAS FUNCIONES
 	funciones();
-
-    //INICIO PAGINATION (PARA LAS BUSQUEDAS SEGUN SELECCIONES)
-	/*$('#form_main_facturas #bs_regis').on('keyup',function(){
-	  pagination(1);
-	});
-
-	$('#form_main_facturas #fecha_b').on('change',function(){
-	  pagination(1);
-	});
-
-	$('#form_main_facturas #fecha_f').on('change',function(){
-	  pagination(1);
-	});
-
-	$('#form_main_facturas #tipo_paciente_grupo').on('change',function(){
-	  pagination(1);
-	});
-
-	$('#form_main_facturas #pacientesIDGrupo').on('change',function(){
-	  pagination(1);
-	});
-
-	$('#form_main_facturas #estado').on('change',function(){
-		pagination(1);
-	});*/
 
 	$("#form_main_facturas #buscar").on("click", function(e){
 		e.preventDefault();
 		pagination(1);
 	});
 
-	//FIN PAGINATION (PARA LAS BUSQUEDAS SEGUN SELECCIONES)
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 300);
+
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 800);
+
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 1500);
 });
 //FIN CONTROLES DE ACCION
 /****************************************************************************************************************************************************************/
@@ -47,7 +181,6 @@ $(document).ready(function() {
 /***************************************************************************************************************************************************************************/
 //INICIO FUNCIONES
 
-//INICIO OBTENER COLABORADOR CONSULTA
 function getColaboradorConsulta(){
     var url = '<?php echo SERVERURL; ?>php/facturacion/getMedicoConsulta.php';
 	var colaborador_id;
@@ -62,9 +195,7 @@ function getColaboradorConsulta(){
 	});
 	return colaborador_id;
 }
-//FIN OBTENER COLABORADOR CONSULTA
 
-//INICIO FUNCION PARA OBTENER LAS FUNCIONES
 function funciones(){
     pagination(1);
 	getColaborador();
@@ -78,10 +209,12 @@ function funciones(){
 	listar_colaboradores_buscar();
 	listar_servicios_factura_buscar();
 	listar_productos_facturas_buscar();
-}
-//FIN FUNCION PARA OBTENER LAS FUNCIONES
 
-//INICIO PAGINACION DE REGISTROS
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 500);
+}
+
 function pagination(partida){
 	var url = '<?php echo SERVERURL; ?>php/facturacion/paginar.php';
 
@@ -118,14 +251,16 @@ function pagination(partida){
 		success:function(data){
 			var array = eval(data);
 			$('#agrega-registros').html(array[0]);
-			$('#pagination').html(array[1]);			
+			$('#pagination').html(array[1]);
+
+			setTimeout(function(){
+				reforzarSelect2Facturacion();
+			}, 50);
 		}
 	});
 	return false;
 }
-//FIN PAGINACION DE REGISTROS
 
-//INICIO FUNCION PARA OBTENER LOS PACIENTES
 function getPacientes(){
     var url = '<?php echo SERVERURL; ?>php/facturacion/getPacientes.php';
 
@@ -139,7 +274,6 @@ function getPacientes(){
         }
      });
 }
-//FIN FUNCION PARA OBTENER LOS PACIENTES
 
 function getColaboradorConsulta(){
 	var url = '<?php echo SERVERURL; ?>php/facturacion/getMedicoConsulta.php';
@@ -155,9 +289,7 @@ function getColaboradorConsulta(){
 	});
 	return colaborador_id;
 }
-//FIN FUNCION PARA OBTENER LOS COLABORADORES
 
-//INICIO FUNCION PARA OBTENER LOS BANCOS DISPONIBLES
 function getEstado(){
     var url = '<?php echo SERVERURL; ?>php/facturacion/getEstado.php';
 
@@ -168,13 +300,16 @@ function getEstado(){
         success: function(data){
 		    $('#form_main_facturas #estado').html("");
 			$('#form_main_facturas #estado').html(data);
-			$('#form_main_facturas #estado').selectpicker('refresh');
+
+			aplicarSelect2Facturacion($('#form_main_facturas #estado'), {
+				width: '150px',
+				placeholder: 'Estado',
+				minimumResultsForSearch: 0
+			});
         }
      });
 }
-//FIN FUNCION PARA OBTENER LOS BANCOS DISPONIBLES
 
-//INICIO FUNCION PARA OBTENER LOS PROFESIONALES
 function getColaborador(){
     var url = '<?php echo SERVERURL; ?>php/citas/getMedico.php';
 
@@ -183,14 +318,19 @@ function getColaborador(){
         url: url,
         success: function(data){
 		    $('#form_main_facturas #profesional').html("");
-			  $('#form_main_facturas #profesional').html(data);
-				$('#form_main_facturas #profesional').selectpicker('refresh');
+			$('#form_main_facturas #profesional').html(data);
+
+			if ($('#form_main_facturas #profesional').length) {
+				aplicarSelect2Facturacion($('#form_main_facturas #profesional'), {
+					width: '180px',
+					placeholder: 'Profesional',
+					minimumResultsForSearch: 0
+				});
+			}
 		}
      });
 }
-//FIN FUNCION PARA OBTENER LOS PROFESIONALES
 
-//INICIO ENVIAR FACTURA POR CORREO ELECTRONICO
 function mailBill(facturas_id){
 	swal({
 		title: "¿Estas seguro?",
@@ -206,8 +346,8 @@ function mailBill(facturas_id){
 			}
 		},
 		dangerMode: true,
-		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
+		closeOnEsc: false,
+		closeOnClickOutside: false	
 	}).then((willConfirm) => {
 		if (willConfirm === true) {
 			sendMail(facturas_id);
@@ -230,15 +370,14 @@ function mailBillGroup(facturas_id){
 			}
 		},
 		dangerMode: true,
-		closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-		closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera	
+		closeOnEsc: false,
+		closeOnClickOutside: false	
 	}).then((willConfirm) => {
 		if (willConfirm === true) {
 			sendMailGroup(facturas_id);
 		}
 	});
 }
-//FIN ENVIAR FACTURA POR CORREO ELECTRONICO
 
 function getNumeroFactura(facturas_id){
 	var url = '<?php echo SERVERURL; ?>php/facturacion/getNoFactura.php';
@@ -290,8 +429,6 @@ function getNumeroNombrePaciente(facturas_id){
 	});
 	return noFactura;
 }
-//FIN ENVIAR FACTURA POR CORREO ELECTRONICO
-//FIN FUNCIONES
 
 /*
 ###########################################################################################################################################################
@@ -299,7 +436,7 @@ function getNumeroNombrePaciente(facturas_id){
 ###########################################################################################################################################################
 */
 /*															INICIO FACTURACIÓN				   															 */
-//INICIOS FORMULARIOS
+
 $('#acciones_atras').on('click', function(e){
 	 e.preventDefault();
 	 if($('#formulario_facturacion #cliente_nombre').val() != "" || $('#formulario_facturacion #colaborador_nombre').val() != ""){
@@ -317,8 +454,8 @@ $('#acciones_atras').on('click', function(e){
 				}
 			},
 			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+			closeOnEsc: false,
+			closeOnClickOutside: false
 		}).then((willConfirm) => {
 			if (willConfirm === true) {
 				$('#main_facturacion').show();
@@ -330,6 +467,10 @@ $('#acciones_atras').on('click', function(e){
 				$('#formulario_facturacion')[0].reset();
 				$('.footer').show();
 				$('.footer1').hide();
+
+				setTimeout(function(){
+					reforzarSelect2Facturacion();
+				}, 100);
 			}
 		});
 	 }else{
@@ -341,6 +482,10 @@ $('#acciones_atras').on('click', function(e){
 		 $('#acciones_factura').removeClass("active");
 		 $('.footer').show();
     	 $('.footer1').hide();
+
+		 setTimeout(function(){
+			reforzarSelect2Facturacion();
+		 }, 100);
 	 }
 });
 
@@ -365,7 +510,7 @@ function formFactura(){
 	 $('#acciones_atras').removeClass("active");
 	 $('#acciones_factura').addClass("active");
 	 $('#label_acciones_factura').html("Factura");
-	 $('#formulario_facturacion #fact_eval').val(1);//ESTO VIENE DE UNA FACTURA
+	 $('#formulario_facturacion #fact_eval').val(1);
 	 $('#formulario_facturacion #fecha').attr('disabled', false);
 	 $('#formulario_facturacion').attr({ 'data-form': 'save' });
 	 $('#formulario_facturacion').attr({ 'action': '<?php echo SERVERURL; ?>php/facturacion/addFactura.php' });
@@ -437,13 +582,18 @@ function formFacturaGrupo(){
 		}
 	});
 
-	//ENVIAMOS EL TAMAÑO AL FORMULARIO DE FACTURAS, QUE POSTERIOR MENTE SE USARA PARA SABER EL TAMAÑO DE LA TABLA Y PODER ITERAR LOS DETALLES DE ESTA
 	$('#formGrupoFacturacion #tamano').val(tamaño);
 	netoGrupo = (subTotal + ISVGrupo) - descuentoGrupo;
 
 	$('#formGrupoFacturacion #servicio_idGrupo').val(1);
-	$('#formGrupoFacturacion #servicio_idGrupo').selectpicker('refresh');
 
+	aplicarSelect2Facturacion($('#formGrupoFacturacion #servicio_idGrupo'), {
+		width: '100%',
+		placeholder: 'Servicio',
+		minimumResultsForSearch: 0
+	});
+
+	$('#formGrupoFacturacion #servicio_idGrupo').val(1).trigger('change.select2');
 
 	$('#formGrupoFacturacion #subTotalBillGrupo').val(parseFloat(subTotal).toFixed(2));
 	$('#formGrupoFacturacion #taxAmountBillGrupo').val(parseFloat(ISVGrupo).toFixed(2));
@@ -468,7 +618,7 @@ function llenarTablaFacturaFacturaGrupo(count){
 }
 
 function limpiarTablaFacturaGrupo(){
-	$("#formGrupoFacturacion #invoiceItemGrupo > tbody").empty();//limpia solo los registros del body
+	$("#formGrupoFacturacion #invoiceItemGrupo > tbody").empty();
 	var count = 0;
 	var htmlRows = '';
 	htmlRows += '<tr>';
@@ -485,9 +635,11 @@ $(document).ready(function() {
 	$('#acciones_atras').addClass("active");
 	$('#label_acciones_factura').html("");
 });
-//FIN BUSQUEDA PACIENTES
 
-//INICIO BUSQUEDA COLABORADORES
+/****************************************************************************************************************************************************************/
+// BUSQUEDA COLABORADORES
+/****************************************************************************************************************************************************************/
+
 $('#formulario_facturacion #buscar_colaboradores').on('click', function(e){
 	e.preventDefault();
 	listar_colaboradores_buscar();
@@ -533,9 +685,11 @@ var view_colaboradores_busqueda_dataTable = function(tbody, table){
 		$('#modal_busqueda_colaboradores').modal('hide');
 	});
 }
-//FIN BUSQUEDA COLABORADORES
 
-//INCIO ELIMINAR FACTURA BORRADOR
+/****************************************************************************************************************************************************************/
+// ELIMINAR FACTURA BORRADOR
+/****************************************************************************************************************************************************************/
+
 function deleteBill(facturas_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 		swal({
@@ -552,8 +706,8 @@ function deleteBill(facturas_id){
 				}
 			},
 			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+			closeOnEsc: false,
+			closeOnClickOutside: false
 		}).then((willConfirm) => {
 			if (willConfirm === true) {
 				eliminarFacturaBorrador(facturas_id);
@@ -565,8 +719,8 @@ function deleteBill(facturas_id){
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
 			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+			closeOnEsc: false,
+			closeOnClickOutside: false
 		});
 	}
 }
@@ -584,19 +738,19 @@ function eliminarFacturaBorrador(facturas_id){
 					text: "Registro eliminado correctamente",
 					icon: "success",
 					timer: 3000,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera					
+					closeOnEsc: false,
+					closeOnClickOutside: false					
 				});
 				pagination(1);
-			   return false;
+			    return false;
 			}else if(registro == 2){
 				swal({
 					title: "Error al eliminar el registro, por favor intentelo de nuevo o verifique que no tenga información almacenada",
 					text: "No tiene permisos para ejecutar esta acción",
 					icon: "error",
 					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+					closeOnEsc: false,
+					closeOnClickOutside: false
 				});
 			    return false;
 			}else{
@@ -605,8 +759,8 @@ function eliminarFacturaBorrador(facturas_id){
 					text: "No tiene permisos para ejecutar esta acción",
 					icon: "error",
 					dangerMode: true,
-					closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-					closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+					closeOnEsc: false,
+					closeOnClickOutside: false
 				});
 			    return false;
 			}
@@ -614,7 +768,6 @@ function eliminarFacturaBorrador(facturas_id){
 	});
 	return false;
 }
-//FIN ELIMINAR FACTURA BORRADOR
 
 $(document).ready(function(){
 	$(document).on('click', '#checkAllFactura', function(){
@@ -652,14 +805,14 @@ function calcularTotalFactura(){
 	if($('#form_main_facturas #tipo_paciente_grupo').val() == 2 && $('#form_main_facturas #pacientesIDGrupo').val() != ""){
 	   	$("[id^='importeFacturaGrupo_']").each(function() {
 			var id = $(this).attr('id');
-			id = id.replace("importeFacturaGrupo_",'');
+			id = id.replace("importeFacturaGrupo_", '');
 			var importe_factura = parseFloat($('#importeFacturaGrupo_'+id).attr('data-value'));
 			total_factura += importe_factura;
 		});
 
 	   	$("[id^='codigoFacturaGrupo_']").each(function() {
 			var id = $(this).attr('id');
-			id = id.replace("codigoFacturaGrupo_",'');
+			id = id.replace("codigoFacturaGrupo_", '');
 			var importe_factura = parseFloat($('#codigoFacturaGrupo_'+id).attr('data-value'));
 			total_factura += importe_factura;
 		});
@@ -732,31 +885,31 @@ function getMaterialEnviado(muestras_id){
 }
 
 /****************************************************************************************************************************************************************/
-// INICIO TIPO CLIENTE / CLIENTE GRUPO
+// INICIO TIPO CLIENTE / CLIENTE GRUPO CON SELECT2 Y MISMO PHP ORIGINAL
 /****************************************************************************************************************************************************************/
-
-var requestPacienteGrupo = null;
-var ultimoTipoPacienteGrupo = null;
-
-function refrescarSelectPicker(selector){
-	if ($(selector).hasClass('selectpicker')) {
-		$(selector).selectpicker('refresh');
-	}
-}
 
 function limpiarSelectPacienteGrupo(mensaje){
 	var texto = mensaje || 'Seleccione un cliente';
 
-	$('#form_main_facturas #pacientesIDGrupo')
-		.html('<option value="">' + texto + '</option>')
-		.val('');
+	var $cliente = $('#form_main_facturas #pacientesIDGrupo');
 
-	refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+	if ($cliente.data('select2')) {
+		$cliente.select2('destroy');
+	}
+
+	$cliente.next('.select2').remove();
+
+	$cliente.html('<option value="">' + texto + '</option>').val('');
+
+	inicializarSelect2PacienteGrupo();
 }
 
 function bloquearSelectPacienteGrupo(bloquear){
 	$('#form_main_facturas #pacientesIDGrupo').prop('disabled', bloquear);
-	refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+
+	if ($('#form_main_facturas #pacientesIDGrupo').data('select2')) {
+		$('#form_main_facturas #pacientesIDGrupo').trigger('change.select2');
+	}
 }
 
 function getTipoPacienteGrupo(){
@@ -767,37 +920,53 @@ function getTipoPacienteGrupo(){
 		url: url,
 		cache: false,
 		beforeSend: function(){
-			$('#form_main_facturas #tipo_paciente_grupo')
-				.html('<option value="">Cargando...</option>')
-				.val('');
+			var $tipo = $('#form_main_facturas #tipo_paciente_grupo');
 
-			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+			$tipo.html('<option value="">Cargando...</option>').val('');
+
+			aplicarSelect2Facturacion($tipo, {
+				width: '170px',
+				placeholder: 'Tipo Cliente',
+				minimumResultsForSearch: 0
+			});
 
 			limpiarSelectPacienteGrupo('Seleccione primero un tipo de cliente');
 			bloquearSelectPacienteGrupo(true);
 		},
 		success: function(data){
-			$('#form_main_facturas #tipo_paciente_grupo').html(data);
+			var $tipo = $('#form_main_facturas #tipo_paciente_grupo');
 
-			var tipoInicial = $('#form_main_facturas #tipo_paciente_grupo option:first').val();
+			$tipo.html(data);
+
+			var tipoInicial = $tipo.find('option:first').val();
 
 			if (tipoInicial === '' || tipoInicial === null || typeof tipoInicial === 'undefined') {
 				tipoInicial = '1';
 			}
 
-			$('#form_main_facturas #tipo_paciente_grupo').val(tipoInicial);
-			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+			$tipo.val(tipoInicial);
 
-			getPacienteGrupo(tipoInicial);
+			aplicarSelect2Facturacion($tipo, {
+				width: '170px',
+				placeholder: 'Tipo Cliente',
+				minimumResultsForSearch: 0
+			});
+
+			inicializarSelect2PacienteGrupo();
+			bloquearSelectPacienteGrupo(false);
 		},
 		error: function(xhr, status, error){
 			console.error('Error al cargar tipos de cliente:', error);
 
-			$('#form_main_facturas #tipo_paciente_grupo')
-				.html('<option value="">Error al cargar</option>')
-				.val('');
+			var $tipo = $('#form_main_facturas #tipo_paciente_grupo');
 
-			refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+			$tipo.html('<option value="">Error al cargar</option>').val('');
+
+			aplicarSelect2Facturacion($tipo, {
+				width: '170px',
+				placeholder: 'Tipo Cliente',
+				minimumResultsForSearch: 0
+			});
 
 			limpiarSelectPacienteGrupo('No se pudieron cargar los clientes');
 			bloquearSelectPacienteGrupo(false);
@@ -805,9 +974,93 @@ function getTipoPacienteGrupo(){
 	});
 }
 
-function getPacienteGrupo(tipo_paciente){
-	var url = '<?php echo SERVERURL; ?>php/facturacion/getPacienteGrupo.php';
+function inicializarSelect2PacienteGrupo(){
+	var $cliente = $('#form_main_facturas #pacientesIDGrupo');
 
+	if (!$cliente.length) return;
+
+	if (!$.fn.select2) {
+		setTimeout(function(){
+			inicializarSelect2PacienteGrupo();
+		}, 150);
+		return;
+	}
+
+	if ($.fn.selectpicker && $cliente.data('selectpicker')) {
+		try {
+			$cliente.selectpicker('destroy');
+		} catch(e) {}
+	}
+
+	$cliente.removeClass('selectpicker');
+	$cliente.removeAttr('data-live-search');
+	$cliente.removeAttr('data-size');
+	$cliente.removeAttr('data-width');
+	$cliente.removeAttr('title');
+
+	if ($cliente.data('select2')) {
+		$cliente.select2('destroy');
+	}
+
+	$cliente.next('.select2').remove();
+
+	$cliente.select2({
+		width: '260px',
+		placeholder: 'Cliente',
+		minimumInputLength: 0,
+		minimumResultsForSearch: 0,
+		allowClear: false,
+		ajax: {
+			url: '<?php echo SERVERURL; ?>php/facturacion/getPacienteGrupo.php',
+			type: 'POST',
+			dataType: 'json',
+			delay: 300,
+			data: function(params){
+				return {
+					tipo_paciente: $('#form_main_facturas #tipo_paciente_grupo').val() || 1,
+					term: params.term || ''
+				};
+			},
+			processResults: function(data){
+				return {
+					results: data.results || []
+				};
+			},
+			cache: true
+		},
+		templateResult: formatPacienteGrupoResult,
+		templateSelection: formatPacienteGrupoSelection
+	});
+}
+
+function formatPacienteGrupoResult(paciente){
+	if (paciente.loading) return 'Cargando...';
+
+	var $container = $('<div>');
+
+	$container.append(
+		$('<strong>').text(paciente.nombre || paciente.text || '')
+	);
+
+	if (paciente.identidad) {
+		$container.append(
+			$('<small>')
+				.css('display', 'block')
+				.css('color', '#6c757d')
+				.text('RTN: ' + paciente.identidad)
+		);
+	}
+
+	return $container;
+}
+
+function formatPacienteGrupoSelection(paciente){
+	if (paciente.nombre) return paciente.nombre;
+	if (paciente.text) return paciente.text.split(' - ')[0];
+	return paciente.id || '';
+}
+
+function getPacienteGrupo(tipo_paciente){
 	tipo_paciente = $.trim(tipo_paciente);
 
 	if (tipo_paciente === '' || tipo_paciente === null || typeof tipo_paciente === 'undefined') {
@@ -823,70 +1076,27 @@ function getPacienteGrupo(tipo_paciente){
 		requestPacienteGrupo = null;
 	}
 
-	requestPacienteGrupo = $.ajax({
-		type: 'POST',
-		url: url,
-		cache: false,
-		data: {
-			tipo_paciente: tipo_paciente
-		},
-		beforeSend: function(){
-			$('#form_main_facturas #pacientesIDGrupo')
-				.html('<option value="">Cargando clientes...</option>')
-				.val('');
+	limpiarSelectPacienteGrupo('Cliente');
+	bloquearSelectPacienteGrupo(false);
+	inicializarSelect2PacienteGrupo();
 
-			bloquearSelectPacienteGrupo(true);
-		},
-		success: function(data){
-			if (tipo_paciente !== ultimoTipoPacienteGrupo) {
-				return false;
-			}
-
-			$('#form_main_facturas #pacientesIDGrupo')
-				.html(data)
-				.val('');
-
-			refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
-		},
-		error: function(xhr, status, error){
-			if (status === 'abort') {
-				return false;
-			}
-
-			console.error('Error al cargar clientes:', error);
-
-			if (tipo_paciente === ultimoTipoPacienteGrupo) {
-				limpiarSelectPacienteGrupo('Error al cargar clientes');
-			}
-		},
-		complete: function(xhr, status){
-			if (tipo_paciente === ultimoTipoPacienteGrupo) {
-				bloquearSelectPacienteGrupo(false);
-			}
-
-			requestPacienteGrupo = null;
-		}
-	});
-
-	return requestPacienteGrupo;
+	return true;
 }
 
 $(document).ready(function(){
     $('#form_main_facturas #tipo_paciente_grupo').off('change').on('change', function(){
         var tipoPaciente = $(this).val();
 
-        limpiarSelectPacienteGrupo('Cargando clientes...');
-        getPacienteGrupo(tipoPaciente);
+        ultimoTipoPacienteGrupo = tipoPaciente;
 
-        $('#form_main_facturas #pacientesIDGrupo').val('');
-        refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
-
-        // AGREGAR ESTA LÍNEA:
-        refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
+        $('#form_main_facturas #pacientesIDGrupo').val(null).trigger('change');
+        inicializarSelect2PacienteGrupo();
 
         $('#main_facturacion #factura_manual').hide();
         $('#checkAllFactura').prop('checked', false);
         $('.itemRowFactura').prop('checked', false);
+
+		pagination(1);
     });
 
     $('#form_main_facturas #pacientesIDGrupo').off('change').on('change', function(){
@@ -894,9 +1104,24 @@ $(document).ready(function(){
         $('#checkAllFactura').prop('checked', false);
         $('.itemRowFactura').prop('checked', false);
 
-        // AGREGAR ESTA LÍNEA:
-        refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+		pagination(1);
     });
+
+	$('#form_main_facturas #estado').off('change').on('change', function(){
+		pagination(1);
+	});
+
+	$('#form_main_facturas #fecha_b').off('change').on('change', function(){
+		pagination(1);
+	});
+
+	$('#form_main_facturas #fecha_f').off('change').on('change', function(){
+		pagination(1);
+	});
+
+	$('#form_main_facturas #bs_regis').off('keyup').on('keyup', function(){
+		pagination(1);
+	});
 });
 
 /****************************************************************************************************************************************************************/
@@ -978,17 +1203,21 @@ var view_pacientes_facturas_tipo_busqueda_dataTable = function(tbody, table){
 	$(tbody).on("click", "button.view", function(e){
 		e.preventDefault();
 		var data = table.row( $(this).parents("tr") ).data();
-		$('#form_main_facturas #pacientesIDGrupo').val(data.pacientes_id);
-		//pagination(1);
+
+		var $cliente = $('#form_main_facturas #pacientesIDGrupo');
+		var option = new Option(data.paciente, data.pacientes_id, true, true);
+		$cliente.append(option).trigger('change');
+
 		$('#modal_busqueda_pacientes').modal('hide');
 	});
 }
-/*														 	FIN FACTURACIÓN				   															 	*/
+
 /*
 ###########################################################################################################################################################
 ###########################################################################################################################################################
 ###########################################################################################################################################################
 */
+
 $(document).ready(function() {
 	$('#formulario_facturacion #label_facturas_activo').html("Contado");
 
@@ -1017,11 +1246,10 @@ $(document).ready(function() {
     });
 });
 
-//INICIO FORMULARIO PAGO FACTURAS
 function pay(facturas_id){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3){
 		$('#formulario_facturacion')[0].reset();
-		$("#formulario_facturacion #invoiceItem > tbody").empty();//limpia solo los registros del body
+		$("#formulario_facturacion #invoiceItem > tbody").empty();
 
 		var url = '<?php echo SERVERURL; ?>php/facturacion/editarFactura.php';
 			$.ajax({
@@ -1030,14 +1258,18 @@ function pay(facturas_id){
 			data:'facturas_id='+facturas_id,
 			success: function(valores){
 				var datos = eval(valores);
-				$('#formulario_facturacion #fact_eval').val(1);//ESTO VIENE DE UNA FACTURA
+				$('#formulario_facturacion #fact_eval').val(1);
 				$('#formulario_facturacion #facturas_id').val(facturas_id);
 				$('#formulario_facturacion #pacientes_id').val(datos[0]);
 				$('#formulario_facturacion #cliente_nombre').val(datos[1]);
 				$('#formulario_facturacion #colaborador_id').val(datos[3]);
 				$('#formulario_facturacion #colaborador_nombre').val(datos[4]);
 				$('#formulario_facturacion #servicio_id').val(datos[5]);
-				$('#formulario_facturacion #servicio_id').selectpicker('refresh');
+
+				if ($('#formulario_facturacion #servicio_id').length && $.fn.select2) {
+					$('#formulario_facturacion #servicio_id').trigger('change.select2');
+				}
+
 				$('#formulario_facturacion #notes').val(datos[6]);
 				$('#formulario_facturacion #paciente_muestra').val(datos[7]);
 				$('#formulario_facturacion #muestras_numero').val(datos[8]);
@@ -1122,16 +1354,12 @@ function pay(facturas_id){
 			text: "No tiene permisos para ejecutar esta acción",
 			icon: "error",
 			dangerMode: true,
-			closeOnEsc: false, // Desactiva el cierre con la tecla Esc
-			closeOnClickOutside: false // Desactiva el cierre al hacer clic fuera
+			closeOnEsc: false,
+			closeOnClickOutside: false
 		});
 	}
-
-	//MOSTRAMOS EL FORMULARIO PARA EL METODO DE PAGO
 }
-//FIN FORMULARIO PAGO FACTURAS
 
-//INICIO FORMULARIO DE BUSQUEDA CLIENTES
 $('#formulario_facturacion #buscar_paciente').on('click', function(e){
 	e.preventDefault();
 	 $('#modal_busqueda_pacientes').modal({
@@ -1172,10 +1400,10 @@ var listar_pacientes_buscar = function(){
 		"dom": dom,
 		"buttons":[
 			{
-				text:      '<i class="fas fa-sync-alt fa-lg"></i> Actualizar',
-			titleAttr: 'Actualizar Registro',
+				text: '<i class="fas fa-sync-alt fa-lg"></i> Actualizar',
+				titleAttr: 'Actualizar Registro',
 				className: 'table_actualizar btn btn-secondary',
-				action: 	function(){
+				action: function(){
 					listar_pacientes_buscar();
 				}
 			}
@@ -1192,8 +1420,11 @@ var view_pacientes_busqueda_dataTable = function(tbody, table){
 	$(tbody).on("click", "button.view", function(e){
 		e.preventDefault();
 		var data = table.row( $(this).parents("tr") ).data();
-		$('#form_main_facturas #pacientesIDGrupo').val(data.pacientes_id);
-		//pagination(1);
+
+		var $cliente = $('#form_main_facturas #pacientesIDGrupo');
+		var option = new Option(data.paciente, data.pacientes_id, true, true);
+		$cliente.append(option).trigger('change');
+
 		$('#modal_busqueda_pacientes_main_muetras').modal('hide');
 	});
 }
@@ -1215,19 +1446,16 @@ function getTotalFacturasDisponibles(){
         async: true,
         dataType: 'json',
         success: function(valores) {
-            // Función para formatear números
             function formatNumber(num) {
                 num = parseInt(num, 10) || 0;
                 return num.toLocaleString('en-US');
             }
 
-            // Procesar valores
             var facturasDisponibles = parseInt(valores[0], 10) || 0;
             var diasRestantes = parseInt(valores[1], 10) || 0;
             var rangoFinal = formatNumber(valores[3] || "0");
             var rangoInicial = formatNumber(valores[4] || "0");
 
-            // Actualizar ambos contadores
             updateCounter('facturas-counter-1', facturasDisponibles, diasRestantes, rangoInicial, rangoFinal);
             updateCounter('facturas-counter-2', facturasDisponibles, diasRestantes, rangoInicial, rangoFinal);
         },
@@ -1239,9 +1467,7 @@ function getTotalFacturasDisponibles(){
     });
 }
 
-// Función para actualizar un contador específico
 function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInicial, rangoFinal) {
-    // Elementos del DOM
     var counter = $('#' + counterId);
     var counterHeader = $('#' + counterId + ' #counter-header');
     var counterStatus = $('#' + counterId + ' #counter-status');
@@ -1249,13 +1475,10 @@ function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInici
     var counterFooter = $('#' + counterId + ' #counter-footer');
     var counterIcon = $('#' + counterId + ' .counter-icon i');
     
-    // Actualizar rangos
     $('#' + counterId + ' #rango-inicial').text(rangoInicial);
     $('#' + counterId + ' #rango-final').text(rangoFinal);
     
-    // Determinar el estado
     if(facturasDisponibles < 0 || diasRestantes < 0) {
-        // Estado: Límite excedido
         counterHeader.html('<strong>LÍMITE AUTORIZADO EXCEDIDO</strong>');
         counterStatus.html('Ha superado el máximo de facturas permitidas');
         counterNumber.text('0');
@@ -1270,7 +1493,6 @@ function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInici
         });
     } 
     else if(facturasDisponibles <= 10 || diasRestantes <= 3) {
-        // Estado: Alerta (quedan pocas)
         counterHeader.html('<strong>ALERTA: FACTURAS DISPONIBLES</strong>');
         counterStatus.html(`${formatNumber(facturasDisponibles)} restantes de ${rangoFinal}`);
         counterNumber.text(formatNumber(facturasDisponibles));
@@ -1285,7 +1507,6 @@ function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInici
         });
     }
     else if(facturasDisponibles <= 30 || diasRestantes <= 7) {
-        // Estado: Advertencia
         counterHeader.html('<strong>FACTURAS DISPONIBLES</strong>');
         counterStatus.html(`${formatNumber(facturasDisponibles)} restantes de ${rangoFinal}`);
         counterNumber.text(formatNumber(facturasDisponibles));
@@ -1300,7 +1521,6 @@ function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInici
         });
     }
     else {
-        // Estado: Normal
         counterHeader.html('<strong>TOTAL DISPONIBLE AUTORIZADO</strong>');
         counterStatus.html(`${formatNumber(facturasDisponibles)} facturas disponibles`);
         counterNumber.text(formatNumber(facturasDisponibles));
@@ -1316,22 +1536,33 @@ function updateCounter(counterId, facturasDisponibles, diasRestantes, rangoInici
     }
 }
 
-// Función para manejar errores
 function handleCounterError(counterId) {
     $('#' + counterId + ' #counter-header').html('<strong>ERROR DE CONEXIÓN</strong>');
     $('#' + counterId + ' #counter-status').text('No se pueden cargar los datos').addClass('status-danger');
     $('#' + counterId + ' #counter-number').text('0');
 }
 
-// Función para formatear números (extraída para reutilización)
 function formatNumber(num) {
     num = parseInt(num, 10) || 0;
     return num.toLocaleString('en-US');
 }
 
-// Inicializar
 $(function () {
     getTotalFacturasDisponibles();
     setInterval(getTotalFacturasDisponibles, 60000);
+});
+
+$(window).on('load', function(){
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 300);
+
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 800);
+
+	setTimeout(function(){
+		reforzarSelect2Facturacion();
+	}, 1500);
 });
 </script>
