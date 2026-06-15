@@ -1,22 +1,27 @@
 <?php
 session_start();   
 include "../funtions.php";
-	
+
 //CONEXION A DB
 $mysqli = connect_mysqli();
- 
-$muestras_id = $_POST['muestras_id'];
 
-$query = "SELECT number
-    FROM muestras 
-	WHERE muestras_id = '$muestras_id'";
-$result = $mysqli->query($query);   
-$consulta2 = $result->fetch_assoc(); 
+// Sanitizar entrada
+$muestras_id = isset($_POST['muestras_id']) ? intval($_POST['muestras_id']) : 0;
 
-$numeroMuestra = $consulta2['number'];
+// Prepared statement
+$query = "SELECT number FROM muestras WHERE muestras_id = ?";
+$stmt = $mysqli->prepare($query);
 
-echo $numeroMuestra;
+$numeroMuestra = "";
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+if ($stmt) {
+    $stmt->bind_param("i", $muestras_id);
+    $stmt->execute();
+    $stmt->bind_result($numeroMuestra);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+echo htmlspecialchars($numeroMuestra, ENT_QUOTES, 'UTF-8');
+
+$mysqli->close();

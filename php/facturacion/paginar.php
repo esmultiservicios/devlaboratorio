@@ -1,4 +1,5 @@
 <?php
+//paginar.php - Facturacion
 session_start();
 include "../funtions.php";
 
@@ -8,14 +9,14 @@ header('Content-Type: application/json; charset=UTF-8');
 $mysqli = connect_mysqli();
 $mysqli->set_charset('utf8mb4');
 
-$colaborador_id        = (int)$_SESSION['colaborador_id'];
+$colaborador_id        = isset($_SESSION['colaborador_id']) ? (int)$_SESSION['colaborador_id'] : 0;
 $paginaActual          = isset($_POST['partida']) ? (int)$_POST['partida'] : 1;
-$fechai                = isset($_POST['fechai']) ? $_POST['fechai'] : date('Y-m-01');
-$fechaf                = isset($_POST['fechaf']) ? $_POST['fechaf'] : date('Y-m-d');
+$fechai                = isset($_POST['fechai']) && $_POST['fechai'] !== '' ? $_POST['fechai'] : date('Y-m-01');
+$fechaf                = isset($_POST['fechaf']) && $_POST['fechaf'] !== '' ? $_POST['fechaf'] : date('Y-m-d');
 $dato                  = isset($_POST['dato']) ? trim($_POST['dato']) : '';
 $tipo_paciente_grupo   = isset($_POST['tipo_paciente_grupo']) && $_POST['tipo_paciente_grupo'] !== '' ? (int)$_POST['tipo_paciente_grupo'] : null;
 $pacientesIDGrupo      = isset($_POST['pacientesIDGrupo']) && $_POST['pacientesIDGrupo'] !== '' ? (int)$_POST['pacientesIDGrupo'] : null;
-$estado                = isset($_POST['estado']) ? (int)$_POST['estado'] : 1;
+$estado                = isset($_POST['estado']) && $_POST['estado'] !== '' ? (int)$_POST['estado'] : 1;
 
 if ($paginaActual <= 0) {
     $paginaActual = 1;
@@ -28,6 +29,20 @@ function e($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function bindParams(mysqli_stmt $stmt, string $types, array $params) {
+    if ($types === '' || empty($params)) {
+        return true;
+    }
+
+    $refs = [];
+
+    foreach ($params as $key => $value) {
+        $refs[$key] = &$params[$key];
+    }
+
+    return $stmt->bind_param($types, ...$refs);
+}
+
 // ===============================
 // 1) Construir WHERE + binds
 // ===============================
@@ -35,50 +50,61 @@ $where   = [];
 $types   = '';
 $params  = [];
 
-// estado + rango de fechas
+// Estado
 $where[] = 'f.estado = ?';
 $types  .= 'i';
 $params[] = $estado;
 
-$where[] = 'f.fecha BETWEEN ? AND ?';
-$types  .= 'ss';
-$params[] = $fechai;
-$params[] = $fechaf;
+// Si NO hay cliente seleccionado, aplica rango de fechas.
+// Si hay cliente seleccionado, trae todo el historial del cliente sin obligarte a mover fechas.
+if (is_null($pacientesIDGrupo)) {
+    $where[] = 'f.fecha BETWEEN ? AND ?';
+    $types  .= 'ss';
+    $params[] = $fechai;
+    $params[] = $fechaf;
+}
 
-// si estado es 2 ó 4 filtrar por usuario
+// Si estado es 2 ó 4 filtrar por usuario
 if ($estado === 2 || $estado === 4) {
     $where[] = 'f.usuario = ?';
     $types  .= 'i';
     $params[] = $colaborador_id;
 }
 
-// filtros por tipo/empresa
+// Filtro por tipo cliente
 if (!is_null($tipo_paciente_grupo)) {
     $where[] = 'p.tipo_paciente_id = ?';
     $types  .= 'i';
     $params[] = $tipo_paciente_grupo;
 }
 
+// Filtro por cliente
 if (!is_null($pacientesIDGrupo)) {
     $where[] = 'p.pacientes_id = ?';
     $types  .= 'i';
     $params[] = $pacientesIDGrupo;
 }
 
-// búsqueda libre
+// Búsqueda libre
 if ($dato !== '') {
     $like = "%$dato%";
+
     $where[] = '(
-        p.expediente LIKE ? 
-        OR p.nombre LIKE ? 
-        OR p.apellido LIKE ? 
-        OR CONCAT(p.apellido," ",p.nombre) LIKE ? 
-        OR CONCAT(p.nombre," ",p.apellido) LIKE ?
+        p.expediente LIKE ?
+        OR p.nombre LIKE ?
+        OR p.apellido LIKE ?
+        OR CONCAT(p.apellido, " ", p.nombre) LIKE ?
+        OR CONCAT(p.nombre, " ", p.apellido) LIKE ?
         OR CAST(f.number AS CHAR) LIKE ?
     )';
 
     $types  .= 'ssssss';
-    array_push($params, $like, $like, $like, $like, $like, $like);
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
 }
 
 $whereSQL = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
@@ -90,15 +116,15 @@ $sql = "
 SELECT
     f.facturas_id,
     DATE_FORMAT(f.fecha, '%d/%m/%Y') AS fecha,
-    CONCAT(p.nombre,' ',p.apellido) AS empresa,
+    CONCAT(p.nombre, ' ', p.apellido) AS empresa,
     p.identidad AS identidad,
-    CONCAT(c.nombre,' ',c.apellido) AS profesional,
+    CONCAT(c.nombre, ' ', c.apellido) AS profesional,
     f.estado,
     s.nombre AS consultorio,
     sc.prefijo,
     f.number,
     sc.relleno,
-    COALESCE(CONCAT(p1.nombre,' ',p1.apellido), '') AS paciente,
+    COALESCE(CONCAT(p1.nombre, ' ', p1.apellido), '') AS paciente,
     p1.pacientes_id AS codigoPacienteEmpresa,
     f.muestras_id,
     c.colaborador_id,
@@ -109,19 +135,19 @@ SELECT
     COALESCE(fd_sum.total_isv, 0)         AS total_isv,
     COALESCE(fd_sum.neto_antes_isv, 0)    AS neto_antes_isv
 FROM facturas AS f
-INNER JOIN pacientes AS p 
+INNER JOIN pacientes AS p
     ON f.pacientes_id = p.pacientes_id
-INNER JOIN secuencia_facturacion AS sc 
+INNER JOIN secuencia_facturacion AS sc
     ON f.secuencia_facturacion_id = sc.secuencia_facturacion_id
-INNER JOIN servicios AS s 
+INNER JOIN servicios AS s
     ON f.servicio_id = s.servicio_id
-INNER JOIN colaboradores AS c 
+INNER JOIN colaboradores AS c
     ON f.colaborador_id = c.colaborador_id
-LEFT JOIN muestras_hospitales AS mh 
+LEFT JOIN muestras_hospitales AS mh
     ON f.muestras_id = mh.muestras_id
-LEFT JOIN pacientes AS p1 
+LEFT JOIN pacientes AS p1
     ON mh.pacientes_id = p1.pacientes_id
-LEFT JOIN muestras AS m 
+LEFT JOIN muestras AS m
     ON f.muestras_id = m.muestras_id
 LEFT JOIN (
     SELECT
@@ -133,7 +159,7 @@ LEFT JOIN (
         SUM(precio * cantidad) AS neto_antes_isv
     FROM facturas_detalle
     GROUP BY facturas_id
-) AS fd_sum 
+) AS fd_sum
     ON fd_sum.facturas_id = f.facturas_id
 {$whereSQL}
 ORDER BY f.fecha DESC, f.facturas_id DESC
@@ -155,17 +181,17 @@ $params_main = $params;
 $params_main[] = $offset;
 $params_main[] = $nroLotes;
 
-$stmt->bind_param($types_main, ...$params_main);
+bindParams($stmt, $types_main, $params_main);
 $stmt->execute();
 $result = $stmt->get_result();
 
 // ===============================
-// 3) COUNT(*) total
+// 3) COUNT total
 // ===============================
 $sqlCount = "
 SELECT COUNT(*) AS total
 FROM facturas AS f
-INNER JOIN pacientes AS p 
+INNER JOIN pacientes AS p
     ON f.pacientes_id = p.pacientes_id
 {$whereSQL}
 ";
@@ -180,9 +206,16 @@ if (!$stmtCount) {
     exit;
 }
 
-$stmtCount->bind_param($types, ...$params);
+bindParams($stmtCount, $types, $params);
 $stmtCount->execute();
-$total_registros = (int)$stmtCount->get_result()->fetch_assoc()['total'];
+
+$countResult = $stmtCount->get_result();
+$total_registros = 0;
+
+if ($countRow = $countResult->fetch_assoc()) {
+    $total_registros = (int)$countRow['total'];
+}
+
 $stmtCount->close();
 
 $nroPaginas = (int)ceil($total_registros / $nroLotes);

@@ -1,5 +1,4 @@
 <?php
-//getPacienteGrupo
 session_start();
 include "../funtions.php";
 
@@ -8,22 +7,23 @@ $mysqli = connect_mysqli();
 
 $tipo_paciente = $_POST['tipo_paciente'];
 
-//OBTENEMOS EL DESCUENTO A APLICAR SEGUN LO ESTABLECIDO POR EL PROFESIONAL
-$query = "SELECT p.pacientes_id, CONCAT(p.nombre,' ',p.apellido) AS 'empresa'
-	FROM facturas AS f
-	INNER JOIN pacientes AS p
-	ON f.pacientes_id = p.pacientes_id
-	WHERE p.tipo_paciente_id = '$tipo_paciente' AND p.estado = 1
-	GROUP BY p.pacientes_id";
+// Eliminamos el CONCAT del expediente
+$query = "SELECT pacientes_id, 
+			CONCAT(nombre,' ',apellido, ' - ', identidad) AS 'empresa'
+	FROM pacientes 
+	WHERE tipo_paciente_id = '$tipo_paciente' AND estado = 1
+	ORDER BY nombre ASC
+	LIMIT 500";
+
 $result = $mysqli->query($query) or die($mysqli->error);
 
-if($result->num_rows>0){
+if($result->num_rows > 0){
 	while($consulta2 = $result->fetch_assoc()){
 		echo '<option value="'.$consulta2['pacientes_id'].'">'.$consulta2['empresa'].'</option>';
 	}
-}else{
+} else {
 	echo '<option value="">No hay datos que mostrar</option>';
 }
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
+$result->free();
+$mysqli->close();

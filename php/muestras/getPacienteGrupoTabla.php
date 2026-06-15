@@ -5,12 +5,18 @@ include "../funtions.php";
 //CONEXION A DB
 $mysqli = connect_mysqli(); 
 
-$tipo_paciente = $_POST['tipo_paciente'];
+$tipo_paciente = isset($_POST['tipo_paciente']) ? $_POST['tipo_paciente'] : '1';
 
-//CONSULTA LOS DATOS DE LA ENTIDAD CORPORACION
-$consulta = "SELECT p.pacientes_id, CONCAT(p.nombre,' ',p.apellido) AS 'paciente', p.identidad AS 'identidad', p.expediente AS 'expediente', p.email As 'email'
+// CORREGIDO: Filtrar por tipo_paciente y eliminar CONCAT innecesario para la tabla
+$consulta = "SELECT p.pacientes_id, 
+			CONCAT(p.nombre,' ',p.apellido) AS paciente, 
+			p.identidad, 
+			p.expediente, 
+			p.email
 	FROM pacientes AS p
-	GROUP BY p.pacientes_id";
+	WHERE p.tipo_paciente_id = '$tipo_paciente' AND p.estado = 1
+	ORDER BY p.nombre ASC";
+	
 $result = $mysqli->query($consulta);	
 
 $arreglo = array();
@@ -21,6 +27,5 @@ while($data = $result->fetch_assoc()){
 
 echo json_encode($arreglo);
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+$result->free();
+$mysqli->close();

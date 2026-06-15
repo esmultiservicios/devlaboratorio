@@ -1,5 +1,5 @@
 <?php
-// paginar.php
+// paginar.php - Admision
 session_start();
 include "../funtions.php";
 

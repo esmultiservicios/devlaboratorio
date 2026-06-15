@@ -1,22 +1,27 @@
 <?php
 session_start();   
 include "../funtions.php";
-	
+
 //CONEXION A DB
 $mysqli = connect_mysqli();
- 
-$muestras_id = $_POST['muestras_id'];
 
-$query = "SELECT facturas_id 
-    FROM facturas 
-	WHERE muestras_id = '$muestras_id' AND estado = 2";
-$result = $mysqli->query($query);   
-$consulta2 = $result->fetch_assoc(); 
+// Sanitizar entrada
+$muestras_id = isset($_POST['muestras_id']) ? intval($_POST['muestras_id']) : 0;
 
-$facturas_id = $consulta2['facturas_id'];
+// Prepared statement
+$query = "SELECT facturas_id FROM facturas WHERE muestras_id = ? AND estado = 2";
+$stmt = $mysqli->prepare($query);
 
-echo $facturas_id;
+$facturas_id = "";
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+if ($stmt) {
+    $stmt->bind_param("i", $muestras_id);
+    $stmt->execute();
+    $stmt->bind_result($facturas_id);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+echo htmlspecialchars($facturas_id, ENT_QUOTES, 'UTF-8');
+
+$mysqli->close();

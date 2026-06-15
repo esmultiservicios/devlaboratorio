@@ -1,27 +1,27 @@
 <?php
 session_start(); 
 include('../funtions.php');
-	
+
 //CONEXION A DB
-$mysqli = connect_mysqli(); 
+$mysqli = connect_mysqli();
 
-$pacientes_id  = $_POST['pacientes_id'];
+// Sanitizar entrada
+$pacientes_id = isset($_POST['pacientes_id']) ? intval($_POST['pacientes_id']) : 0;
 
-//CONSULTA LOS DATOS DE LA ENTIDAD CORPORACION
-$consulta = "SELECT hospitales_id
-FROM hospitales
-WHERE pacientes_id = 'pacientes_id'";
+// CORREGIDO: la consulta tenía 'pacientes_id' como string literal
+$consulta = "SELECT hospitales_id FROM hospitales WHERE pacientes_id = ?";
+$stmt = $mysqli->prepare($consulta);
 
-$result = $mysqli->query($consulta);	
 $hospital = "";
 
-if($result->num_rows>0){
-	$consulta2 = $result->fetch_assoc();
-	$hospital = $consulta2['hospitales_id'];
+if ($stmt) {
+    $stmt->bind_param("i", $pacientes_id);
+    $stmt->execute();
+    $stmt->bind_result($hospital);
+    $stmt->fetch();
+    $stmt->close();
 }
 
-echo $hospital;
+echo htmlspecialchars($hospital, ENT_QUOTES, 'UTF-8');
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+$mysqli->close();

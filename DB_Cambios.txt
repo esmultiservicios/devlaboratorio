@@ -26,6 +26,10 @@ CREATE TABLE `facturas_cambio_fecha` (
 
 ####22/05/2025####
 
+ALTER TABLE facturas_detalle ADD INDEX idx_facturas_detalle_facturas_id (facturas_id);
+
+ALTER TABLE facturas ADD INDEX idx_facturas_estado_fecha (estado, fecha, pacientes_id);
+
 ALTER TABLE pacientes 
 ADD INDEX idx_pacientes_estado_tipo_id (estado, tipo_paciente_id, pacientes_id);
 

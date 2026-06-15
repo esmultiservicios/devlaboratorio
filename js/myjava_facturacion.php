@@ -872,25 +872,31 @@ function getPacienteGrupo(tipo_paciente){
 }
 
 $(document).ready(function(){
-	$('#form_main_facturas #tipo_paciente_grupo').off('change').on('change', function(){
-		var tipoPaciente = $(this).val();
+    $('#form_main_facturas #tipo_paciente_grupo').off('change').on('change', function(){
+        var tipoPaciente = $(this).val();
 
-		limpiarSelectPacienteGrupo('Cargando clientes...');
-		getPacienteGrupo(tipoPaciente);
+        limpiarSelectPacienteGrupo('Cargando clientes...');
+        getPacienteGrupo(tipoPaciente);
 
-		$('#form_main_facturas #pacientesIDGrupo').val('');
-		refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+        $('#form_main_facturas #pacientesIDGrupo').val('');
+        refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
 
-		$('#main_facturacion #factura_manual').hide();
-		$('#checkAllFactura').prop('checked', false);
-		$('.itemRowFactura').prop('checked', false);
-	});
+        // AGREGAR ESTA LÍNEA:
+        refrescarSelectPicker('#form_main_facturas #tipo_paciente_grupo');
 
-	$('#form_main_facturas #pacientesIDGrupo').off('change').on('change', function(){
-		$('#main_facturacion #factura_manual').hide();
-		$('#checkAllFactura').prop('checked', false);
-		$('.itemRowFactura').prop('checked', false);
-	});
+        $('#main_facturacion #factura_manual').hide();
+        $('#checkAllFactura').prop('checked', false);
+        $('.itemRowFactura').prop('checked', false);
+    });
+
+    $('#form_main_facturas #pacientesIDGrupo').off('change').on('change', function(){
+        $('#main_facturacion #factura_manual').hide();
+        $('#checkAllFactura').prop('checked', false);
+        $('.itemRowFactura').prop('checked', false);
+
+        // AGREGAR ESTA LÍNEA:
+        refrescarSelectPicker('#form_main_facturas #pacientesIDGrupo');
+    });
 });
 
 /****************************************************************************************************************************************************************/

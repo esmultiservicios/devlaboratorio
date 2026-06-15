@@ -1,23 +1,27 @@
 <?php
 session_start();   
 include "../funtions.php";
-	
+
 //CONEXION A DB
 $mysqli = connect_mysqli();
 
-$pacientes_id = $_POST['pacientes_id'];
+// Sanitizar entrada
+$pacientes_id = isset($_POST['pacientes_id']) ? intval($_POST['pacientes_id']) : 0;
 
-$query = "SELECT expediente 
-   FROM pacientes 
-   WHERE pacientes_id = '$pacientes_id'";
-$result = $mysqli->query($query);
-        
-$consulta2 = $result->fetch_assoc(); 
+// Prepared statement
+$query = "SELECT expediente FROM pacientes WHERE pacientes_id = ?";
+$stmt = $mysqli->prepare($query);
 
-$expediente = $consulta2['expediente'];
+$expediente = "";
 
-echo $expediente;
+if ($stmt) {
+    $stmt->bind_param("i", $pacientes_id);
+    $stmt->execute();
+    $stmt->bind_result($expediente);
+    $stmt->fetch();
+    $stmt->close();
+}
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+echo htmlspecialchars($expediente, ENT_QUOTES, 'UTF-8');
+
+$mysqli->close();

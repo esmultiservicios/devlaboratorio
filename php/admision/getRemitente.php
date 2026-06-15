@@ -5,22 +5,22 @@ include "../funtions.php";
 //CONEXION A DB
 $mysqli = connect_mysqli();
 
-$consulta = "SELECT c.colaborador_id AS 'colaborador_id', CONCAT(c.nombre,' ',c.apellido) AS 'colaborador'
-	FROM colaboradores AS c
-	INNER JOIN puesto_colaboradores AS pc
-	ON c.puesto_id = pc.puesto_id
-	WHERE pc.puesto_id IN(6)
-	ORDER BY CONCAT(c.nombre,' ',c.apellido)";
-$result = $mysqli->query($consulta) or die($mysqli->error);
+// Query optimizada con JOIN y ORDER BY
+$consulta = "SELECT c.colaborador_id, CONCAT(c.nombre, ' ', c.apellido) AS colaborador
+FROM colaboradores AS c
+INNER JOIN puesto_colaboradores AS pc ON c.puesto_id = pc.puesto_id
+WHERE pc.puesto_id IN (6)
+ORDER BY colaborador ASC";
 
-if($result->num_rows>0){
-	while($consulta2 = $result->fetch_assoc()){
-		echo '<option value="'.$consulta2['colaborador_id'].'">'.$consulta2['colaborador'].'</option>';
-	}
-}else{
-	echo '<option value="">No hay registros que mostrar</option>';
+$result = $mysqli->query($consulta);
+
+if($result->num_rows > 0) {
+    while($consulta2 = $result->fetch_assoc()) {
+        echo '<option value="' . htmlspecialchars($consulta2['colaborador_id'], ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($consulta2['colaborador'], ENT_QUOTES, 'UTF-8') . '</option>';
+    }
+} else {
+    echo '<option value="">No hay registros que mostrar</option>';
 }
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+$result->free();
+$mysqli->close();

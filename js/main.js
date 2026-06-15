@@ -1290,6 +1290,18 @@ $(function () {
   });
 });
 
+// Definir SERVERURL - Ajusta según tu configuración
+var SERVERURL = (function () {
+  // Detecta la URL base automáticamente
+  var path = window.location.pathname;
+  // Asume que el sistema está en /cami/ o similar
+  var parts = path.split("/");
+  var base = "";
+  for (var i = 1; i < parts.length - 2; i++) {
+    base += "/" + parts[i];
+  }
+  return base + "/";
+})();
 /*
 //INICIO MENU FORM PAGOS FACTURAS
 $(document).ready(function () {

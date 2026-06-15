@@ -1,24 +1,22 @@
 <?php
 session_start(); 
 include('../funtions.php');
-	
+
 //CONEXION A DB
-$mysqli = connect_mysqli(); 
+$mysqli = connect_mysqli();
 
-//CONSULTA LOS DATOS DE LA ENTIDAD CORPORACION
-$consulta = "SELECT tipo_muestra_id, nombre FROM tipo_muestra";
+// Query optimizada con ORDER BY
+$consulta = "SELECT tipo_muestra_id, nombre FROM tipo_muestra ORDER BY nombre ASC";
+$result = $mysqli->query($consulta);
 
-$result = $mysqli->query($consulta);	
-
-if($result->num_rows>0){
-	echo '<option value="0">Sin selección</option>';
-	while($consulta2 = $result->fetch_assoc()){
-		echo '<option value="'.$consulta2['tipo_muestra_id'].'">'.$consulta2['nombre'].'</option>';
-	}
-}else{
-	echo '<option value="">No hay registros que mostrar</option>';
+if($result->num_rows > 0) {
+    echo '<option value="0">Sin selección</option>';
+    while($consulta2 = $result->fetch_assoc()) {
+        echo '<option value="' . htmlspecialchars($consulta2['tipo_muestra_id'], ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($consulta2['nombre'], ENT_QUOTES, 'UTF-8') . '</option>';
+    }
+} else {
+    echo '<option value="">No hay registros que mostrar</option>';
 }
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+$result->free();
+$mysqli->close();

@@ -5,18 +5,23 @@ include "../funtions.php";
 //CONEXION A DB
 $mysqli = connect_mysqli();
 
-$pacientes_id = $_POST['pacientes_id'];
+// Sanitizar entrada
+$pacientes_id = isset($_POST['pacientes_id']) ? intval($_POST['pacientes_id']) : 0;
 
-$query = "SELECT tipo_paciente_id
-    FROM pacientes
-	WHERE pacientes_id = '$pacientes_id'";
-$result = $mysqli->query($query);
-$consulta2 = $result->fetch_assoc();
+// Prepared statement
+$query = "SELECT tipo_paciente_id FROM pacientes WHERE pacientes_id = ?";
+$stmt = $mysqli->prepare($query);
 
-$tipo_paciente_id = $consulta2['tipo_paciente_id'];
+$tipo_paciente_id = "";
 
-echo $tipo_paciente_id;
+if ($stmt) {
+    $stmt->bind_param("i", $pacientes_id);
+    $stmt->execute();
+    $stmt->bind_result($tipo_paciente_id);
+    $stmt->fetch();
+    $stmt->close();
+}
 
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
-?>
+echo htmlspecialchars($tipo_paciente_id, ENT_QUOTES, 'UTF-8');
+
+$mysqli->close();

@@ -59,6 +59,30 @@ $mysqli->close();//CERRAR CONEXIÓN
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Facturación :: <?php echo $empresa; ?></title>
     <?php include("script_css.php"); ?>
+
+    <style>
+        /* Estilos para feedback visual de selects */
+        .selectpicker-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading-spinner-small {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }       
+    </style>
 </head>
 
 <body>
