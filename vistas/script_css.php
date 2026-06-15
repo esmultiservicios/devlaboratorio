@@ -2,6 +2,7 @@
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>bootstrap/css/bootstrap.min.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>css/notyf.min.css" type="text/css" media="screen">		
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>bootstrap/css/bootstrap-select.min.css" crossorigin="anonymous"/>
+<link rel="stylesheet" href="<?php echo SERVERURL; ?>css/select2.min.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>bootstrap/css/dataTables.bootstrap4.min.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>css/fileinput.css" type="text/css" media="screen">
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>css/style.css" type="text/css" media="screen">

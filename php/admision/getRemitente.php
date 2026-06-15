@@ -1,4 +1,5 @@
 <?php
+//getRemitente.php
 session_start();   
 include "../funtions.php";
 

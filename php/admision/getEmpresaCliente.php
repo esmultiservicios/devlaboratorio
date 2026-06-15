@@ -11,7 +11,7 @@ $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
 // Query con prepared statement por seguridad
 $consulta = "SELECT pacientes_id, CONCAT(nombre, ' ', apellido) AS nombre
 FROM pacientes
-WHERE tipo_paciente_id = ? AND estado = 1
+WHERE estado = 1 AND tipo_paciente_id = ?
 ORDER BY nombre ASC";
 
 $stmt = $mysqli->prepare($consulta);

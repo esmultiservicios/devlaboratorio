@@ -1,4 +1,5 @@
 <?php
+//getTipoMuestra.php
 session_start(); 
 include('../funtions.php');
 

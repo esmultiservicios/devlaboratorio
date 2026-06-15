@@ -58,6 +58,21 @@ $mysqli->close();//CERRAR CONEXIÓN
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Clientes :: <?php echo $empresa; ?></title>
 	<?php include("script_css.php"); ?>
+	
+	<style>
+		/* Ajuste de Select2 en modales */
+		.select2-container--default .select2-selection--single {
+			height: 38px;
+			border: 1px solid #ced4da;
+			border-radius: 0.25rem;
+		}
+		.select2-container--default .select2-selection--single .select2-selection__rendered {
+			line-height: 38px;
+		}
+		.select2-container--default .select2-selection--single .select2-selection__arrow {
+			height: 36px;
+		}
+	</style>
 </head>
 <body>
    <!--Ventanas Modales-->
@@ -300,5 +315,6 @@ $mysqli->close();//CERRAR CONEXIÓN
 		include "../js/functions.php";
 		include "../js/myjava_cambiar_pass.php";
 	?>
+
 </body>
 </html>

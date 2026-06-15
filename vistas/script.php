@@ -4,6 +4,7 @@
 <script src="<?php echo SERVERURL; ?>bootstrap/js/popper.min.js" crossorigin="anonymous"></script>
 <script src="<?php echo SERVERURL; ?>bootstrap/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <script src="<?php echo SERVERURL; ?>bootstrap/js/bootstrap-select.min.js" crossorigin="anonymous"></script>
+<script src="<?php echo SERVERURL; ?>js/select2.min.js" crossorigin="anonymous"></script>
 <script src="<?php echo SERVERURL; ?>js/query/notyf.min.js"></script>
 <script src="<?php echo SERVERURL; ?>js/main.js" crossorigin="anonymous"></script>
 <script src="<?php echo SERVERURL; ?>bootstrap/js/jquery.mCustomScrollbar.concat.min.js"></script>	

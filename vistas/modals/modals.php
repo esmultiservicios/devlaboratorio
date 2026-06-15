@@ -2871,8 +2871,9 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="cliente_admision">Cliente</label>
                                     <div class="input-group mb-3">
-                                        <select class="selectpicker" id="cliente_admision" name="cliente_admision"
-                                            data-live-search="true" title="Cliente" data-size="10" data-width="100%">
+                                        <!-- CAMBIADO: Select2 en lugar de Bootstrap Select -->
+                                        <select id="cliente_admision" name="cliente_admision" style="width: 100%;">
+                                            <option value="">Escriba para buscar un cliente...</option>
                                         </select>
                                     </div>
                                 </div>

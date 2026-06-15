@@ -6,19 +6,6 @@ function safeRefresh($el){
   }
 }
 
-function showNotify(icon, title, message) {
-    if (typeof toastr !== 'undefined') {
-        if (icon === 'success') toastr.success(message, title);
-        else if (icon === 'error') toastr.error(message, title);
-        else if (icon === 'warning') toastr.warning(message, title);
-        else toastr.info(message, title);
-    } else if (typeof swal === 'function') {
-        swal(title, message, icon);
-    } else {
-        alert(title + ": " + message);
-    }
-}
-
 // ===== CACHÉ PARA SELECTS (cargan una sola vez) =====
 var catalogosCargados = false;
 
@@ -60,10 +47,11 @@ function getGenero(){
 }
 
 function getClientesAdmision(){
+  // Esta función ya NO se usa con Select2, pero la mantenemos por si acaso
   var url = SERVERURL + 'php/admision/getClientes.php';
   return $.ajax({ type:'POST', url:url }).done(function(data){
     var $s = $('#formulario_admision #cliente_admision');
-    $s.html(data); safeRefresh($s);
+    $s.html(data);
   });
 }
 
@@ -133,9 +121,9 @@ function cargarCatalogosIniciales(callback){
     getRemitente(),
     getHospitales(),
     getCategorias(),
-    getClientesAdmision(),
     getTipo()
   ];
+  // getClientesAdmision() ya NO se carga aquí porque usamos Select2
   
   if (typeof getServicio === 'function') cargas.push(getServicio());
   
@@ -251,27 +239,6 @@ $('#form_main_admision_muestras #tipo').on('change', function(){
   });
 });
 
-$('#formulario_admision #cliente_admision').on('change', function(){
-  var url = SERVERURL + 'php/admision/consultarClientes.php';
-  $.ajax({
-    type:'POST',
-    url:url,
-    data: { pacientes_id: $(this).val() },
-    async: false,
-    success:function(data){
-      var valores = JSON.parse(data);
-      $('#formulario_admision #name').val(valores[0]);
-      $('#formulario_admision #lastname').val(valores[1]);
-      $('#formulario_admision #rtn').val(valores[2]);
-      $('#formulario_admision #edad').val(valores[3]);
-      $('#formulario_admision #telefono1').val(valores[4]);
-      $('#formulario_admision #genero').val(valores[5]); safeRefresh($('#formulario_admision #genero'));
-      $('#formulario_admision #direccion').val(valores[6]);
-      $('#formulario_admision #correo').val(valores[7]);
-    }
-  });
-});
-
 $('#formulario_admision #tipo_muestra').on('change', function(){
   var url = SERVERURL + 'php/admision/getProductos.php';
   var $p = $('#formulario_admision #producto');
@@ -359,8 +326,14 @@ $('#formulario_admision #nuevo_admision').on('click', function(e){
   $('#formulario_admision #telefono1').val("");
   $('#formulario_admision #direccion').val("");
   $('#formulario_admision #correo').val("");
-  $('#formulario_admision #cliente_admision').val("");
-  safeRefresh($('#formulario_admision #cliente_admision'));
+  
+  // Limpiar Select2
+  if ($.fn.select2) {
+    $('#formulario_admision #cliente_admision').val(null).trigger('change');
+  } else {
+    $('#formulario_admision #cliente_admision').val("");
+  }
+  
   $('#formulario_admision #name').focus();
 });
 
@@ -753,7 +726,7 @@ function historiaMuestrasPacientes(partida){
   return false;
 }
 
-// ===== Modal clientes (RÁPIDO - los selects ya están cargados) =====
+// ===== MODAL CLIENTES CON SELECT2 (con últimos clientes al abrir) =====
 function modalClientes(){
   $('#formulario_admision').attr({ 'data-form': 'save' });
   $('#formulario_admision').attr({ 'action': SERVERURL + 'php/admision/agregarRegistro.php' });
@@ -787,17 +760,113 @@ function modalClientes(){
   $('#formulario_admision #datos_clinicos').attr('readonly', false);
   $('#formulario_admision #mostrar_datos_clinicos').attr('disabled', false);
   
-  // SOLO refrescar los selects (ya están cargados desde initPage)
+  // INICIALIZAR SELECT2
+  if ($.fn.select2) {
+    // Destruir instancia anterior si existe
+    if ($('#formulario_admision #cliente_admision').data('select2')) {
+      $('#formulario_admision #cliente_admision').select2('destroy');
+    }
+    
+    $('#formulario_admision #cliente_admision').select2({
+      placeholder: 'Escriba para buscar un cliente...',
+      minimumInputLength: 0,
+      ajax: {
+        url: SERVERURL + 'php/admision/getClientes.php',
+        dataType: 'json',
+        delay: 300,
+        data: function(params) {
+          return {
+            term: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.results
+          };
+        },
+        cache: false
+      },
+      templateResult: formatClienteResult,
+      templateSelection: formatClienteSelection
+    });
+  }
+  
+  // Refrescar otros selects
   safeRefresh($('#formulario_admision #genero'));
   safeRefresh($('#formulario_admision #tipo_muestra'));
   safeRefresh($('#formulario_admision #empresa'));
   safeRefresh($('#formulario_admision #remitente'));
   safeRefresh($('#formulario_admision #hospital'));
   safeRefresh($('#formulario_admision #categoria'));
-  safeRefresh($('#formulario_admision #cliente_admision'));
   safeRefresh($('#formulario_admision #paciente_tipo'));
   
+  // Evento change para Select2
+  $('#formulario_admision #cliente_admision').off('change').on('change', function(e){
+      var pacientes_id = $(this).val();
+      if (pacientes_id) {
+          cargarDatosClienteAdmision(pacientes_id);
+      } else {
+          $('#formulario_admision #name').val("");
+          $('#formulario_admision #lastname').val("");
+          $('#formulario_admision #rtn').val(0);
+          $('#formulario_admision #edad').val("");
+          $('#formulario_admision #telefono1').val("");
+          $('#formulario_admision #direccion').val("");
+          $('#formulario_admision #correo').val("");
+      }
+});
+  
   $('#modal_admision_clientes').modal({ show: true, keyboard: false, backdrop:'static' });
+}
+
+// Funciones de formato para Select2
+// Funciones de formato para Select2 (muestra nombre + identidad)
+function formatClienteResult(cliente) {
+    if (cliente.loading) {
+        return 'Cargando...';
+    }
+    // Mostrar nombre e identidad en los resultados
+    var $container = $('<div>');
+    $container.append($('<strong>').text(cliente.nombre || cliente.text.split(' - ')[0]));
+    if (cliente.identidad) {
+        $container.append($('<small>').css('display', 'block').css('color', '#6c757d').text('RTN: ' + cliente.identidad));
+    }
+    return $container;
+}
+
+function formatClienteSelection(cliente) {
+    // En el campo seleccionado, mostrar solo el nombre
+    if (cliente.nombre) {
+        return cliente.nombre;
+    }
+    if (cliente.text) {
+        return cliente.text.split(' - ')[0];
+    }
+    return cliente.id;
+}
+
+// Función separada para cargar datos del cliente
+function cargarDatosClienteAdmision(pacientes_id){
+  if (!pacientes_id) return;
+  
+  var url = SERVERURL + 'php/admision/consultarClientes.php';
+  $.ajax({
+    type:'POST',
+    url:url,
+    data: { pacientes_id: pacientes_id },
+    async: false,
+    success:function(data){
+      var valores = JSON.parse(data);
+      $('#formulario_admision #name').val(valores[0]);
+      $('#formulario_admision #lastname').val(valores[1]);
+      $('#formulario_admision #rtn').val(valores[2]);
+      $('#formulario_admision #edad').val(valores[3]);
+      $('#formulario_admision #telefono1').val(valores[4]);
+      $('#formulario_admision #genero').val(valores[5]); safeRefresh($('#formulario_admision #genero'));
+      $('#formulario_admision #direccion').val(valores[6]);
+      $('#formulario_admision #correo').val(valores[7]);
+    }
+  });
 }
 
 $('#form_main_admision #registrar_empresa').on('click', function(e){
@@ -840,7 +909,7 @@ function modaEmpresa(){
   $('#modal_admision_empesas').modal({ show: true, keyboard: false, backdrop:'static' });
 }
 
-// ===== Facturación desde admisión =====
+// ===== Facturación desde admisión (sin cambios) =====
 function convertDate(inputFormat) {
   function pad(s) { return (s < 10) ? '0' + s : s; }
   var d = new Date(inputFormat);
