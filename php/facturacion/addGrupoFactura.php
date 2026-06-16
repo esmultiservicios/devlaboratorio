@@ -230,10 +230,13 @@ try {
         // Guardar estado original de la factura individual para restaurar si falla algo.
         $facturasIndividualesOriginales[$lineaFactura_id] = obtenerFacturaIndividualOriginal($mysqli, $lineaFactura_id);
 
+        $lineaTotal = round(($lineaImporte + $lineaISV) - $lineaDescuento, 2);
+
         // Actualizar factura individual con la misma secuencia y número.
-        // Se mantiene estado=2 como tu código original.
+        // También se sincroniza importe con el total REAL del detalle individual.
+        // Esto evita que una factura con descuento quede con encabezado viejo y bloquee la factura grupal.
         $update_fact = "UPDATE facturas
-                        SET fecha = ?, number = ?, secuencia_facturacion_id = ?, estado = 2
+                        SET fecha = ?, number = ?, secuencia_facturacion_id = ?, importe = ?, estado = 2
                         WHERE facturas_id = ?";
 
         $stmtUpdateFact = $mysqli->prepare($update_fact);
@@ -243,10 +246,11 @@ try {
         }
 
         $stmtUpdateFact->bind_param(
-            "siii",
+            "siidi",
             $fecha,
             $numero,
             $secuencia_facturacion_id,
+            $lineaTotal,
             $lineaFactura_id
         );
 
@@ -648,16 +652,9 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
             throw new Exception("La factura individual ID " . $facturas_id . " tiene total cero o inválido.");
         }
 
-        // Validar contra encabezado individual.
+        // El total confiable siempre sale del detalle.
+        // Si el encabezado individual quedó con importe viejo, se corrige al procesar la factura grupal.
         $importeEncabezadoIndividual = round((float)$rowFactura['importe'], 2);
-
-        if (abs($importeEncabezadoIndividual - $lineaTotal) > 0.01) {
-            throw new Exception(
-                "La factura individual ID " . $facturas_id .
-                " no cuadra. Encabezado: " . number_format($importeEncabezadoIndividual, 2, '.', '') .
-                ", detalle: " . number_format($lineaTotal, 2, '.', '') . "."
-            );
-        }
 
         $detalles[] = array(
             'facturas_id' => $facturas_id,
@@ -684,7 +681,7 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
  * para restaurarla si algo falla en MyISAM.
  */
 function obtenerFacturaIndividualOriginal($conexion, $facturas_id) {
-    $query = "SELECT fecha, number, secuencia_facturacion_id, estado
+    $query = "SELECT fecha, number, secuencia_facturacion_id, importe, estado
               FROM facturas
               WHERE facturas_id = ?
               LIMIT 1";
@@ -711,6 +708,7 @@ function obtenerFacturaIndividualOriginal($conexion, $facturas_id) {
         'fecha' => $row['fecha'],
         'number' => $row['number'],
         'secuencia_facturacion_id' => $row['secuencia_facturacion_id'],
+        'importe' => $row['importe'],
         'estado' => $row['estado']
     );
 }
@@ -750,18 +748,20 @@ function limpiarFacturaGrupalFallida($conexion, $facturas_grupal_id, $facturasIn
             $fecha_original = $data['fecha'];
             $number_original = (int)$data['number'];
             $secuencia_original = (int)$data['secuencia_facturacion_id'];
+            $importe_original = (float)$data['importe'];
             $estado_original = (int)$data['estado'];
 
             $stmt = $conexion->prepare("UPDATE facturas 
-                                        SET fecha = ?, number = ?, secuencia_facturacion_id = ?, estado = ?
+                                        SET fecha = ?, number = ?, secuencia_facturacion_id = ?, importe = ?, estado = ?
                                         WHERE facturas_id = ?");
 
             if ($stmt) {
                 $stmt->bind_param(
-                    "siiii",
+                    "siidii",
                     $fecha_original,
                     $number_original,
                     $secuencia_original,
+                    $importe_original,
                     $estado_original,
                     $facturas_id
                 );
