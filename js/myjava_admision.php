@@ -10,6 +10,7 @@
    - Texto de búsqueda muestras con debounce
    - Corregido SweetAlert normal: NO usa showNotify("warning")
    - Corregido Facturar desde muestras: abre factura aunque no venga producto automático
+   - Corregido Empresa en modal Registro Clientes: queda vacía, no selecciona la primera empresa
 /****************************************************************************************************************************************************************/
 
 /****************************************************************************************************************************************************************/
@@ -154,6 +155,42 @@ function aplicarSelect2($select, opciones){
       $s.val(valorActual).trigger('change.select2');
     }
   });
+}
+
+function prepararSelectVacio($select, texto){
+  if (!$select || !$select.length) return;
+
+  texto = texto || 'Sin selección';
+
+  if ($select.find('option[value=""]').length === 0) {
+    $select.prepend('<option value="">' + texto + '</option>');
+  }
+
+  $select.val('');
+
+  if ($select.hasClass('select2-hidden-accessible')) {
+    $select.trigger('change.select2');
+  } else {
+    $select.trigger('change');
+  }
+}
+
+function limpiarEmpresaAdmision(){
+  var $empresa = $('#formulario_admision select[name="empresa"], #formulario_admision #empresa');
+
+  if (!$empresa.length) return;
+
+  prepararSelectVacio($empresa, 'Sin selección');
+
+  aplicarSelect2($empresa, {
+    width: '100%',
+    placeholder: 'Sin selección',
+    allowClear: true,
+    minimumResultsForSearch: 0,
+    dropdownParent: $('#modal_admision_clientes')
+  });
+
+  $empresa.val(null).trigger('change');
 }
 
 function aplicarSelect2VistaPrincipal(){
@@ -392,12 +429,21 @@ function getEmpresa(){
 
     $s.html(data);
 
+    if ($s.find('option[value=""]').length === 0) {
+      $s.prepend('<option value="">Sin selección</option>');
+    }
+
+    $s.val('');
+
     aplicarSelect2($s, {
       width: '100%',
-      placeholder: 'Empresa',
+      placeholder: 'Sin selección',
+      allowClear: true,
       minimumResultsForSearch: 0,
       dropdownParent: $('#modal_admision_clientes')
     });
+
+    $s.val(null).trigger('change');
   });
 }
 
@@ -618,6 +664,7 @@ $(document).ready(function(){
   });
 
   $("#modal_admision_clientes").off('shown.bs.modal.admision').on('shown.bs.modal.admision', function(){
+    limpiarEmpresaAdmision();
     $(this).find('#formulario_admision #name').focus();
   });
 
@@ -1063,6 +1110,8 @@ $('#formulario_admision #nuevo_admision').off('click').on('click', function(e){
     $('#formulario_admision #cliente_admision').val("");
   }
 
+  limpiarEmpresaAdmision();
+
   $('#formulario_admision #name').focus();
 });
 
@@ -1085,6 +1134,8 @@ $('#formulario_admision #nuevo_admision_muestra').off('click').on('click', funct
   $('#formulario_admision #material_enviado').val("");
   $('#formulario_admision #datos_clinicos').val("");
   $('#formulario_admision #producto').html("");
+
+  limpiarEmpresaAdmision();
 
   aplicarSelect2($('#formulario_admision #producto'), {
     width: '100%',
@@ -1738,12 +1789,7 @@ function modalClientes(){
     dropdownParent: $('#modal_admision_clientes')
   });
 
-  aplicarSelect2($('#formulario_admision #empresa'), {
-    width: '100%',
-    placeholder: 'Empresa',
-    minimumResultsForSearch: 0,
-    dropdownParent: $('#modal_admision_clientes')
-  });
+  limpiarEmpresaAdmision();
 
   aplicarSelect2($('#formulario_admision #categoria'), {
     width: '100%',
@@ -1772,6 +1818,7 @@ function modalClientes(){
       $('#formulario_admision #telefono1').val("");
       $('#formulario_admision #direccion').val("");
       $('#formulario_admision #correo').val("");
+      limpiarEmpresaAdmision();
     }
   });
 
@@ -1780,6 +1827,10 @@ function modalClientes(){
     keyboard: false,
     backdrop:'static'
   });
+
+  setTimeout(function(){
+    limpiarEmpresaAdmision();
+  }, 200);
 }
 
 /****************************************************************************************************************************************************************/
@@ -1851,6 +1902,8 @@ function cargarDatosClienteAdmision(pacientes_id){
 
     $('#formulario_admision #direccion').val(valores[6]);
     $('#formulario_admision #correo').val(valores[7]);
+
+    limpiarEmpresaAdmision();
   });
 }
 

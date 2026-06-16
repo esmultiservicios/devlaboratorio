@@ -19,7 +19,7 @@ $(document).ready(function() {
 	funciones();
 
 	//INICIO ABRIR VENTANA MODAL PARA EL REGISTRO DE LAS FACTURAS
-	$('#form_main_facturacion_reportes #factura').on('click',function(e){
+	$('#form_main_facturacion_reportes #factura').off('click.reporteFacturacion').on('click.reporteFacturacion',function(e){
 		e.preventDefault();
 
 		if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4){
@@ -58,7 +58,7 @@ $(document).ready(function() {
 	//FIN ABRIR VENTANA MODAL PARA EL REGISTRO DE LAS FACTURAS
 
 	//INICIO PARA EL REGISTRO DE COBROS A PROFESIONALES
-	$('#formCobros #generar').on('click', function(e){
+	$('#formCobros #generar').off('click.reporteFacturacion').on('click.reporteFacturacion', function(e){
 		 if ($('#formCobros #comentario').val() != ""){
 			e.preventDefault();
 			agregarCobros();
@@ -79,19 +79,17 @@ $(document).ready(function() {
 	//FIN PARA EL REGISTRO DE COBROS A PROFESIONALES
 
     //INICIO PAGINATION
-	$('#form_main_facturacion_reportes #estado').on('change',function(){
+	$('#form_main_facturacion_reportes #estado')
+	.off('change.reporteFacturacion changed.bs.select.reporteFacturacion')
+	.on('change.reporteFacturacion changed.bs.select.reporteFacturacion',function(){
 		listar_reporte_facturacion();
 	});
 
-	$('#form_main_facturacion_reportes #pacientesIDGrupo').on('change',function(){
+	$('#form_main_facturacion_reportes #fecha_b').off('change.reporteFacturacion').on('change.reporteFacturacion',function(){
 		listar_reporte_facturacion();
 	});
 
-	$('#form_main_facturacion_reportes #fecha_b').on('change',function(){
-		listar_reporte_facturacion();
-	});
-
-	$('#form_main_facturacion_reportes #fecha_f').on('change',function(){
+	$('#form_main_facturacion_reportes #fecha_f').off('change.reporteFacturacion').on('change.reporteFacturacion',function(){
 		listar_reporte_facturacion();
 	});
 	//FIN PAGINATION
@@ -99,7 +97,7 @@ $(document).ready(function() {
 //FIN CONTROLES DE ACCION
 /****************************************************************************************************************************************************************/
 
-$('#form_eliminar #Si').on('click', function(e){
+$('#form_eliminar #Si').off('click.reporteFacturacion').on('click.reporteFacturacion', function(e){
 	if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 4){
 		e.preventDefault();
 
@@ -135,7 +133,6 @@ function funciones(){
 	listar_reporte_facturacion();
 	getEstado();
 	getTipoPacienteGrupo();
-	getPacienteGrupo(1);
 }
 //FIN AGRUPAR FUNCIONES
 
@@ -468,57 +465,231 @@ function convertDate(inputFormat) {
 
 	return [d.getFullYear(), pad(d.getMonth()+1), pad(d.getDate())].join('-');
 }
+
+/******************************************************************************************************************************************************************************/
+// INICIO HELPERS PARA SELECTPICKER Y FILTROS
+/******************************************************************************************************************************************************************************/
+
+function rfRefreshSelectpicker($select) {
+	if (!$select || !$select.length) {
+		return;
+	}
+
+	if ($.fn && $.fn.selectpicker) {
+		try {
+			if (!$select.data('selectpicker')) {
+				$select.selectpicker();
+			}
+
+			$select.selectpicker('refresh');
+		} catch (e) {
+			console.warn('No se pudo refrescar selectpicker:', e);
+		}
+	}
+}
+
+function rfParseJsonSeguro(data) {
+	if (typeof data === 'object') {
+		return data;
+	}
+
+	try {
+		return JSON.parse(data);
+	} catch(e) {
+		return null;
+	}
+}
+
+function rfConstruirOptionsClientes(data) {
+	var html = '<option value="">Cliente</option>';
+
+	if (data === null || typeof data === 'undefined') {
+		return html;
+	}
+
+	if (typeof data === 'string') {
+		var limpio = $.trim(data);
+
+		if (limpio === '') {
+			return html;
+		}
+
+		var json = rfParseJsonSeguro(limpio);
+
+		if (json !== null) {
+			return rfConstruirOptionsClientes(json);
+		}
+
+		return limpio;
+	}
+
+	if ($.isArray(data)) {
+		$.each(data, function(i, item) {
+			if (typeof item === 'object') {
+				var id = item.id || item.pacientes_id || item.value || '';
+				var text = item.text || item.nombre || item.paciente || item.label || '';
+
+				if (id !== '' && text !== '') {
+					html += '<option value="' + rfEscapeHtml(id) + '">' + rfEscapeHtml(text) + '</option>';
+				}
+			}
+		});
+
+		return html;
+	}
+
+	if (data.results && $.isArray(data.results)) {
+		$.each(data.results, function(i, item) {
+			var id = item.id || item.pacientes_id || item.value || '';
+			var text = item.text || item.nombre || item.paciente || item.label || '';
+
+			if (id !== '' && text !== '') {
+				html += '<option value="' + rfEscapeHtml(id) + '">' + rfEscapeHtml(text) + '</option>';
+			}
+		});
+
+		return html;
+	}
+
+	if (data.data && $.isArray(data.data)) {
+		$.each(data.data, function(i, item) {
+			var id = item.id || item.pacientes_id || item.value || '';
+			var text = item.text || item.nombre || item.paciente || item.label || '';
+
+			if (id !== '' && text !== '') {
+				html += '<option value="' + rfEscapeHtml(id) + '">' + rfEscapeHtml(text) + '</option>';
+			}
+		});
+
+		return html;
+	}
+
+	return html;
+}
+
+/******************************************************************************************************************************************************************************/
+// FIN HELPERS PARA SELECTPICKER Y FILTROS
+/******************************************************************************************************************************************************************************/
+
+/******************************************************************************************************************************************************************************/
+// INICIO CARGA DE FILTROS
 /******************************************************************************************************************************************************************************/
 
 function getEstado(){
     var url = '<?php echo SERVERURL; ?>php/reporte_facturacion/getEstado.php';
+	var $estado = $('#form_main_facturacion_reportes #estado');
 
 	$.ajax({
         type: "POST",
         url: url,
 	    async: true,
         success: function(data){
-		    $('#form_main_facturacion_reportes #estado').html("");
-			$('#form_main_facturacion_reportes #estado').html(data);
-			$('#form_main_facturacion_reportes #estado').selectpicker('refresh');
-        }
+		    $estado.html(data);
+			rfRefreshSelectpicker($estado);
+        },
+		error: function(xhr, status, error){
+			console.error('Error cargando estados:', xhr.responseText || error);
+			showNotify("error", "Error", "No se pudieron cargar los estados.");
+		}
      });
 }
 
 function getTipoPacienteGrupo(){
     var url = '<?php echo SERVERURL; ?>php/facturacion/getTipoPaciente.php';
+	var $tipo = $('#form_main_facturacion_reportes #tipo_paciente_grupo');
 
 	$.ajax({
         type: "POST",
         url: url,
         success: function(data){
-		    $('#form_main_facturacion_reportes #tipo_paciente_grupo').html("");
-			$('#form_main_facturacion_reportes #tipo_paciente_grupo').html(data);
-			$('#form_main_facturacion_reportes #tipo_paciente_grupo').selectpicker('refresh');
+		    $tipo.html(data);
 
-			getPacienteGrupo(1);
+			if (($tipo.val() === null || $tipo.val() === '' || typeof $tipo.val() === 'undefined') && $tipo.find('option[value="1"]').length > 0) {
+				$tipo.val('1');
+			}
+
+			rfRefreshSelectpicker($tipo);
+
+			var tipoSeleccionado = $tipo.val();
+
+			if (tipoSeleccionado === null || tipoSeleccionado === '' || typeof tipoSeleccionado === 'undefined') {
+				tipoSeleccionado = 1;
+			}
+
+			getPacienteGrupo(tipoSeleccionado);
+		},
+		error: function(xhr, status, error){
+			console.error('Error cargando tipo de cliente:', xhr.responseText || error);
+			showNotify("error", "Error", "No se pudieron cargar los tipos de cliente.");
 		}
      });
 }
 
 function getPacienteGrupo(tipo_paciente){
     var url = '<?php echo SERVERURL; ?>php/facturacion/getPacienteGrupo.php';
+	var $cliente = $('#form_main_facturacion_reportes #pacientesIDGrupo');
+
+	if (tipo_paciente === null || tipo_paciente === '' || typeof tipo_paciente === 'undefined') {
+		tipo_paciente = 1;
+	}
+
+	$cliente.prop('disabled', true);
+	$cliente.html('<option value="">Cargando clientes...</option>');
+	rfRefreshSelectpicker($cliente);
 
 	$.ajax({
 		type: "POST",
 		url: url,
-		data:'tipo_paciente=' + tipo_paciente,
+		data: {
+			tipo_paciente: tipo_paciente
+		},
 		success: function(data){
-			$('#form_main_facturacion_reportes #pacientesIDGrupo').html("");
-			$('#form_main_facturacion_reportes #pacientesIDGrupo').html(data);
-			$('#form_main_facturacion_reportes #pacientesIDGrupo').selectpicker('refresh');
+			var html = rfConstruirOptionsClientes(data);
+
+			$cliente.html(html);
+			$cliente.val('');
+			$cliente.prop('disabled', false);
+
+			rfRefreshSelectpicker($cliente);
+
+			listar_reporte_facturacion();
+		},
+		error: function(xhr, status, error){
+			console.error('Error cargando clientes:', xhr.responseText || error);
+
+			$cliente.html('<option value="">Cliente</option>');
+			$cliente.val('');
+			$cliente.prop('disabled', false);
+
+			rfRefreshSelectpicker($cliente);
+
+			showNotify("error", "Error", "No se pudieron cargar los clientes.");
 		}
 	});
 }
 
-$('#form_main_facturacion_reportes #tipo_paciente_grupo').on('change',function(){
-	getPacienteGrupo($('#form_main_facturacion_reportes #tipo_paciente_grupo').val());
+$(document)
+.off('change.reporteTipoPacienteGrupo changed.bs.select.reporteTipoPacienteGrupo', '#form_main_facturacion_reportes #tipo_paciente_grupo')
+.on('change.reporteTipoPacienteGrupo changed.bs.select.reporteTipoPacienteGrupo', '#form_main_facturacion_reportes #tipo_paciente_grupo', function(){
+	var tipo = $(this).val();
+
+	if (tipo === null || tipo === '' || typeof tipo === 'undefined') {
+		tipo = 1;
+	}
+
+	$('#form_main_facturacion_reportes #pacientesIDGrupo').val('');
+	getPacienteGrupo(tipo);
 });
+
+$(document)
+.off('change.reportePacienteGrupo changed.bs.select.reportePacienteGrupo', '#form_main_facturacion_reportes #pacientesIDGrupo')
+.on('change.reportePacienteGrupo changed.bs.select.reportePacienteGrupo', '#form_main_facturacion_reportes #pacientesIDGrupo', function(){
+	listar_reporte_facturacion();
+});
+
+/******************************************************************************************************************************************************************************/
+// FIN CARGA DE FILTROS
+/******************************************************************************************************************************************************************************/
 
 var table_reporte_facturacion_global = null;
 
