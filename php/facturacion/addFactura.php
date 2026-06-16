@@ -75,8 +75,8 @@ try {
 
     $total_despues_isv = round(($total_valor + $isv_neto) - $descuentos, 2);
 
-    if ($total_despues_isv <= 0) {
-        throw new Exception("El total de la factura debe ser mayor a cero.");
+    if ($total_despues_isv < 0) {
+        throw new Exception("El total de la factura no puede ser negativo.");
     }
 
     $lockSecuenciaNombre = adquirirLockSecuenciaFactura($mysqli, $empresa_id, $documento_tipo, 20);

@@ -136,8 +136,8 @@ try {
 
     $total_despues_isv = round(($total_valor + $isv_neto) - $descuentos, 2);
 
-    if ($total_despues_isv <= 0) {
-        throw new Exception("El total de la factura grupal debe ser mayor a cero.");
+    if ($total_despues_isv < 0) {
+        throw new Exception("El total de la factura grupal no puede ser negativo.");
     }
 
     // =========================================================
@@ -648,8 +648,8 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
 
         $lineaTotal = round(($lineaImporte + $lineaISV) - $lineaDescuento, 2);
 
-        if ($lineaTotal <= 0) {
-            throw new Exception("La factura individual ID " . $facturas_id . " tiene total cero o inválido.");
+        if ($lineaTotal < 0) {
+            throw new Exception("La factura individual ID " . $facturas_id . " tiene total negativo o inválido.");
         }
 
         // El total confiable siempre sale del detalle.

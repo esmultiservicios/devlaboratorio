@@ -217,10 +217,10 @@ function obtenerTotalesFacturaDesdeDetalle() {
 	});
 
 	return {
-		subtotal: totalAmount,
-		descuento: totalDiscount,
-		isv: totalISV,
-		total: (totalAmount + totalISV) - totalDiscount,
+		subtotal: parseFloat(totalAmount.toFixed(2)),
+		descuento: parseFloat(totalDiscount.toFixed(2)),
+		isv: parseFloat(totalISV.toFixed(2)),
+		total: parseFloat(((totalAmount + totalISV) - totalDiscount).toFixed(2)),
 		lineas: totalLineas
 	};
 }
@@ -344,8 +344,11 @@ function validarFacturaAntesDeEnviar() {
 
 	var totales = obtenerTotalesFacturaDesdeDetalle();
 
-	if (totales.total <= 0) {
-		errores.push('El total de la factura debe ser mayor a cero.');
+	// IMPORTANTE:
+	// Se permite total L. 0.00 cuando el descuento cubre el 100%.
+	// Solo se bloquea si el total queda negativo.
+	if (totales.total < 0) {
+		errores.push('El total de la factura no puede ser negativo.');
 	}
 
 	var totalPantalla = convertirNumeroFactura($('#formulario_facturacion #totalAftertax').val());

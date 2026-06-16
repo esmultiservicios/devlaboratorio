@@ -1902,17 +1902,107 @@ function formatNumber(num) {
 }
 
 /****************************************************************************************************************************************************************/
-// VALIDACION EXTRA ANTES DE ENVIAR FACTURA NORMAL
+// VALIDACIÓN FACTURA NORMAL
+// PERMITE DESCUENTO 100%: TOTAL L 0.00 ES VÁLIDO
 /****************************************************************************************************************************************************************/
 
-$(document).off('submit.validarPacienteFacturaNormal', '#formulario_facturacion');
-$(document).on('submit.validarPacienteFacturaNormal', '#formulario_facturacion', function(e){
+function numeroSeguroFacturaNormal(valor){
+	valor = $.trim(valor || '');
+
+	if (valor === '') {
+		return 0;
+	}
+
+	valor = valor.replace(/,/g, '.');
+
+	if (isNaN(parseFloat(valor))) {
+		return 0;
+	}
+
+	return parseFloat(valor);
+}
+
+function obtenerResumenFacturaNormal(){
+	var subtotal = 0;
+	var isv = 0;
+	var descuento = 0;
+	var total = 0;
+	var lineas = 0;
+
+	$('#formulario_facturacion #invoiceItem tbody tr').each(function(){
+		var productoID = $.trim($(this).find('[id^="productoID_"]').val() || '');
+		var productoNombre = $.trim($(this).find('[id^="productName_"]').val() || '');
+		var cantidad = numeroSeguroFacturaNormal($(this).find('[id^="quantity_"]').val());
+		var precio = numeroSeguroFacturaNormal($(this).find('[id^="price_"]').val());
+		var descuentoLinea = numeroSeguroFacturaNormal($(this).find('[id^="discount_"]').val());
+		var isvLinea = numeroSeguroFacturaNormal($(this).find('[id^="valor_isv_"]').val());
+
+		if (productoID !== '' || productoNombre !== '' || cantidad > 0 || precio > 0 || descuentoLinea > 0 || isvLinea > 0) {
+			lineas++;
+		}
+
+		subtotal += (cantidad * precio);
+		isv += isvLinea;
+		descuento += descuentoLinea;
+	});
+
+	subtotal = parseFloat(subtotal.toFixed(2));
+	isv = parseFloat(isv.toFixed(2));
+	descuento = parseFloat(descuento.toFixed(2));
+	total = parseFloat(((subtotal + isv) - descuento).toFixed(2));
+
+	if ($('#formulario_facturacion #subTotal').length) {
+		$('#formulario_facturacion #subTotal').val(subtotal.toFixed(2));
+	}
+
+	if ($('#formulario_facturacion #taxAmount').length) {
+		$('#formulario_facturacion #taxAmount').val(isv.toFixed(2));
+	}
+
+	if ($('#formulario_facturacion #taxDescuento').length) {
+		$('#formulario_facturacion #taxDescuento').val(descuento.toFixed(2));
+	}
+
+	if ($('#formulario_facturacion #totalAftertax').length) {
+		$('#formulario_facturacion #totalAftertax').val(total.toFixed(2));
+	}
+
+	if ($('#subTotalFooter').length) {
+		$('#subTotalFooter').val(subtotal.toFixed(2));
+	}
+
+	if ($('#taxAmountFooter').length) {
+		$('#taxAmountFooter').val(isv.toFixed(2));
+	}
+
+	if ($('#taxDescuentoFooter').length) {
+		$('#taxDescuentoFooter').val(descuento.toFixed(2));
+	}
+
+	if ($('#totalAftertaxFooter').length) {
+		$('#totalAftertaxFooter').val(total.toFixed(2));
+	}
+
+	return {
+		subtotal: subtotal,
+		isv: isv,
+		descuento: descuento,
+		total: total,
+		lineas: lineas
+	};
+}
+
+function validarFacturaNormalAntesDeEnviar(){
 	var pacientes_id = $.trim($('#formulario_facturacion #pacientes_id').val() || '');
 	var cliente_nombre = $.trim($('#formulario_facturacion #cliente_nombre').val() || '');
 
-	if (pacientes_id === '' || pacientes_id === '0' || cliente_nombre === '') {
-		e.preventDefault();
+	if (typeof calculateTotal === 'function') {
+		calculateTotal();
+	}
 
+	var resumen = obtenerResumenFacturaNormal();
+
+	if (pacientes_id === '' || pacientes_id === '0' || cliente_nombre === '') {
 		swal({
 			title: "Paciente requerido",
 			text: "Debe seleccionar el paciente antes de registrar la factura.",
@@ -1922,6 +2012,85 @@ $(document).on('submit.validarPacienteFacturaNormal', '#formulario_facturacion',
 			closeOnClickOutside: false
 		});
 
+		return false;
+	}
+
+	if (resumen.lineas <= 0) {
+		swal({
+			title: "Detalle requerido",
+			text: "Debe agregar al menos un producto o servicio antes de registrar la factura.",
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false,
+			closeOnClickOutside: false
+		});
+
+		return false;
+	}
+
+	if (resumen.subtotal <= 0) {
+		swal({
+			title: "Detalle inválido",
+			text: "El subtotal de la factura debe ser mayor a cero.",
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false,
+			closeOnClickOutside: false
+		});
+
+		return false;
+	}
+
+	if (resumen.descuento < 0) {
+		swal({
+			title: "Descuento inválido",
+			text: "El descuento no puede ser negativo.",
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false,
+			closeOnClickOutside: false
+		});
+
+		return false;
+	}
+
+	if (resumen.descuento > (resumen.subtotal + resumen.isv)) {
+		swal({
+			title: "Descuento inválido",
+			text: "El descuento no puede ser mayor al subtotal más ISV.",
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false,
+			closeOnClickOutside: false
+		});
+
+		return false;
+	}
+
+	// IMPORTANTE:
+	// Total L 0.00 SÍ es válido cuando el descuento es del 100%.
+	// Solo se bloquea si queda negativo.
+	if (resumen.total < 0) {
+		swal({
+			title: "Total inválido",
+			text: "El total de la factura no puede ser negativo.",
+			icon: "warning",
+			dangerMode: true,
+			closeOnEsc: false,
+			closeOnClickOutside: false
+		});
+
+		return false;
+	}
+
+	return true;
+}
+
+$(document).off('submit.validarPacienteFacturaNormal', '#formulario_facturacion');
+$(document).on('submit.validarPacienteFacturaNormal', '#formulario_facturacion', function(e){
+	if (!validarFacturaNormalAntesDeEnviar()) {
+		e.preventDefault();
+		e.stopImmediatePropagation();
 		return false;
 	}
 
@@ -2055,6 +2224,41 @@ $(document).on('submit.validarPacienteFacturaGrupal', '#formGrupoFacturacion', f
 
 	return true;
 });
+
+/****************************************************************************************************************************************************************/
+// OVERRIDE VALIDACIÓN AJAX GLOBAL
+// PERMITE FACTURA NORMAL CON TOTAL L 0.00 POR DESCUENTO 100%
+/****************************************************************************************************************************************************************/
+
+var validarFormularioAjaxEspecialOriginalFacturacion = null;
+
+if (typeof validarFormularioAjaxEspecial === 'function') {
+	validarFormularioAjaxEspecialOriginalFacturacion = validarFormularioAjaxEspecial;
+}
+
+function validarFormularioAjaxEspecial(formulario){
+	var $formulario = $(formulario);
+
+	if (!$formulario.length && this) {
+		$formulario = $(this);
+	}
+
+	var formularioID = $formulario.attr('id') || '';
+
+	if (formularioID === 'formulario_facturacion') {
+		return validarFacturaNormalAntesDeEnviar();
+	}
+
+	if (formularioID === 'formGrupoFacturacion') {
+		return validarFacturaGrupalAntesDeEnviar();
+	}
+
+	if (typeof validarFormularioAjaxEspecialOriginalFacturacion === 'function') {
+		return validarFormularioAjaxEspecialOriginalFacturacion.apply(this, arguments);
+	}
+
+	return true;
+}
 
 $(function () {
     getTotalFacturasDisponibles();
