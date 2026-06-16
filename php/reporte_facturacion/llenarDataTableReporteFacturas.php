@@ -1,5 +1,5 @@
 <?php
-//llenarDataTableReporteFacturas.php
+// llenarDataTableReporteFacturas.php
 session_start();
 include '../funtions.php';
 
@@ -8,14 +8,10 @@ header('Content-Type: application/json; charset=UTF-8');
 // CONEXIÓN A DB
 $mysqli = connect_mysqli();
 
-$colaborador_id = $_SESSION['colaborador_id'];
-$type = $_SESSION['type'];
-
-$fechai = isset($_POST['fechai']) ? $_POST['fechai'] : '';
-$fechaf = isset($_POST['fechaf']) ? $_POST['fechaf'] : '';
-$pacientesIDGrupo = isset($_POST['pacientesIDGrupo']) ? $_POST['pacientesIDGrupo'] : '';
-$estado = isset($_POST['estado']) ? $_POST['estado'] : 1;
-$usuario = $_SESSION['colaborador_id'];
+$fechai = isset($_POST['fechai']) ? trim($_POST['fechai']) : '';
+$fechaf = isset($_POST['fechaf']) ? trim($_POST['fechaf']) : '';
+$pacientesIDGrupo = isset($_POST['pacientesIDGrupo']) ? trim($_POST['pacientesIDGrupo']) : '';
+$estado = isset($_POST['estado']) ? trim($_POST['estado']) : '1';
 
 $dato = '';
 
@@ -27,12 +23,35 @@ if (isset($_POST['search']['value']) && trim($_POST['search']['value']) != '') {
     $dato = trim($_POST['search']['value']);
 }
 
-if ($estado == 1) {
+/*
+    ESTADOS DE FACTURA:
+    2 = Pagado / Contado normal
+    3 = Cancelado / Anulado
+    4 = Crédito
+
+    IMPORTANTE:
+    Antes este reporte también filtraba por usuario para ciertos tipos de cuenta.
+    Ese filtro se eliminó porque el reporte debe mostrar lo mismo para todos.
+*/
+
+if ($estado == '' || $estado == 1) {
+    // Normal: pagadas y crédito
     $in = 'IN(2,4)';
-} else if ($estado == 4) {
-    $in = 'IN(4)';
-} else {
+} else if ($estado == 2) {
+    // Solo pagadas / contado
+    $in = 'IN(2)';
+} else if ($estado == 3) {
+    // Solo canceladas
     $in = 'IN(3)';
+} else if ($estado == 4) {
+    // Solo crédito
+    $in = 'IN(4)';
+} else if ($estado == 5) {
+    // Todos los estados visibles en reporte
+    $in = 'IN(2,3,4)';
+} else {
+    // Respaldo seguro
+    $in = 'IN(2,4)';
 }
 
 function obtenerNumeroFacturaBuscado($texto) {
@@ -56,7 +75,6 @@ function obtenerNumeroFacturaBuscado($texto) {
 $busqueda_paciente = '';
 $consulta_fecha = '';
 $consulta_datos = '';
-$consulta_usuario = '';
 
 if ($pacientesIDGrupo != '') {
     $pacientesIDGrupo = $mysqli->real_escape_string($pacientesIDGrupo);
@@ -67,7 +85,9 @@ if ($dato == '') {
     $fechai = $mysqli->real_escape_string($fechai);
     $fechaf = $mysqli->real_escape_string($fechaf);
 
-    $consulta_fecha = "AND f.fecha BETWEEN '$fechai' AND '$fechaf'";
+    if ($fechai != '' && $fechaf != '') {
+        $consulta_fecha = "AND f.fecha BETWEEN '$fechai' AND '$fechaf'";
+    }
 } else {
     $dato_esc = $mysqli->real_escape_string($dato);
     $dato_like = '%' . $dato_esc . '%';
@@ -88,11 +108,6 @@ if ($dato == '') {
             OR CONCAT(sc.prefijo, LPAD(f.number, sc.relleno, '0')) LIKE '$dato_like'
         )
     ";
-}
-
-if (!($type == 1 || $type == 2 || $type == 4)) {
-    $usuario = $mysqli->real_escape_string($usuario);
-    $consulta_usuario = "AND f.usuario = '$usuario'";
 }
 
 /*
@@ -154,6 +169,7 @@ SELECT
     sc.relleno AS 'relleno', 
     f.pacientes_id AS 'pacientes_id', 
     f.cierre AS 'cierre', 
+    f.estado AS 'estado_factura',
     (CASE WHEN f.tipo_factura = 1 THEN 'Contado' ELSE 'Crédito' END) AS 'tipo_documento', 
     f.tipo_factura,
     m.number AS 'muestra',
@@ -166,7 +182,7 @@ SELECT
     CAST(SUM(fd.isv_valor) AS DECIMAL(12,2)) AS 'isv_neto',
     CAST(SUM(fd.precio * fd.cantidad) + SUM(fd.isv_valor) - SUM(fd.descuento) AS DECIMAL(12,2)) AS 'total',
 
-    CAST(SUM(fd.precio) AS DECIMAL(12,2)) AS 'precio',
+    CAST(SUM(fd.precio * fd.cantidad) AS DECIMAL(12,2)) AS 'precio',
 
     (CASE 
         WHEN COUNT(DISTINCT f.facturas_id) > 1 THEN 'Grupal'
@@ -195,7 +211,6 @@ $join_cambio_fecha
 WHERE f.estado $in
 $consulta_fecha
 $busqueda_paciente
-$consulta_usuario
 $consulta_datos
 
 GROUP BY f.secuencia_facturacion_id, f.number
@@ -211,14 +226,14 @@ while ($data = $result->fetch_assoc()) {
     $numero = $data['numero'] == 0 ? 'Aún no se ha generado' : $data['prefijo'] . rellenarDigitos($data['numero'], $data['relleno']);
     $data['factura'] = $numero;
 
-    if ($estado == 1) {
-        $estado_ = 'Borrador';
-    } else if ($estado == 2) {
+    if ($data['estado_factura'] == 2) {
         $estado_ = 'Pagada';
-    } else if ($estado == 3) {
+    } else if ($data['estado_factura'] == 3) {
         $estado_ = 'Cancelada';
-    } else if ($estado == 4) {
+    } else if ($data['estado_factura'] == 4) {
         $estado_ = 'Crédito';
+    } else if ($data['estado_factura'] == 1) {
+        $estado_ = 'Borrador';
     } else {
         $estado_ = '';
     }
