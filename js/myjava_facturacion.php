@@ -5,6 +5,7 @@
 
 var requestPacienteGrupo = null;
 var ultimoTipoPacienteGrupo = null;
+var intervaloFacturasDisponiblesFacturacion = null;
 
 /****************************************************************************************************************************************************************/
 // HELPERS GENERALES FACTURACIÓN
@@ -2067,9 +2068,6 @@ function validarFacturaNormalAntesDeEnviar(){
 		return false;
 	}
 
-	// IMPORTANTE:
-	// Total L 0.00 SÍ es válido cuando el descuento es del 100%.
-	// Solo se bloquea si queda negativo.
 	if (resumen.total < 0) {
 		swal({
 			title: "Total inválido",
@@ -2226,15 +2224,9 @@ $(document).on('submit.validarPacienteFacturaGrupal', '#formGrupoFacturacion', f
 });
 
 /****************************************************************************************************************************************************************/
-// OVERRIDE VALIDACIÓN AJAX GLOBAL
+// OVERRIDE VALIDACIÓN AJAX GLOBAL SIN RECURSIÓN
 // PERMITE FACTURA NORMAL CON TOTAL L 0.00 POR DESCUENTO 100%
 /****************************************************************************************************************************************************************/
-
-var validarFormularioAjaxEspecialOriginalFacturacion = null;
-
-if (typeof validarFormularioAjaxEspecial === 'function') {
-	validarFormularioAjaxEspecialOriginalFacturacion = validarFormularioAjaxEspecial;
-}
 
 function validarFormularioAjaxEspecial(formulario){
 	var $formulario = $(formulario);
@@ -2246,15 +2238,19 @@ function validarFormularioAjaxEspecial(formulario){
 	var formularioID = $formulario.attr('id') || '';
 
 	if (formularioID === 'formulario_facturacion') {
-		return validarFacturaNormalAntesDeEnviar();
+		if (typeof validarFacturaNormalAntesDeEnviar === 'function') {
+			return validarFacturaNormalAntesDeEnviar();
+		}
+
+		return true;
 	}
 
 	if (formularioID === 'formGrupoFacturacion') {
-		return validarFacturaGrupalAntesDeEnviar();
-	}
+		if (typeof validarFacturaGrupalAntesDeEnviar === 'function') {
+			return validarFacturaGrupalAntesDeEnviar();
+		}
 
-	if (typeof validarFormularioAjaxEspecialOriginalFacturacion === 'function') {
-		return validarFormularioAjaxEspecialOriginalFacturacion.apply(this, arguments);
+		return true;
 	}
 
 	return true;
@@ -2262,7 +2258,13 @@ function validarFormularioAjaxEspecial(formulario){
 
 $(function () {
     getTotalFacturasDisponibles();
-    setInterval(getTotalFacturasDisponibles, 60000);
+
+	if (intervaloFacturasDisponiblesFacturacion !== null) {
+		clearInterval(intervaloFacturasDisponiblesFacturacion);
+		intervaloFacturasDisponiblesFacturacion = null;
+	}
+
+    intervaloFacturasDisponiblesFacturacion = setInterval(getTotalFacturasDisponibles, 60000);
 });
 
 $(window).on('load', function(){
