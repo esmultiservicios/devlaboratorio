@@ -23,6 +23,8 @@ $(document).ready(function() {
 		e.preventDefault();
 
 		if (getUsuarioSistema() == 1 || getUsuarioSistema() == 2 || getUsuarioSistema() == 3 || getUsuarioSistema() == 4){
+			var profesional = '';
+
 			if($('#form_main_facturacion_reportes #profesional').val() == "" || $('#form_main_facturacion_reportes #profesional').val() == null){
 				profesional = getColaboradorConsultaID();
 			}else{
@@ -500,6 +502,19 @@ function rfParseJsonSeguro(data) {
 	}
 }
 
+function rfEscapeHtml(value) {
+	if (value === null || value === undefined) {
+		return '';
+	}
+
+	return String(value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
 function rfConstruirOptionsClientes(data) {
 	var html = '<option value="">Cliente</option>';
 
@@ -521,21 +536,6 @@ function rfConstruirOptionsClientes(data) {
 		}
 
 		return limpio;
-	}
-
-	if ($.isArray(data)) {
-		$.each(data, function(i, item) {
-			if (typeof item === 'object') {
-				var id = item.id || item.pacientes_id || item.value || '';
-				var text = item.text || item.nombre || item.paciente || item.label || '';
-
-				if (id !== '' && text !== '') {
-					html += '<option value="' + rfEscapeHtml(id) + '">' + rfEscapeHtml(text) + '</option>';
-				}
-			}
-		});
-
-		return html;
 	}
 
 	if (data.results && $.isArray(data.results)) {
@@ -564,6 +564,21 @@ function rfConstruirOptionsClientes(data) {
 		return html;
 	}
 
+	if ($.isArray(data)) {
+		$.each(data, function(i, item) {
+			if (typeof item === 'object') {
+				var id = item.id || item.pacientes_id || item.value || '';
+				var text = item.text || item.nombre || item.paciente || item.label || '';
+
+				if (id !== '' && text !== '') {
+					html += '<option value="' + rfEscapeHtml(id) + '">' + rfEscapeHtml(text) + '</option>';
+				}
+			}
+		});
+
+		return html;
+	}
+
 	return html;
 }
 
@@ -585,6 +600,11 @@ function getEstado(){
 	    async: true,
         success: function(data){
 		    $estado.html(data);
+
+			if (($estado.val() === null || $estado.val() === '' || typeof $estado.val() === 'undefined') && $estado.find('option[value="1"]').length > 0) {
+				$estado.val('1');
+			}
+
 			rfRefreshSelectpicker($estado);
         },
 		error: function(xhr, status, error){
@@ -635,11 +655,14 @@ function getPacienteGrupo(tipo_paciente){
 
 	$cliente.prop('disabled', true);
 	$cliente.html('<option value="">Cargando clientes...</option>');
+	$cliente.val('');
 	rfRefreshSelectpicker($cliente);
 
 	$.ajax({
 		type: "POST",
 		url: url,
+		dataType: "json",
+		cache: false,
 		data: {
 			tipo_paciente: tipo_paciente
 		},
@@ -677,7 +700,12 @@ $(document)
 		tipo = 1;
 	}
 
-	$('#form_main_facturacion_reportes #pacientesIDGrupo').val('');
+	var $cliente = $('#form_main_facturacion_reportes #pacientesIDGrupo');
+
+	$cliente.val('');
+	$cliente.html('<option value="">Cliente</option>');
+	rfRefreshSelectpicker($cliente);
+
 	getPacienteGrupo(tipo);
 });
 
@@ -1100,19 +1128,6 @@ function initModalCambioFechaFactura() {
 	$("#modalCambioFechaFactura").on('shown.bs.modal', function(){
 		$(this).find('#formCambioFechaFactura #fecha_nueva').focus();
 	});
-}
-
-function rfEscapeHtml(value) {
-	if (value === null || value === undefined) {
-		return '';
-	}
-
-	return String(value)
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;');
 }
 
 function rfToNumber(value) {
@@ -1544,6 +1559,11 @@ var delete_bill_dataTable = function(tbody, table){
 		e.preventDefault();
 
 		var data = table.row($(this).parents("tr")).data();
+
+		if (!data || !data.facturas_id) {
+			showNotify("error", "Error", "No se pudo obtener la factura seleccionada.");
+			return false;
+		}
 		
 		modal_rollback(data.facturas_id, data.pacientes_id);
 
@@ -1765,8 +1785,8 @@ function guardarCambioFechaFactura() {
 function reporteFacturacion() {
     var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
     var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();  
-    var clientes = $('#form_main_facturacion_reportes #clientes').val();
-    var profesional = $('#form_main_facturacion_reportes #profesional').val();
+    var clientes = $('#form_main_facturacion_reportes #pacientesIDGrupo').val() || '';
+    var profesional = $('#form_main_facturacion_reportes #profesional').val() || '';
     var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
 
     var params = {
@@ -1786,8 +1806,8 @@ function reporteFacturacion() {
 function reporteFacturacionExcel() {
     var fechai = $('#form_main_facturacion_reportes #fecha_b').val();
     var fechaf = $('#form_main_facturacion_reportes #fecha_f').val();  
-    var clientes = $('#form_main_facturacion_reportes #clientes').val();
-    var profesional = $('#form_main_facturacion_reportes #profesional').val();
+    var clientes = $('#form_main_facturacion_reportes #pacientesIDGrupo').val() || '';
+    var profesional = $('#form_main_facturacion_reportes #profesional').val() || '';
     var estado = $('#form_main_facturacion_reportes #estado').val() || 1;
 
     var params = {
