@@ -35,7 +35,6 @@ $params[] = $tipo;
 
 if ($dato !== '') {
     $dato_like = '%' . $dato . '%';
-    $dato_inicio = $dato . '%';
 
     $condiciones[] = "(
         p.expediente LIKE ?
@@ -48,15 +47,19 @@ if ($dato !== '') {
         OR p.localidad LIKE ?
         OR CONCAT(p.nombre, ' ', p.apellido) LIKE ?
         OR CONCAT(p.apellido, ' ', p.nombre) LIKE ?
+        OR CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) LIKE ?
+        OR CONCAT(TRIM(p.apellido), ' ', TRIM(p.nombre)) LIKE ?
     )";
 
-    $types .= "ssssssssss";
-    $params[] = $dato_inicio;
-    $params[] = $dato_inicio;
-    $params[] = $dato_inicio;
-    $params[] = $dato_inicio;
-    $params[] = $dato_inicio;
-    $params[] = $dato_inicio;
+    $types .= "ssssssssssss";
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
+    $params[] = $dato_like;
     $params[] = $dato_like;
     $params[] = $dato_like;
     $params[] = $dato_like;
@@ -143,7 +146,7 @@ if ($paginaActual < $nroPaginas) {
 $query = "
     SELECT 
         p.pacientes_id,
-        CONCAT(p.nombre, ' ', p.apellido) AS nombre,
+        CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) AS nombre,
         p.edad,
         p.telefono1 AS telefono,
         p.telefono2 AS telefono1,
@@ -361,12 +364,16 @@ if ($result->num_rows > 0) {
         $pacientes_id = intval($registro2['pacientes_id']);
 
         $identidad = htmlspecialchars($registro2['identidad'], ENT_QUOTES, 'UTF-8');
-        $nombre = htmlspecialchars($registro2['nombre'], ENT_QUOTES, 'UTF-8');
+        $nombre = htmlspecialchars(trim($registro2['nombre']), ENT_QUOTES, 'UTF-8');
         $edad = htmlspecialchars($registro2['edad'], ENT_QUOTES, 'UTF-8');
         $telefono = htmlspecialchars($registro2['telefono'], ENT_QUOTES, 'UTF-8');
         $telefono1 = htmlspecialchars($registro2['telefono1'], ENT_QUOTES, 'UTF-8');
         $correo = htmlspecialchars($registro2['correo'], ENT_QUOTES, 'UTF-8');
         $direccion = htmlspecialchars($registro2['direccion'], ENT_QUOTES, 'UTF-8');
+
+        if ($nombre === '') {
+            $nombre = 'Sin nombre';
+        }
 
         $telefono_html = ($telefono !== '' && $telefono !== '0')
             ? '<span class="telefono-pill"><i class="fas fa-phone-alt"></i> ' . $telefono . '</span>'
