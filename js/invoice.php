@@ -344,9 +344,11 @@ function validarFacturaAntesDeEnviar() {
 
 	var totales = obtenerTotalesFacturaDesdeDetalle();
 
-	// IMPORTANTE:
-	// Se permite total L. 0.00 cuando el descuento cubre el 100%.
-	// Solo se bloquea si el total queda negativo.
+	/*
+		IMPORTANTE:
+		Se permite total 0.00 cuando el descuento es del 100%.
+		Solo se bloquea si el total queda negativo.
+	*/
 	if (totales.total < 0) {
 		errores.push('El total de la factura no puede ser negativo.');
 	}
@@ -380,6 +382,7 @@ function validarFacturaAntesDeEnviar() {
 	IMPORTANTE:
 	Este listener trabaja antes que el submit de .FormularioAjax del main.js.
 	Si algo está mal, detiene el submit y notifica al usuario.
+	No se toca validarFormularioAjaxEspecial para evitar recursión.
 */
 document.addEventListener('submit', function(e) {
 	var formulario = e.target;

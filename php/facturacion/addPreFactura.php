@@ -69,8 +69,8 @@ try {
 
     $total_despues_isv = round(($total_valor + $isv_neto) - $descuentos, 2);
 
-    if ($total_despues_isv <= 0) {
-        throw new Exception("El total de la prefactura debe ser mayor a cero.");
+    if ($total_despues_isv < 0) {
+        throw new Exception("El total de la prefactura no puede ser negativo.");
     }
 
     $mysqli->begin_transaction();
