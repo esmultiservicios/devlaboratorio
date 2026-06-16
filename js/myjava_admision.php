@@ -11,6 +11,7 @@
    - Corregido SweetAlert normal: NO usa showNotify("warning")
    - Corregido Facturar desde muestras: abre factura aunque no venga producto automático
    - Corregido Empresa en modal Registro Clientes: queda vacía, no selecciona la primera empresa
+   - Corregido Producto en modal Registro Clientes: no se oculta, espera Tipo Muestra y luego carga productos
 /****************************************************************************************************************************************************************/
 
 /****************************************************************************************************************************************************************/
@@ -20,6 +21,7 @@
 var catalogosCargados = false;
 var requestPaginationAdmision = null;
 var requestPaginationMuestrasAdmision = null;
+var requestProductosAdmision = null;
 var timerBusquedaAdmision = null;
 var timerBusquedaMuestrasAdmision = null;
 
@@ -253,6 +255,67 @@ function setEstadoMuestrasPendientePorDefecto(){
   if ($estado.hasClass('select2-hidden-accessible')) {
     $estado.trigger('change.select2');
   }
+}
+
+/****************************************************************************************************************************************************************/
+// HELPERS PRODUCTO ADMISION
+/****************************************************************************************************************************************************************/
+
+function getSelectProductoAdmision(){
+  return $('#formulario_admision select[name="producto"], #formulario_admision #producto').first();
+}
+
+function getSelectTipoMuestraAdmision(){
+  return $('#formulario_admision select[name="tipo_muestra"], #formulario_admision #tipo_muestra').first();
+}
+
+function getValorTipoMuestraAdmision(){
+  var $tipo = getSelectTipoMuestraAdmision();
+
+  if (!$tipo.length) {
+    return '';
+  }
+
+  var valor = $tipo.val();
+
+  if (valor === null || typeof valor === 'undefined' || valor === 'undefined') {
+    valor = '';
+  }
+
+  return $.trim(String(valor));
+}
+
+function limpiarProductoAdmision(mensaje){
+  var $p = getSelectProductoAdmision();
+
+  if (!$p.length) return;
+
+  mensaje = mensaje || 'Seleccione Tipo Muestra primero';
+
+  if (requestProductosAdmision !== null) {
+    requestProductosAdmision.abort();
+    requestProductosAdmision = null;
+  }
+
+  if ($p.data('select2')) {
+    $p.select2('destroy');
+  }
+
+  $p.next('.select2').remove();
+  $p.html('<option value="">' + mensaje + '</option>');
+  $p.val('');
+
+  aplicarSelect2($p, {
+    width: '100%',
+    placeholder: 'Producto',
+    allowClear: true,
+    minimumResultsForSearch: 0,
+    dropdownParent: $('#modal_admision_clientes')
+  });
+
+  setTimeout(function(){
+    $p.val('').trigger('change.select2');
+  }, 50);
 }
 
 /****************************************************************************************************************************************************************/
@@ -565,34 +628,88 @@ function getTipoPacienteSelect(){
 
 function getProductos(){
   var url = SERVERURL + 'php/admision/getProductos.php';
-  var tipo_muestra_id = $('#formulario_admision #tipo_muestra').val();
-  var $p = $('#formulario_admision select[name="producto"], #formulario_admision #producto');
+  var tipo_muestra_id = getValorTipoMuestraAdmision();
+  var $p = getSelectProductoAdmision();
 
-  $p.html('<option value="">Cargando...</option>');
+  if (!$p.length) {
+    console.warn('No se encontró el select Producto.');
+    return $.Deferred().resolve().promise();
+  }
+
+  if (tipo_muestra_id === '') {
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    return $.Deferred().resolve().promise();
+  }
+
+  if (requestProductosAdmision !== null) {
+    requestProductosAdmision.abort();
+    requestProductosAdmision = null;
+  }
+
+  if ($p.data('select2')) {
+    $p.select2('destroy');
+  }
+
+  $p.next('.select2').remove();
+  $p.html('<option value="">Cargando productos...</option>');
+  $p.val('');
 
   aplicarSelect2($p, {
     width: '100%',
     placeholder: 'Producto',
+    allowClear: true,
     minimumResultsForSearch: 0,
     dropdownParent: $('#modal_admision_clientes')
   });
 
-  return $.ajax({
+  requestProductosAdmision = $.ajax({
     type: 'POST',
     url: url,
     data: {
       tipo_muestra_id: tipo_muestra_id
     }
   }).done(function(data){
-    $p.html(data);
+    data = $.trim(data || '');
+
+    if ($p.data('select2')) {
+      $p.select2('destroy');
+    }
+
+    $p.next('.select2').remove();
+
+    if (data === '') {
+      $p.html('<option value="">No hay productos para este Tipo Muestra</option>');
+    } else {
+      $p.html(data);
+
+      if ($p.find('option[value=""]').length === 0) {
+        $p.prepend('<option value="">Producto</option>');
+      }
+    }
+
+    $p.val('');
 
     aplicarSelect2($p, {
       width: '100%',
       placeholder: 'Producto',
+      allowClear: true,
       minimumResultsForSearch: 0,
       dropdownParent: $('#modal_admision_clientes')
     });
+
+    setTimeout(function(){
+      $p.val('').trigger('change.select2');
+    }, 50);
+  }).fail(function(xhr, status){
+    if (status === 'abort') return;
+
+    console.error('Error cargando productos:', xhr.responseText);
+    limpiarProductoAdmision('Error al cargar productos');
+  }).always(function(){
+    requestProductosAdmision = null;
   });
+
+  return requestProductosAdmision;
 }
 
 /****************************************************************************************************************************************************************/
@@ -665,6 +782,7 @@ $(document).ready(function(){
 
   $("#modal_admision_clientes").off('shown.bs.modal.admision').on('shown.bs.modal.admision', function(){
     limpiarEmpresaAdmision();
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
     $(this).find('#formulario_admision #name').focus();
   });
 
@@ -1044,10 +1162,18 @@ $(document).on('change.admisionFechaNacimiento', '#formulario_admision #fecha_na
   CalcularEdadClientes();
 });
 
-$(document).off('change.admisionTipoMuestraProducto', '#formulario_admision #tipo_muestra');
-$(document).on('change.admisionTipoMuestraProducto', '#formulario_admision #tipo_muestra', function(){
-  getProductos();
-});
+$(document).off(
+  'change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto',
+  '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]'
+);
+
+$(document).on(
+  'change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto',
+  '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]',
+  function(){
+    getProductos();
+  }
+);
 
 /****************************************************************************************************************************************************************/
 // BOTONES PRINCIPALES
@@ -1111,6 +1237,7 @@ $('#formulario_admision #nuevo_admision').off('click').on('click', function(e){
   }
 
   limpiarEmpresaAdmision();
+  limpiarProductoAdmision('Seleccione Tipo Muestra primero');
 
   $('#formulario_admision #name').focus();
 });
@@ -1133,16 +1260,9 @@ $('#formulario_admision #nuevo_admision_muestra').off('click').on('click', funct
   $('#formulario_admision #diagnostico_clinico').val("");
   $('#formulario_admision #material_enviado').val("");
   $('#formulario_admision #datos_clinicos').val("");
-  $('#formulario_admision #producto').html("");
 
   limpiarEmpresaAdmision();
-
-  aplicarSelect2($('#formulario_admision #producto'), {
-    width: '100%',
-    placeholder: 'Producto',
-    minimumResultsForSearch: 0,
-    dropdownParent: $('#modal_admision_clientes')
-  });
+  limpiarProductoAdmision('Seleccione Tipo Muestra primero');
 });
 
 /****************************************************************************************************************************************************************/
@@ -1798,12 +1918,7 @@ function modalClientes(){
     dropdownParent: $('#modal_admision_clientes')
   });
 
-  aplicarSelect2($('#formulario_admision #producto'), {
-    width: '100%',
-    placeholder: 'Producto',
-    minimumResultsForSearch: 0,
-    dropdownParent: $('#modal_admision_clientes')
-  });
+  limpiarProductoAdmision('Seleccione Tipo Muestra primero');
 
   $('#formulario_admision #cliente_admision').off('change.admisionClienteSelect').on('change.admisionClienteSelect', function(){
     var pacientes_id = $(this).val();
@@ -1830,6 +1945,7 @@ function modalClientes(){
 
   setTimeout(function(){
     limpiarEmpresaAdmision();
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
   }, 200);
 }
 
