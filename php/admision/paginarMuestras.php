@@ -120,17 +120,30 @@ $fechaf_exclusive = date('Y-m-d', strtotime($fechaf . ' +1 day'));
 // =========================================================
 // DETECTAR BÚSQUEDA POR NÚMERO DE MUESTRA
 // =========================================================
+// Si el dato parece número/código de muestra, se busca en histórico,
+// pero SOLO contra m.number para evitar búsquedas lentas en pacientes,
+// teléfonos, diagnósticos, material enviado y datos clínicos.
+// Ejemplos válidos: BX-3253-06-2026, CXC656-06-2026, 27824.
 
 $buscarNumeroMuestraHistorico = false;
-
-if ($dato !== '' && preg_match('/\d/', $dato)) {
-    $buscarNumeroMuestraHistorico = true;
-}
-
 $dato_normalizado_numero = '';
+$dato_para_comparar = '';
 
 if ($dato !== '') {
+    $dato_para_comparar = preg_replace('/\s+/', '', $dato);
     $dato_normalizado_numero = preg_replace('/[^A-Za-z0-9]/', '', $dato);
+
+    if (
+        preg_match('/^[A-Za-z0-9\-\\/]+$/', $dato_para_comparar)
+        && preg_match('/\d/', $dato_para_comparar)
+        && (
+            preg_match('/[\-\\/]/', $dato_para_comparar)
+            || preg_match('/^[A-Za-z]+/', $dato_para_comparar)
+            || preg_match('/^\d{3,}$/', $dato_para_comparar)
+        )
+    ) {
+        $buscarNumeroMuestraHistorico = true;
+    }
 }
 
 // =========================================================
@@ -167,49 +180,45 @@ if ($tipo_muestra !== '' && intval($tipo_muestra) > 0) {
 }
 
 if ($dato !== '') {
-    $dato_like = '%' . $dato . '%';
-    $dato_sin_espacios = '%' . str_replace(' ', '', $dato) . '%';
-    $dato_numero_like = '%' . $dato_normalizado_numero . '%';
+    if ($buscarNumeroMuestraHistorico) {
+        $condiciones[] = "(
+            m.number = ?
+            OR m.number LIKE ?
+            OR REPLACE(REPLACE(REPLACE(m.number, '-', ''), ' ', ''), '/', '') = ?
+        )";
 
-    $condiciones[] = "(
-        m.number LIKE ?
-        OR REPLACE(m.number, ' ', '') LIKE ?
-        OR REPLACE(REPLACE(REPLACE(m.number, '-', ''), ' ', ''), '/', '') LIKE ?
-        OR p.expediente LIKE ?
-        OR p.identidad LIKE ?
-        OR p.telefono1 LIKE ?
-        OR p.telefono2 LIKE ?
-        OR CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) LIKE ?
-        OR CONCAT(TRIM(p.apellido), ' ', TRIM(p.nombre)) LIKE ?
-        OR p.nombre LIKE ?
-        OR p.apellido LIKE ?
-        OR pc.identidad LIKE ?
-        OR CONCAT(TRIM(pc.nombre), ' ', TRIM(pc.apellido)) LIKE ?
-        OR CONCAT(TRIM(pc.apellido), ' ', TRIM(pc.nombre)) LIKE ?
-        OR m.diagnostico_clinico LIKE ?
-        OR m.material_eviando LIKE ?
-        OR m.datos_clinico LIKE ?
-    )";
+        $types .= 'sss';
 
-    $types .= 'sssssssssssssssss';
+        $params[] = $dato_para_comparar;
+        $params[] = $dato_para_comparar . '%';
+        $params[] = $dato_normalizado_numero;
+    } else {
+        $dato_like = '%' . $dato . '%';
 
-    $params[] = $dato_like;
-    $params[] = $dato_sin_espacios;
-    $params[] = $dato_numero_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
+        $condiciones[] = "(
+            m.number LIKE ?
+            OR p.expediente LIKE ?
+            OR p.identidad LIKE ?
+            OR p.telefono1 LIKE ?
+            OR p.telefono2 LIKE ?
+            OR CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) LIKE ?
+            OR CONCAT(TRIM(p.apellido), ' ', TRIM(p.nombre)) LIKE ?
+            OR p.nombre LIKE ?
+            OR p.apellido LIKE ?
+            OR pc.identidad LIKE ?
+            OR CONCAT(TRIM(pc.nombre), ' ', TRIM(pc.apellido)) LIKE ?
+            OR CONCAT(TRIM(pc.apellido), ' ', TRIM(pc.nombre)) LIKE ?
+            OR m.diagnostico_clinico LIKE ?
+            OR m.material_eviando LIKE ?
+            OR m.datos_clinico LIKE ?
+        )";
+
+        $types .= 'sssssssssssssss';
+
+        for ($i = 0; $i < 15; $i++) {
+            $params[] = $dato_like;
+        }
+    }
 }
 
 $where = '';
@@ -230,25 +239,10 @@ $from = "
         ON mh.muestras_id = m.muestras_id
     LEFT JOIN pacientes AS pc
         ON pc.pacientes_id = mh.pacientes_id
-    LEFT JOIN (
-        SELECT
-            fx.muestras_id,
-            MAX(fx.facturas_id) AS facturas_id,
-            MAX(CASE 
-                WHEN TRIM(CAST(fx.number AS CHAR)) <> '' 
-                     AND TRIM(CAST(fx.number AS CHAR)) <> '0'
-                     AND fx.estado IN (2, 4)
-                THEN fx.number
-                ELSE NULL
-            END) AS numero_factura_real,
-            MAX(fx.estado) AS estado_factura
-        FROM facturas AS fx
-        WHERE fx.muestras_id IS NOT NULL
-          AND fx.muestras_id > 0
-          AND fx.estado IN (1, 2, 4)
-        GROUP BY fx.muestras_id
-    ) AS fd
-        ON fd.muestras_id = m.muestras_id
+    LEFT JOIN facturas AS fx
+        ON fx.muestras_id = m.muestras_id
+        AND fx.muestras_id > 0
+        AND fx.estado IN (1, 2, 4)
 ";
 
 // =========================================================
@@ -359,9 +353,39 @@ $query = "
         TRIM(CONCAT(IFNULL(p.nombre, ''), ' ', IFNULL(p.apellido, ''))) AS paciente,
         MIN(pc.pacientes_id) AS pacientes_id_cliente_codigo,
         MIN(TRIM(CONCAT(IFNULL(pc.nombre, ''), ' ', IFNULL(pc.apellido, '')))) AS pacientes_id_cliente,
-        MAX(fd.facturas_id) AS factura_id_relacionada,
-        MAX(fd.numero_factura_real) AS numero_factura_real,
-        MAX(fd.estado_factura) AS estado_factura
+        COALESCE(
+            MAX(CASE 
+                WHEN fx.estado IN (2, 4)
+                     AND TRIM(CAST(fx.number AS CHAR)) <> ''
+                     AND TRIM(CAST(fx.number AS CHAR)) <> '0'
+                THEN fx.facturas_id
+                ELSE NULL
+            END),
+            MAX(CASE
+                WHEN fx.estado = 1 THEN fx.facturas_id
+                ELSE NULL
+            END)
+        ) AS factura_id_relacionada,
+        MAX(CASE 
+            WHEN fx.estado IN (2, 4)
+                 AND TRIM(CAST(fx.number AS CHAR)) <> ''
+                 AND TRIM(CAST(fx.number AS CHAR)) <> '0'
+            THEN fx.number
+            ELSE NULL
+        END) AS numero_factura_real,
+        COALESCE(
+            MAX(CASE 
+                WHEN fx.estado IN (2, 4)
+                     AND TRIM(CAST(fx.number AS CHAR)) <> ''
+                     AND TRIM(CAST(fx.number AS CHAR)) <> '0'
+                THEN fx.estado
+                ELSE NULL
+            END),
+            MAX(CASE
+                WHEN fx.estado = 1 THEN fx.estado
+                ELSE NULL
+            END)
+        ) AS estado_factura
     $from
     $where
     GROUP BY 
@@ -802,4 +826,3 @@ $stmt->close();
 $mysqli->close();
 
 echo json_encode(array($tabla, $lista), JSON_UNESCAPED_UNICODE);
-?>

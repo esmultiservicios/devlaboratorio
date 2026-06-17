@@ -1,5 +1,12 @@
 <?php
-// paginar.php - Admision
+// paginar.php - Admision OPTIMIZADO
+// Mantiene la misma salida JSON: array(tabla, paginacion)
+// Optimización:
+// - Prepared statements
+// - Búsqueda separada por tipo de dato
+// - Evita LIKE masivo innecesario cuando el dato es numérico
+// - Mantiene filtros por estado y tipo_paciente_id
+
 session_start();
 include "../funtions.php";
 
@@ -13,62 +20,18 @@ if ($paginaActual <= 0) {
     $paginaActual = 1;
 }
 
-$dato = isset($_POST['dato']) ? trim($_POST['dato']) : '';
-
-$tipo = (isset($_POST['tipo']) && trim($_POST['tipo']) !== '') ? intval($_POST['tipo']) : 1;
-$estado = (isset($_POST['estado']) && trim($_POST['estado']) !== '') ? intval($_POST['estado']) : 1;
+$dato = isset($_POST['dato']) ? trim((string)$_POST['dato']) : '';
+$tipo = (isset($_POST['tipo']) && trim((string)$_POST['tipo']) !== '') ? intval($_POST['tipo']) : 1;
+$estado = (isset($_POST['estado']) && trim((string)$_POST['estado']) !== '') ? intval($_POST['estado']) : 1;
 
 $nroLotes = 15;
 $limit = ($paginaActual <= 1) ? 0 : $nroLotes * ($paginaActual - 1);
 
-$condiciones = array();
-$types = '';
-$params = array();
+// =========================================================
+// HELPERS
+// =========================================================
 
-$condiciones[] = "p.estado = ?";
-$types .= "i";
-$params[] = $estado;
-
-$condiciones[] = "p.tipo_paciente_id = ?";
-$types .= "i";
-$params[] = $tipo;
-
-if ($dato !== '') {
-    $dato_like = '%' . $dato . '%';
-
-    $condiciones[] = "(
-        p.expediente LIKE ?
-        OR p.nombre LIKE ?
-        OR p.apellido LIKE ?
-        OR p.identidad LIKE ?
-        OR p.telefono1 LIKE ?
-        OR p.telefono2 LIKE ?
-        OR p.email LIKE ?
-        OR p.localidad LIKE ?
-        OR CONCAT(p.nombre, ' ', p.apellido) LIKE ?
-        OR CONCAT(p.apellido, ' ', p.nombre) LIKE ?
-        OR CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) LIKE ?
-        OR CONCAT(TRIM(p.apellido), ' ', TRIM(p.nombre)) LIKE ?
-    )";
-
-    $types .= "ssssssssssss";
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-    $params[] = $dato_like;
-}
-
-$where = " WHERE " . implode(" AND ", $condiciones);
-
-function ejecutarConsultaPreparada($mysqli, $sql, $types = '', $params = array()) {
+function ejecutarConsultaPreparadaAdmision($mysqli, $sql, $types = '', $params = array()) {
     $stmt = $mysqli->prepare($sql);
 
     if (!$stmt) {
@@ -111,14 +74,81 @@ function ejecutarConsultaPreparada($mysqli, $sql, $types = '', $params = array()
     return array($stmt, $result);
 }
 
-/* CONTAR REGISTROS */
+// =========================================================
+// WHERE OPTIMIZADO
+// =========================================================
+
+$condiciones = array();
+$types = '';
+$params = array();
+
+$condiciones[] = "p.estado = ?";
+$types .= 'i';
+$params[] = $estado;
+
+$condiciones[] = "p.tipo_paciente_id = ?";
+$types .= 'i';
+$params[] = $tipo;
+
+if ($dato !== '') {
+    $datoLimpioNumeros = preg_replace('/[^0-9]/', '', $dato);
+    $datoLike = '%' . $dato . '%';
+    $datoPrefix = $dato . '%';
+
+    // Si el dato es numérico o identidad/teléfono/expediente, no se fuerza búsqueda pesada por nombres concatenados.
+    if ($datoLimpioNumeros !== '' && preg_match('/^[0-9\-\s]+$/', $dato)) {
+        $condiciones[] = "(
+            p.expediente = ?
+            OR p.identidad LIKE ?
+            OR p.telefono1 LIKE ?
+            OR p.telefono2 LIKE ?
+        )";
+
+        $types .= 'isss';
+        $params[] = intval($datoLimpioNumeros);
+        $params[] = $datoPrefix;
+        $params[] = $datoPrefix;
+        $params[] = $datoPrefix;
+    } else {
+        // Para nombres/correos/dirección se mantiene búsqueda flexible, pero priorizando prefijos indexables.
+        $condiciones[] = "(
+            p.nombre LIKE ?
+            OR p.apellido LIKE ?
+            OR p.email LIKE ?
+            OR p.localidad LIKE ?
+            OR CONCAT(TRIM(p.nombre), ' ', TRIM(p.apellido)) LIKE ?
+            OR CONCAT(TRIM(p.apellido), ' ', TRIM(p.nombre)) LIKE ?
+            OR p.identidad LIKE ?
+            OR p.telefono1 LIKE ?
+            OR p.telefono2 LIKE ?
+        )";
+
+        $types .= 'sssssssss';
+        $params[] = $datoPrefix;
+        $params[] = $datoPrefix;
+        $params[] = $datoLike;
+        $params[] = $datoLike;
+        $params[] = $datoLike;
+        $params[] = $datoLike;
+        $params[] = $datoPrefix;
+        $params[] = $datoPrefix;
+        $params[] = $datoPrefix;
+    }
+}
+
+$where = " WHERE " . implode(" AND ", $condiciones);
+
+// =========================================================
+// TOTAL DE REGISTROS
+// =========================================================
+
 $query_count = "
     SELECT COUNT(*) AS total
     FROM pacientes AS p
     $where
 ";
 
-$countExec = ejecutarConsultaPreparada($mysqli, $query_count, $types, $params);
+$countExec = ejecutarConsultaPreparadaAdmision($mysqli, $query_count, $types, $params);
 $stmtCount = $countExec[0];
 $resultCount = $countExec[1];
 
@@ -142,7 +172,10 @@ if ($paginaActual < $nroPaginas) {
     $lista .= '<li class="page-item"><a class="page-link" href="javascript:pagination(' . $nroPaginas . ');void(0);">Última</a></li>';
 }
 
-/* CONSULTA PRINCIPAL */
+// =========================================================
+// CONSULTA PRINCIPAL
+// =========================================================
+
 $query = "
     SELECT 
         p.pacientes_id,
@@ -159,12 +192,12 @@ $query = "
     LIMIT ?, ?
 ";
 
-$typesMain = $types . "ii";
+$typesMain = $types . 'ii';
 $paramsMain = $params;
 $paramsMain[] = $limit;
 $paramsMain[] = $nroLotes;
 
-$mainExec = ejecutarConsultaPreparada($mysqli, $query, $typesMain, $paramsMain);
+$mainExec = ejecutarConsultaPreparadaAdmision($mysqli, $query, $typesMain, $paramsMain);
 $stmt = $mainExec[0];
 $result = $mainExec[1];
 
@@ -455,3 +488,4 @@ $stmt->close();
 $mysqli->close();
 
 echo json_encode(array($tabla, $lista), JSON_UNESCAPED_UNICODE);
+?>

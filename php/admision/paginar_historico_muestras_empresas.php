@@ -1,154 +1,236 @@
 <?php
+// paginar_historico_muestras_empresas.php OPTIMIZADO
+// Mantiene la misma salida JSON: array(tabla, paginacion)
+// Optimización:
+// - Prepared statements
+// - Elimina consulta N+1 para buscar paciente empresa
+// - Elimina consulta innecesaria a facturas que no se usaba en la salida
+// - Usa COUNT separado y LIMIT real
+
 session_start();
 include "../funtions.php";
 
-//CONEXION A DB
+header('Content-Type: application/json; charset=UTF-8');
+
 $mysqli = connect_mysqli();
+$mysqli->set_charset("utf8");
 
-$colaborador_id = $_SESSION['colaborador_id'];
-$paginaActual = $_POST['partida'];
-$pacientes_id = $_POST['pacientes_id'];
-$dato = $_POST['dato'];
-
-if($dato == ""){
-	$where = "WHERE m.pacientes_id= '$pacientes_id' AND m.estado NOT IN(2)";
-}else{
-	$where = "WHERE m.pacientes_id= '$pacientes_id' AND m.estado NOT IN(2) AND (m.number LIKE '%$dato%' OR tm.nombre LIKE '%$dato%')";
+$paginaActual = isset($_POST['partida']) ? intval($_POST['partida']) : 1;
+if ($paginaActual <= 0) {
+    $paginaActual = 1;
 }
 
-$query = "SELECT p.pacientes_id AS 'pacientes_id', CONCAT(p.nombre, ' ', p.apellido) AS paciente, m.fecha AS 'fecha', m.diagnostico_clinico AS 'diagnostico_clinico', m.material_eviando As 'material_eviando', m.datos_clinico As 'datos_clinico',
-(CASE WHEN m.estado = '1' THEN 'Atendido' ELSE 'Pendiente' END) AS 'estatus', m.muestras_id  As 'muestras_id', m.mostrar_datos_clinicos As 'mostrar_datos_clinicos', m.number AS 'numero'
-	FROM muestras AS m
-	INNER JOIN pacientes AS p
-	ON m.pacientes_id = p.pacientes_id
-	INNER JOIN tipo_muestra AS tm
-	ON m.tipo_muestra_id = tm.tipo_muestra_id
-	".$where."
-	ORDER BY m.fecha DESC";
-$result = $mysqli->query($query) or die($mysqli->error);
+$pacientes_id = isset($_POST['pacientes_id']) ? intval($_POST['pacientes_id']) : 0;
+$dato = isset($_POST['dato']) ? trim((string)$_POST['dato']) : '';
 
 $nroLotes = 5;
-$nroProductos = $result->num_rows;
-$nroPaginas = ceil($nroProductos/$nroLotes);
+$limit = ($paginaActual <= 1) ? 0 : $nroLotes * ($paginaActual - 1);
+
+function ejecutarConsultaPreparadaHistoricoEmpresas($mysqli, $sql, $types = '', $params = array()) {
+    $stmt = $mysqli->prepare($sql);
+
+    if (!$stmt) {
+        echo json_encode(array(
+            '<div style="color:#C7030D">Error al preparar consulta: ' . htmlspecialchars($mysqli->error, ENT_QUOTES, 'UTF-8') . '</div>',
+            ''
+        ), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($types !== '' && count($params) > 0) {
+        $bindParams = array();
+        $bindParams[] = $types;
+
+        for ($i = 0; $i < count($params); $i++) {
+            $bindParams[] = &$params[$i];
+        }
+
+        call_user_func_array(array($stmt, 'bind_param'), $bindParams);
+    }
+
+    if (!$stmt->execute()) {
+        echo json_encode(array(
+            '<div style="color:#C7030D">Error al ejecutar consulta: ' . htmlspecialchars($stmt->error, ENT_QUOTES, 'UTF-8') . '</div>',
+            ''
+        ), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $result = $stmt->get_result();
+
+    if (!$result) {
+        echo json_encode(array(
+            '<div style="color:#C7030D">Error al obtener resultado: ' . htmlspecialchars($stmt->error, ENT_QUOTES, 'UTF-8') . '</div>',
+            ''
+        ), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    return array($stmt, $result);
+}
+
+$condiciones = array();
+$types = '';
+$params = array();
+
+$condiciones[] = "m.pacientes_id = ?";
+$types .= 'i';
+$params[] = $pacientes_id;
+
+$condiciones[] = "m.estado NOT IN ('2')";
+
+if ($dato !== '') {
+    $datoPrefix = $dato . '%';
+    $datoLike = '%' . $dato . '%';
+
+    $condiciones[] = "(
+        m.number LIKE ?
+        OR tm.nombre LIKE ?
+    )";
+
+    $types .= 'ss';
+    $params[] = $datoPrefix;
+    $params[] = $datoLike;
+}
+
+$where = ' WHERE ' . implode(' AND ', $condiciones);
+
+$from = "
+    FROM muestras AS m
+    INNER JOIN pacientes AS p
+        ON m.pacientes_id = p.pacientes_id
+    INNER JOIN tipo_muestra AS tm
+        ON m.tipo_muestra_id = tm.tipo_muestra_id
+    LEFT JOIN muestras_hospitales AS mh
+        ON mh.muestras_id = m.muestras_id
+    LEFT JOIN pacientes AS pc
+        ON pc.pacientes_id = mh.pacientes_id
+";
+
+$query_count = "
+    SELECT COUNT(DISTINCT m.muestras_id) AS total
+    $from
+    $where
+";
+
+$countExec = ejecutarConsultaPreparadaHistoricoEmpresas($mysqli, $query_count, $types, $params);
+$stmtCount = $countExec[0];
+$resultCount = $countExec[1];
+$rowCount = $resultCount->fetch_assoc();
+$nroProductos = isset($rowCount['total']) ? intval($rowCount['total']) : 0;
+$stmtCount->close();
+
+$nroPaginas = ($nroProductos > 0) ? ceil($nroProductos / $nroLotes) : 1;
+
 $lista = '';
 $tabla = '';
 
-if($paginaActual > 1){
-	$lista = $lista.'<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas('.(1).');void(0);">Inicio</a></li>';
+if ($paginaActual > 1) {
+    $lista .= '<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas(1);void(0);">Inicio</a></li>';
+    $lista .= '<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas(' . ($paginaActual - 1) . ');void(0);">Anterior ' . ($paginaActual - 1) . '</a></li>';
 }
 
-if($paginaActual > 1){
-	$lista = $lista.'<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas('.($paginaActual-1).');void(0);">Anterior '.($paginaActual-1).'</a></li>';
+if ($paginaActual < $nroPaginas) {
+    $lista .= '<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas(' . ($paginaActual + 1) . ');void(0);">Siguiente ' . ($paginaActual + 1) . ' de ' . $nroPaginas . '</a></li>';
 }
 
-if($paginaActual < $nroPaginas){
-	$lista = $lista.'<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas('.($paginaActual+1).');void(0);">Siguiente '.($paginaActual+1).' de '.$nroPaginas.'</a></li>';
+if ($paginaActual > 1 && $nroPaginas > 0) {
+    $lista .= '<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas(' . $nroPaginas . ');void(0);">Ultima</a></li>';
 }
 
-if($paginaActual > 1){
-	$lista = $lista.'<li class="page-item"><a class="page-link" href="javascript:historiaMuestrasEmpresas('.($nroPaginas).');void(0);">Ultima</a></li>';
+$query = "
+    SELECT
+        p.pacientes_id AS pacientes_id,
+        CONCAT(p.nombre, ' ', p.apellido) AS paciente,
+        m.fecha AS fecha,
+        m.diagnostico_clinico AS diagnostico_clinico,
+        m.material_eviando AS material_eviando,
+        m.datos_clinico AS datos_clinico,
+        CASE WHEN m.estado = '1' THEN 'Atendido' ELSE 'Pendiente' END AS estatus,
+        m.muestras_id AS muestras_id,
+        m.mostrar_datos_clinicos AS mostrar_datos_clinicos,
+        m.number AS numero,
+        MIN(pc.pacientes_id) AS pacientes_id_cliente_codigo,
+        MIN(CONCAT(pc.nombre, ' ', pc.apellido)) AS pacientes_id_cliente
+    $from
+    $where
+    GROUP BY
+        p.pacientes_id,
+        p.nombre,
+        p.apellido,
+        m.fecha,
+        m.diagnostico_clinico,
+        m.material_eviando,
+        m.datos_clinico,
+        m.estado,
+        m.muestras_id,
+        m.mostrar_datos_clinicos,
+        m.number
+    ORDER BY m.fecha DESC, m.muestras_id DESC
+    LIMIT ?, ?
+";
+
+$typesMain = $types . 'ii';
+$paramsMain = $params;
+$paramsMain[] = $limit;
+$paramsMain[] = $nroLotes;
+
+$mainExec = ejecutarConsultaPreparadaHistoricoEmpresas($mysqli, $query, $typesMain, $paramsMain);
+$stmt = $mainExec[0];
+$result = $mainExec[1];
+
+$tabla .= '<table class="table table-striped table-condensed table-hover">
+            <tr>
+            <th width="1.3%">No.</th>
+            <th width="10.3%">Fecha</th>
+            <th width="15.3%">Número</th>
+            <th width="24.3%">Paciente</th>
+            <th width="16.3%">Diagnostico Clínico</th>
+            <th width="16.3%">Material Enviado</th>
+            <th width="16.3%">Datos Clínicos</th>
+            </tr>';
+
+$i = $limit + 1;
+
+if ($result->num_rows > 0) {
+    while ($registro2 = $result->fetch_assoc()) {
+        $paciente = htmlspecialchars($registro2['paciente'], ENT_QUOTES, 'UTF-8');
+        $pacientes_id_cliente = isset($registro2['pacientes_id_cliente']) ? trim((string)$registro2['pacientes_id_cliente']) : '';
+
+        if ($pacientes_id_cliente === '') {
+            $empresa = $paciente;
+        } else {
+            $empresa = $paciente . ' (<b>Paciente:</b> ' . htmlspecialchars($pacientes_id_cliente, ENT_QUOTES, 'UTF-8') . ')';
+        }
+
+        $tabla .= '<tr>
+            <td>' . $i . '</td>
+            <td>' . htmlspecialchars($registro2['fecha'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($registro2['numero'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . $empresa . '</td>
+            <td>' . htmlspecialchars($registro2['diagnostico_clinico'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($registro2['material_eviando'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($registro2['datos_clinico'], ENT_QUOTES, 'UTF-8') . '</td>
+            </tr>';
+
+        $i++;
+    }
 }
 
-if($paginaActual <= 1){
-	$limit = 0;
-}else{
-	$limit = $nroLotes*($paginaActual-1);
-}
-
-$registro = "SELECT p.pacientes_id AS 'pacientes_id', CONCAT(p.nombre, ' ', p.apellido) As paciente, m.fecha AS 'fecha', m.diagnostico_clinico AS 'diagnostico_clinico', m.material_eviando As 'material_eviando', m.datos_clinico As 'datos_clinico',
-(CASE WHEN m.estado = '1' THEN 'Atendido' ELSE 'Pendiente' END) AS 'estatus', m.muestras_id  As 'muestras_id', m.mostrar_datos_clinicos As 'mostrar_datos_clinicos', m.number AS 'numero'
-	FROM muestras AS m
-	INNER JOIN pacientes AS p
-	ON m.pacientes_id = p.pacientes_id
-	INNER JOIN tipo_muestra AS tm
-	ON m.tipo_muestra_id = tm.tipo_muestra_id
-	".$where."
-	ORDER BY m.fecha DESC
-	LIMIT $limit, $nroLotes";
-$result = $mysqli->query($registro) or die($mysqli->error);
-
-
-$tabla = $tabla.'<table class="table table-striped table-condensed table-hover">
-			<tr>
-			<th width="1.3%">No.</th>
-			<th width="10.3%">Fecha</th>
-			<th width="15.3%">Número</th>
-			<th width="24.3%">Paciente</th>
-			<th width="16.3%">Diagnostico Clínico</th>
-			<th width="16.3%">Material Enviado</th>
-			<th width="16.3%">Datos Clínicos</th>
-			</tr>';
-$i = 1;
-while($registro2 = $result->fetch_assoc()){
-	$muestras_id = $registro2['muestras_id'];
-	//CONSULTAR EL PACIENTE SI ES ENVIADO POR UNA EMPRESA O CLINICA
-	$query_paciente = "SELECT p.pacientes_id, CONCAT(p.nombre, ' ', p.apellido) As 'paciente'
-		FROM muestras_hospitales AS mh
-		INNER JOIN pacientes AS p
-		ON mh.pacientes_id = p.pacientes_id
-		WHERE mh.muestras_id = '$muestras_id'";
-	$result_paciente = $mysqli->query($query_paciente) or die($mysqli->error);
-
-	$pacientes_id_cliente_codigo = "";
-	$pacientes_id_cliente = "";
-
-	if($result_paciente->num_rows>0){
-		$valores_paciente = $result_paciente->fetch_assoc();
-		$pacientes_id_cliente_codigo = $valores_paciente['pacientes_id'];
-		$pacientes_id_cliente = $valores_paciente['paciente'];
-	}
-
-	$empresa = "";
-
-	if($pacientes_id_cliente == ""){
-		$empresa = $registro2['paciente'];
-	}else{
-		$empresa = $registro2['paciente']." (<b>Paciente:</b> ".$pacientes_id_cliente.")";
-	}
-
-	//CONSULTAMOS SI LA MUESTRA ESTA EN LA Factura
-	$consulta_muestra_fact = "SELECT muestras_id
-		FROM facturas
-		WHERE muestras_id = '$muestras_id'";
-	$result_muestra_fact = $mysqli->query($consulta_muestra_fact) or die($mysqli->error);
-
-	$factura_muestra = "";
-	$title_factura = "";
-
-	if($result_muestra_fact->num_rows>0){
-		$factura_muestra = "Generada";
-		$title_factura = "Esta factura ya ha sido generada, verifique en el módulo de facturación para emitir el pago";
-	}
-
-	$tabla = $tabla.'<tr>
-			<td>'.$i.'</td>
-			<td>'.$registro2['fecha'].'</td>
-			<td>'.$registro2['numero'].'</td>
-			<td>'.$empresa.'</td>
-			<td>'.$registro2['diagnostico_clinico'].'</td>
-			<td>'.$registro2['material_eviando'].'</td>
-            <td>'.$registro2['datos_clinico'].'</td>
-			</tr>';
-			$i++;
-}
-
-if($nroProductos == 0){
-	$tabla = $tabla.'<tr>
-	   <td colspan="12" style="color:#C7030D">No se encontraron resultados</td>
-	</tr>';
-}else{
-   $tabla = $tabla.'<tr>
-	  <td colspan="12"><b><p ALIGN="center">Total de Registros Encontrados: '.$nroProductos.'</p></b>
+if ($nroProductos == 0) {
+    $tabla .= '<tr>
+       <td colspan="12" style="color:#C7030D">No se encontraron resultados</td>
+    </tr>';
+} else {
+    $tabla .= '<tr>
+      <td colspan="12"><b><p ALIGN="center">Total de Registros Encontrados: ' . number_format($nroProductos) . '</p></b>
    </tr>';
 }
 
-$tabla = $tabla.'</table>';
+$tabla .= '</table>';
 
-$array = array(0 => $tabla,
-			   1 => $lista);
+$stmt->close();
+$mysqli->close();
 
-echo json_encode($array);
-
-$result->free();//LIMPIAR RESULTADO
-$mysqli->close();//CERRAR CONEXIÓN
+echo json_encode(array($tabla, $lista), JSON_UNESCAPED_UNICODE);
 ?>
