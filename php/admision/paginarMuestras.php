@@ -8,8 +8,12 @@
 // - Si se escribe número de muestra: busca en todo el histórico por número.
 // - Si cliente o tipo_muestra vienen en 0, se toman como "sin filtro".
 // - Identifica si la muestra no tiene factura, tiene borrador pendiente o factura emitida.
-// - Si la factura existe pero number = 0/vacío, se muestra como "Borrador pendiente".
-// - Si la factura existe con número real, se muestra como "Factura emitida".
+// - Facturas anuladas/canceladas NO bloquean la muestra.
+// - Estado factura:
+//   1 = Borrador / pendiente de pago
+//   2 = Pagada / emitida
+//   3 = Anulada / cancelada
+//   4 = Crédito / emitida
 
 session_start();
 include "../funtions.php";
@@ -233,6 +237,7 @@ $from = "
             MAX(CASE 
                 WHEN TRIM(CAST(fx.number AS CHAR)) <> '' 
                      AND TRIM(CAST(fx.number AS CHAR)) <> '0'
+                     AND fx.estado IN (2, 4)
                 THEN fx.number
                 ELSE NULL
             END) AS numero_factura_real,
@@ -240,6 +245,7 @@ $from = "
         FROM facturas AS fx
         WHERE fx.muestras_id IS NOT NULL
           AND fx.muestras_id > 0
+          AND fx.estado IN (1, 2, 4)
         GROUP BY fx.muestras_id
     ) AS fd
         ON fd.muestras_id = m.muestras_id
@@ -654,7 +660,7 @@ if ($result->num_rows > 0) {
             </span>
         ';
 
-        if ($factura_id_relacionada > 0 && $numero_factura_real_raw !== '' && $numero_factura_real_raw !== '0') {
+        if ($factura_id_relacionada > 0 && ($estado_factura === '2' || $estado_factura === '4') && $numero_factura_real_raw !== '' && $numero_factura_real_raw !== '0') {
             $numero_html .= '
                 <span class="muestra-status-badge muestra-status-emitida">
                     <i class="fas fa-check-circle"></i> Factura emitida
@@ -663,7 +669,7 @@ if ($result->num_rows > 0) {
                     Factura: ' . $numero_factura_real . '
                 </span>
             ';
-        } else if ($factura_id_relacionada > 0) {
+        } else if ($factura_id_relacionada > 0 && $estado_factura === '1') {
             $numero_html .= '
                 <span class="muestra-status-badge muestra-status-borrador">
                     <i class="fas fa-clock"></i> Borrador pendiente
@@ -714,7 +720,7 @@ if ($result->num_rows > 0) {
             ? '<div class="muestra-texto">' . $datos_clinico . '</div>'
             : '<span class="muestra-empty">Sin datos</span>';
 
-        if ($factura_id_relacionada > 0 && $numero_factura_real_raw !== '' && $numero_factura_real_raw !== '0') {
+        if ($factura_id_relacionada > 0 && ($estado_factura === '2' || $estado_factura === '4') && $numero_factura_real_raw !== '' && $numero_factura_real_raw !== '0') {
             $acciones_html = '
                 <a class="dropdown-item" href="javascript:printBill(' . $factura_id_relacionada . ');void(0);">
                     <i class="fas fa-file-invoice-dollar text-success mr-2"></i> Ver factura
@@ -723,7 +729,7 @@ if ($result->num_rows > 0) {
                     <i class="fas fa-check-circle text-success mr-2"></i> Completada
                 </a>
             ';
-        } else if ($factura_id_relacionada > 0) {
+        } else if ($factura_id_relacionada > 0 && $estado_factura === '1') {
             $acciones_html = '
                 <a class="dropdown-item" href="javascript:pago(' . $factura_id_relacionada . ');void(0);">
                     <i class="fas fa-cash-register text-warning mr-2"></i> Completar pago
@@ -796,3 +802,4 @@ $stmt->close();
 $mysqli->close();
 
 echo json_encode(array($tabla, $lista), JSON_UNESCAPED_UNICODE);
+?>
