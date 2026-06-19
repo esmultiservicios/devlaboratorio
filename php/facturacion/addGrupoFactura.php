@@ -612,8 +612,12 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         }
 
         // Obtener total real desde facturas_detalle.
+        // IMPORTANTE:
+        // En factura individual el campo precio ya representa el importe/subtotal calculado de la línea.
+        // Por eso aquí NO se debe hacer cantidad * precio, porque en factura grupal eso vuelve a multiplicar
+        // un subtotal que ya venía calculado y genera montos inflados.
         $sql_sum = "SELECT
-                        ROUND(COALESCE(SUM(cantidad * precio), 0), 2) AS importe_sum,
+                        ROUND(COALESCE(SUM(precio), 0), 2) AS importe_sum,
                         ROUND(COALESCE(SUM(isv_valor), 0), 2) AS isv_sum,
                         ROUND(COALESCE(SUM(descuento), 0), 2) AS desc_sum,
                         COUNT(*) AS cantidad_lineas
@@ -651,10 +655,6 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         if ($lineaTotal < 0) {
             throw new Exception("La factura individual ID " . $facturas_id . " tiene total negativo o inválido.");
         }
-
-        // El total confiable siempre sale del detalle.
-        // Si el encabezado individual quedó con importe viejo, se corrige al procesar la factura grupal.
-        $importeEncabezadoIndividual = round((float)$rowFactura['importe'], 2);
 
         $detalles[] = array(
             'facturas_id' => $facturas_id,

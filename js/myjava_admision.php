@@ -1,6 +1,6 @@
 <script>
 /****************************************************************************************************************************************************************/
-/* ADMISION - JS COMPLETO ORDENADO
+/* ADMISION - JS COMPLETO CORREGIDO
    - Select2 optimizado
    - Sin async:false
    - Sin eval
@@ -11,7 +11,7 @@
    - Corregido SweetAlert normal: NO usa showNotify("warning")
    - Corregido Facturar desde muestras: abre factura aunque no venga producto automático
    - Corregido Empresa en modal Registro Clientes: queda vacía, no selecciona la primera empresa
-   - Corregido Producto en modal Registro Clientes: no se oculta, espera Tipo Muestra y luego carga productos
+   - CORREGIDO: Producto en modal Registro Clientes ahora se pinta correctamente al cargar
 /****************************************************************************************************************************************************************/
 
 /****************************************************************************************************************************************************************/
@@ -33,7 +33,6 @@ function valorAjax(response){
   if ($.isArray(response)) {
     return response[0];
   }
-
   return response;
 }
 
@@ -41,7 +40,6 @@ function parseJsonSeguro(data){
   if (typeof data === 'object') {
     return data;
   }
-
   try {
     return JSON.parse(data);
   } catch(e) {
@@ -51,7 +49,6 @@ function parseJsonSeguro(data){
 
 function respuestaVaciaFactura(resp){
   resp = $.trim(String(valorAjax(resp) || ''));
-
   return (
     resp === '' ||
     resp === '0' ||
@@ -65,7 +62,6 @@ function normalizarValor(valor, defecto){
   if (valor === null || typeof valor === 'undefined' || valor === 'undefined') {
     return defecto;
   }
-
   return valor;
 }
 
@@ -86,7 +82,6 @@ function mostrarErrorSimple(titulo, mensaje){
     showNotify("error", titulo, mensaje);
     return;
   }
-
   if (typeof swal === 'function') {
     swal({
       title: titulo,
@@ -98,7 +93,6 @@ function mostrarErrorSimple(titulo, mensaje){
     });
     return;
   }
-
   alert(titulo + "\n" + mensaje);
 }
 
@@ -113,7 +107,6 @@ function mostrarInfoSimple(titulo, mensaje){
     });
     return;
   }
-
   alert(titulo + "\n" + mensaje);
 }
 
@@ -133,7 +126,6 @@ function aplicarSelect2($select, opciones){
 
   $select.each(function(){
     var $s = $(this);
-
     if (!$s.length) return;
 
     var valorActual = $s.val();
@@ -141,7 +133,6 @@ function aplicarSelect2($select, opciones){
     if ($s.data('select2')) {
       $s.select2('destroy');
     }
-
     $s.next('.select2').remove();
 
     var config = $.extend({
@@ -161,13 +152,11 @@ function aplicarSelect2($select, opciones){
 
 function prepararSelectVacio($select, texto){
   if (!$select || !$select.length) return;
-
   texto = texto || 'Sin selección';
 
   if ($select.find('option[value=""]').length === 0) {
     $select.prepend('<option value="">' + texto + '</option>');
   }
-
   $select.val('');
 
   if ($select.hasClass('select2-hidden-accessible')) {
@@ -179,11 +168,9 @@ function prepararSelectVacio($select, texto){
 
 function limpiarEmpresaAdmision(){
   var $empresa = $('#formulario_admision select[name="empresa"], #formulario_admision #empresa');
-
   if (!$empresa.length) return;
 
   prepararSelectVacio($empresa, 'Sin selección');
-
   aplicarSelect2($empresa, {
     width: '100%',
     placeholder: 'Sin selección',
@@ -191,7 +178,6 @@ function limpiarEmpresaAdmision(){
     minimumResultsForSearch: 0,
     dropdownParent: $('#modal_admision_clientes')
   });
-
   $empresa.val(null).trigger('change');
 }
 
@@ -227,7 +213,6 @@ function aplicarSelect2VistaPrincipal(){
   });
 
   var $cliente = $('#form_main_admision_muestras select[name="cliente"]');
-
   if ($cliente.length && $cliente.find('option').length > 0) {
     aplicarSelect2($cliente, {
       width: '250px',
@@ -239,11 +224,9 @@ function aplicarSelect2VistaPrincipal(){
 
 function setEstadoMuestrasPendientePorDefecto(){
   var $estado = $('#form_main_admision_muestras select[name="estado"]');
-
   if (!$estado.length) return;
 
   var valorActual = $estado.val();
-
   if (valorActual === null || valorActual === '' || typeof valorActual === 'undefined') {
     if ($estado.find('option[value="0"]').length > 0) {
       $estado.val('0');
@@ -258,7 +241,7 @@ function setEstadoMuestrasPendientePorDefecto(){
 }
 
 /****************************************************************************************************************************************************************/
-// HELPERS PRODUCTO ADMISION
+// HELPERS PRODUCTO ADMISION - CORREGIDO
 /****************************************************************************************************************************************************************/
 
 function getSelectProductoAdmision(){
@@ -271,23 +254,16 @@ function getSelectTipoMuestraAdmision(){
 
 function getValorTipoMuestraAdmision(){
   var $tipo = getSelectTipoMuestraAdmision();
-
-  if (!$tipo.length) {
-    return '';
-  }
-
+  if (!$tipo.length) return '';
   var valor = $tipo.val();
-
   if (valor === null || typeof valor === 'undefined' || valor === 'undefined') {
     valor = '';
   }
-
   return $.trim(String(valor));
 }
 
 function limpiarProductoAdmision(mensaje){
   var $p = getSelectProductoAdmision();
-
   if (!$p.length) return;
 
   mensaje = mensaje || 'Seleccione Tipo Muestra primero';
@@ -297,17 +273,20 @@ function limpiarProductoAdmision(mensaje){
     requestProductosAdmision = null;
   }
 
+  // Destruir select2 existente
   if ($p.data('select2')) {
     $p.select2('destroy');
   }
-
   $p.next('.select2').remove();
+
+  // Limpiar opciones
   $p.html('<option value="">' + mensaje + '</option>');
   $p.val('');
 
+  // Re-inicializar select2
   aplicarSelect2($p, {
     width: '100%',
-    placeholder: 'Producto',
+    placeholder: mensaje,
     allowClear: true,
     minimumResultsForSearch: 0,
     dropdownParent: $('#modal_admision_clientes')
@@ -318,6 +297,104 @@ function limpiarProductoAdmision(mensaje){
   }, 50);
 }
 
+// NUEVA FUNCIÓN: Carga productos correctamente
+function cargarProductosPorTipoMuestra(tipo_muestra_id, callback){
+  var $p = getSelectProductoAdmision();
+  if (!$p.length) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
+  // Si no hay tipo_muestra, limpiar y salir
+  if (!tipo_muestra_id || tipo_muestra_id === '') {
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
+  // Cancelar petición anterior
+  if (requestProductosAdmision !== null) {
+    requestProductosAdmision.abort();
+    requestProductosAdmision = null;
+  }
+
+  // Destruir select2 existente
+  if ($p.data('select2')) {
+    $p.select2('destroy');
+  }
+  $p.next('.select2').remove();
+
+  // Mostrar carga
+  $p.html('<option value="">Cargando productos...</option>');
+  $p.val('');
+
+  // Aplicar select2
+  aplicarSelect2($p, {
+    width: '100%',
+    placeholder: 'Cargando productos...',
+    allowClear: true,
+    minimumResultsForSearch: 0,
+    dropdownParent: $('#modal_admision_clientes')
+  });
+
+  // Hacer petición AJAX
+  var url = SERVERURL + 'php/admision/getProductos.php';
+  requestProductosAdmision = $.ajax({
+    type: 'POST',
+    url: url,
+    data: { tipo_muestra_id: tipo_muestra_id }
+  }).done(function(data){
+    data = $.trim(data || '');
+
+    // Destruir select2
+    if ($p.data('select2')) {
+      $p.select2('destroy');
+    }
+    $p.next('.select2').remove();
+
+    // Cargar opciones
+    if (data === '') {
+      $p.html('<option value="">No hay productos para este Tipo Muestra</option>');
+    } else {
+      $p.html(data);
+      if ($p.find('option[value=""]').length === 0) {
+        $p.prepend('<option value="">Seleccione un producto</option>');
+      }
+    }
+    $p.val('');
+
+    // Re-inicializar select2
+    aplicarSelect2($p, {
+      width: '100%',
+      placeholder: 'Producto',
+      allowClear: true,
+      minimumResultsForSearch: 0,
+      dropdownParent: $('#modal_admision_clientes')
+    });
+
+    setTimeout(function(){
+      $p.val('').trigger('change.select2');
+    }, 50);
+
+    if (typeof callback === 'function') callback();
+  }).fail(function(xhr, status){
+    if (status === 'abort') return;
+    console.error('Error cargando productos:', xhr.responseText);
+    limpiarProductoAdmision('Error al cargar productos');
+    if (typeof callback === 'function') callback();
+  }).always(function(){
+    requestProductosAdmision = null;
+  });
+
+  return requestProductosAdmision;
+}
+
+// Función para recargar productos (wrapper)
+function getProductos(){
+  var tipo_muestra_id = getValorTipoMuestraAdmision();
+  return cargarProductosPorTipoMuestra(tipo_muestra_id);
+}
+
 /****************************************************************************************************************************************************************/
 // SI ALGÚN SELECT PRINCIPAL QUEDA NATIVO, LO MONTA AL CLIC
 /****************************************************************************************************************************************************************/
@@ -325,43 +402,20 @@ function limpiarProductoAdmision(mensaje){
 $(document).off('mousedown.admisionSelect2Principal', '#form_main_admision select, #form_main_admision_muestras select');
 $(document).on('mousedown.admisionSelect2Principal', '#form_main_admision select, #form_main_admision_muestras select', function(e){
   var $s = $(this);
-
   if (!$.fn.select2) return;
-
   if (!$s.hasClass('select2-hidden-accessible')) {
     e.preventDefault();
-
     if ($s.attr('name') === 'estado') {
-      aplicarSelect2($s, {
-        width: '130px',
-        placeholder: 'Estado',
-        minimumResultsForSearch: 0
-      });
+      aplicarSelect2($s, { width: '130px', placeholder: 'Estado', minimumResultsForSearch: 0 });
     } else if ($s.attr('name') === 'tipo') {
-      aplicarSelect2($s, {
-        width: '130px',
-        placeholder: 'Tipo',
-        minimumResultsForSearch: 0
-      });
+      aplicarSelect2($s, { width: '130px', placeholder: 'Tipo', minimumResultsForSearch: 0 });
     } else if ($s.attr('name') === 'tipo_muestra') {
-      aplicarSelect2($s, {
-        width: '180px',
-        placeholder: 'Tipo Muestra',
-        minimumResultsForSearch: 0
-      });
+      aplicarSelect2($s, { width: '180px', placeholder: 'Tipo Muestra', minimumResultsForSearch: 0 });
     } else if ($s.attr('name') === 'cliente') {
-      aplicarSelect2($s, {
-        width: '250px',
-        placeholder: 'Cliente',
-        minimumResultsForSearch: 0
-      });
+      aplicarSelect2($s, { width: '250px', placeholder: 'Cliente', minimumResultsForSearch: 0 });
     } else {
-      aplicarSelect2($s, {
-        width: '100%',
-        minimumResultsForSearch: 0
-      });
+      aplicarSelect2($s, { width: '100%', minimumResultsForSearch: 0 });
     }
-
     setTimeout(function(){
       $s.select2('open');
     }, 50);
@@ -382,40 +436,32 @@ $(document).on('select2:open.admisionFocusSelect2', function(){
 
 function getEstadoMuestra(){
   var url = SERVERURL + 'php/admision/getStatusMuestra.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#form_main_admision_muestras select[name="estado"]');
-
     $s.html(data);
-
     if ($s.find('option[value="0"]').length > 0) {
       $s.val('0');
     }
-
     aplicarSelect2($s, {
       width: '130px',
       placeholder: 'Estado',
       minimumResultsForSearch: 0
     });
-
     setEstadoMuestrasPendientePorDefecto();
   });
 }
 
 function getEstadoPaciente(){
   var url = SERVERURL + 'php/admision/getStatusPaciente.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#form_main_admision select[name="estado"]');
-
     $s.html(data);
-
     aplicarSelect2($s, {
       width: '130px',
       placeholder: 'Estado',
@@ -426,7 +472,6 @@ function getEstadoPaciente(){
 
 function getTipoMuestra(){
   var url = SERVERURL + 'php/admision/getTipoMuestra.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -449,12 +494,19 @@ function getTipoMuestra(){
       placeholder: 'Tipo Muestra',
       minimumResultsForSearch: 0
     });
+
+    // Una vez cargado el tipo_muestra, verificar si hay valor y cargar productos
+    var valorTipo = $a.val();
+    if (valorTipo && valorTipo !== '') {
+      cargarProductosPorTipoMuestra(valorTipo);
+    } else {
+      limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    }
   });
 }
 
 function getGenero(){
   var url = SERVERURL + 'php/admision/getSexo.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -483,21 +535,16 @@ function getGenero(){
 
 function getEmpresa(){
   var url = SERVERURL + 'php/admision/getEmpresa.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#formulario_admision select[name="empresa"], #formulario_admision #empresa');
-
     $s.html(data);
-
     if ($s.find('option[value=""]').length === 0) {
       $s.prepend('<option value="">Sin selección</option>');
     }
-
     $s.val('');
-
     aplicarSelect2($s, {
       width: '100%',
       placeholder: 'Sin selección',
@@ -505,22 +552,18 @@ function getEmpresa(){
       minimumResultsForSearch: 0,
       dropdownParent: $('#modal_admision_clientes')
     });
-
     $s.val(null).trigger('change');
   });
 }
 
 function getTipo(){
   var url = SERVERURL + 'php/admision/getTipoPaciente.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#formulario_admision select[name="paciente_tipo"], #formulario_admision #paciente_tipo');
-
     $s.html(data);
-
     aplicarSelect2($s, {
       width: '100%',
       placeholder: 'Tipo',
@@ -532,15 +575,12 @@ function getTipo(){
 
 function getRemitente(){
   var url = SERVERURL + 'php/admision/getRemitente.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#formulario_admision select[name="remitente"], #formulario_admision #remitente');
-
     $s.html(data);
-
     aplicarSelect2($s, {
       width: '100%',
       placeholder: 'Remitente',
@@ -552,7 +592,6 @@ function getRemitente(){
 
 function getHospitales(){
   var url = SERVERURL + 'php/admision/getHospitales.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -581,15 +620,12 @@ function getHospitales(){
 
 function getCategorias(){
   var url = SERVERURL + 'php/admision/getCategoriaMuestra.php';
-
   return $.ajax({
     type: 'POST',
     url: url
   }).done(function(data){
     var $s = $('#formulario_admision select[name="categoria"], #formulario_admision #categoria');
-
     $s.html(data);
-
     aplicarSelect2($s, {
       width: '100%',
       placeholder: 'Categoría',
@@ -601,7 +637,6 @@ function getCategorias(){
 
 function getTipoPacienteSelect(){
   var url = SERVERURL + 'php/admision/getTipoPaciente.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -624,92 +659,6 @@ function getTipoPacienteSelect(){
       minimumResultsForSearch: 0
     });
   });
-}
-
-function getProductos(){
-  var url = SERVERURL + 'php/admision/getProductos.php';
-  var tipo_muestra_id = getValorTipoMuestraAdmision();
-  var $p = getSelectProductoAdmision();
-
-  if (!$p.length) {
-    console.warn('No se encontró el select Producto.');
-    return $.Deferred().resolve().promise();
-  }
-
-  if (tipo_muestra_id === '') {
-    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
-    return $.Deferred().resolve().promise();
-  }
-
-  if (requestProductosAdmision !== null) {
-    requestProductosAdmision.abort();
-    requestProductosAdmision = null;
-  }
-
-  if ($p.data('select2')) {
-    $p.select2('destroy');
-  }
-
-  $p.next('.select2').remove();
-  $p.html('<option value="">Cargando productos...</option>');
-  $p.val('');
-
-  aplicarSelect2($p, {
-    width: '100%',
-    placeholder: 'Producto',
-    allowClear: true,
-    minimumResultsForSearch: 0,
-    dropdownParent: $('#modal_admision_clientes')
-  });
-
-  requestProductosAdmision = $.ajax({
-    type: 'POST',
-    url: url,
-    data: {
-      tipo_muestra_id: tipo_muestra_id
-    }
-  }).done(function(data){
-    data = $.trim(data || '');
-
-    if ($p.data('select2')) {
-      $p.select2('destroy');
-    }
-
-    $p.next('.select2').remove();
-
-    if (data === '') {
-      $p.html('<option value="">No hay productos para este Tipo Muestra</option>');
-    } else {
-      $p.html(data);
-
-      if ($p.find('option[value=""]').length === 0) {
-        $p.prepend('<option value="">Producto</option>');
-      }
-    }
-
-    $p.val('');
-
-    aplicarSelect2($p, {
-      width: '100%',
-      placeholder: 'Producto',
-      allowClear: true,
-      minimumResultsForSearch: 0,
-      dropdownParent: $('#modal_admision_clientes')
-    });
-
-    setTimeout(function(){
-      $p.val('').trigger('change.select2');
-    }, 50);
-  }).fail(function(xhr, status){
-    if (status === 'abort') return;
-
-    console.error('Error cargando productos:', xhr.responseText);
-    limpiarProductoAdmision('Error al cargar productos');
-  }).always(function(){
-    requestProductosAdmision = null;
-  });
-
-  return requestProductosAdmision;
 }
 
 /****************************************************************************************************************************************************************/
@@ -736,7 +685,6 @@ function cargarCatalogosIniciales(callback){
 
   $.when.apply($, cargas).always(function(){
     catalogosCargados = true;
-
     if (typeof callback === 'function') callback();
   });
 }
@@ -782,7 +730,13 @@ $(document).ready(function(){
 
   $("#modal_admision_clientes").off('shown.bs.modal.admision').on('shown.bs.modal.admision', function(){
     limpiarEmpresaAdmision();
-    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    // No limpiar producto aquí, en su lugar cargar productos si hay tipo_muestra
+    var valorTipo = getValorTipoMuestraAdmision();
+    if (valorTipo && valorTipo !== '') {
+      cargarProductosPorTipoMuestra(valorTipo);
+    } else {
+      limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    }
     $(this).find('#formulario_admision #name').focus();
   });
 
@@ -802,12 +756,10 @@ $(document).ready(function(){
 $(document).off('keyup.admisionBuscarClientes', '#form_main_admision #bs_regis');
 $(document).on('keyup.admisionBuscarClientes', '#form_main_admision #bs_regis', function(e){
   clearTimeout(timerBusquedaAdmision);
-
   if (e.key === 'Enter') {
     pagination(1);
     return;
   }
-
   timerBusquedaAdmision = setTimeout(function(){
     pagination(1);
   }, 350);
@@ -861,12 +813,10 @@ $(document).on('click.admisionMuestrasBuscar', '#form_main_admision_muestras #bu
 $(document).off('keyup.admisionMuestrasBuscarTexto', '#form_main_admision_muestras #bs_regis');
 $(document).on('keyup.admisionMuestrasBuscarTexto', '#form_main_admision_muestras #bs_regis', function(e){
   clearTimeout(timerBusquedaMuestrasAdmision);
-
   if (e.key === 'Enter') {
     paginationMuestras(1);
     return;
   }
-
   timerBusquedaMuestrasAdmision = setTimeout(function(){
     paginationMuestras(1);
   }, 450);
@@ -883,7 +833,6 @@ $(document).on('change.admisionMuestrasTipoCliente', '#form_main_admision_muestr
   var $c = $('#form_main_admision_muestras select[name="cliente"]');
 
   $c.html('<option value="">Cargando...</option>');
-
   aplicarSelect2($c, {
     width: '250px',
     placeholder: 'Cliente',
@@ -893,18 +842,14 @@ $(document).on('change.admisionMuestrasTipoCliente', '#form_main_admision_muestr
   $.ajax({
     type: 'POST',
     url: url,
-    data: {
-      tipo: tipo
-    }
+    data: { tipo: tipo }
   }).done(function(data){
     $c.html(data);
-
     aplicarSelect2($c, {
       width: '250px',
       placeholder: 'Cliente',
       minimumResultsForSearch: 0
     });
-
     paginationMuestras(1);
   });
 });
@@ -939,17 +884,14 @@ function pagination(partida, firstLoad){
         mostrarErrorSimple("Error", "La respuesta del servidor no es válida.");
         return;
       }
-
       $('#agrega-registros').html(array[0] || '');
       $('#pagination').html(array[1] || '');
-
       setTimeout(function(){
         aplicarSelect2VistaPrincipal();
       }, 50);
     },
     error: function(xhr, status){
       if (status === 'abort') return;
-
       if (firstLoad) {
         setTimeout(function(){
           pagination(partida, false);
@@ -972,7 +914,6 @@ function paginationMuestras(partida){
   var url = SERVERURL + 'php/admision/paginarMuestras.php';
 
   var estado = $('#form_main_admision_muestras select[name="estado"]').val();
-
   if (estado === null || estado === '' || typeof estado === 'undefined') {
     estado = '0';
   }
@@ -1011,20 +952,15 @@ function paginationMuestras(partida){
         mostrarErrorSimple("Error", "La respuesta del servidor no es válida.");
         return;
       }
-
       $('#agrega-registros_muestras').html(array[0] || '');
       $('#pagination_muestras').html(array[1] || '');
     },
     error: function(xhr, status){
-      if (status === 'abort') {
-        return;
-      }
-
+      if (status === 'abort') return;
       mostrarErrorSimple("Error", "No se enviaron los datos, favor corregir");
     },
     complete: function(){
       requestPaginationMuestrasAdmision = null;
-
       if (typeof hideLoading === 'function') {
         hideLoading();
       }
@@ -1040,7 +976,6 @@ function paginationMuestras(partida){
 
 function CalcularEdadClientes(){
   var url = SERVERURL + 'php/admision/calcularEdad.php';
-
   $.ajax({
     type: 'POST',
     data: {
@@ -1050,13 +985,11 @@ function CalcularEdadClientes(){
   }).done(function(data){
     $('#formulario_admision #edad').val(data);
   });
-
   return false;
 }
 
 function getFechaActual(){
   var url = SERVERURL + 'php/admision/getFechaActual.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -1065,19 +998,16 @@ function getFechaActual(){
 
 function getPacienteTipo(pacientes_id){
   var url = SERVERURL + 'php/admision/getPacienteTipo.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
     data: {
-      pacientes_id: pacientes_id
-    }
+      pacientes_id: pacientes_id    }
   });
 }
 
 function consultarExpediente(pacientes_id){
   var url = SERVERURL + 'php/pacientes/getExpedienteInformacion.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
@@ -1089,7 +1019,6 @@ function consultarExpediente(pacientes_id){
 
 function consultarNumeroMuestra(muestras_id){
   var url = SERVERURL + 'php/admision/getNumeroMuestra.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
@@ -1101,7 +1030,6 @@ function consultarNumeroMuestra(muestras_id){
 
 function consultarNombre(pacientes_id){
   var url = SERVERURL + 'php/pacientes/getNombre.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
@@ -1113,7 +1041,6 @@ function consultarNombre(pacientes_id){
 
 function getHospitalCodigo(){
   var url = SERVERURL + 'php/pacientes/getHospitalCodigo.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -1122,7 +1049,6 @@ function getHospitalCodigo(){
 
 function getRemitenteCodigo(){
   var url = SERVERURL + 'php/pacientes/getRemitenteCodigo.php';
-
   return $.ajax({
     type: 'POST',
     url: url
@@ -1131,7 +1057,6 @@ function getRemitenteCodigo(){
 
 function getFacturaEmision(muestras_id){
   var url = SERVERURL + 'php/muestras/getFacturaEmision.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
@@ -1143,7 +1068,6 @@ function getFacturaEmision(muestras_id){
 
 function getEstadoFactura(muestras_id){
   var url = SERVERURL + 'php/muestras/getEstadoFactura.php';
-
   return $.ajax({
     type: 'POST',
     url: url,
@@ -1154,7 +1078,7 @@ function getEstadoFactura(muestras_id){
 }
 
 /****************************************************************************************************************************************************************/
-// EVENTOS DE FORMULARIO ADMISIÓN
+// EVENTOS DE FORMULARIO ADMISIÓN - CORREGIDO
 /****************************************************************************************************************************************************************/
 
 $(document).off('change.admisionFechaNacimiento', '#formulario_admision #fecha_nac');
@@ -1162,18 +1086,16 @@ $(document).on('change.admisionFechaNacimiento', '#formulario_admision #fecha_na
   CalcularEdadClientes();
 });
 
-$(document).off(
-  'change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto',
-  '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]'
-);
-
-$(document).on(
-  'change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto',
-  '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]',
-  function(){
-    getProductos();
+// Evento para cargar productos cuando cambia tipo_muestra
+$(document).off('change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto', '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]');
+$(document).on('change.admisionTipoMuestraProducto select2:select.admisionTipoMuestraProducto select2:clear.admisionTipoMuestraProducto', '#formulario_admision #tipo_muestra, #formulario_admision select[name="tipo_muestra"]', function(){
+  var valor = $(this).val();
+  if (valor && valor !== '') {
+    cargarProductosPorTipoMuestra(valor);
+  } else {
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
   }
-);
+});
 
 /****************************************************************************************************************************************************************/
 // BOTONES PRINCIPALES
@@ -1196,11 +1118,9 @@ $('#formulario_admision #add_empresa').off('click').on('click', function(e){
 
 $('#form_main_admision #ver_muestras').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#main_facturacion').hide();
   $('#facturacion').hide();
   $('#main_admision_muestras').show();
-
   setTimeout(function(){
     aplicarSelect2VistaPrincipal();
     setEstadoMuestrasPendientePorDefecto();
@@ -1210,7 +1130,6 @@ $('#form_main_admision #ver_muestras').off('click').on('click', function(e){
 
 $('#registrar_productos').off('click').on('click', function(e){
   e.preventDefault();
-
   if (typeof agregarProductos === 'function') {
     agregarProductos();
   }
@@ -1222,7 +1141,6 @@ $('#registrar_productos').off('click').on('click', function(e){
 
 $('#formulario_admision #nuevo_admision').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#formulario_admision #name').val("");
   $('#formulario_admision #lastname').val("");
   $('#formulario_admision #rtn').val(0);
@@ -1238,13 +1156,11 @@ $('#formulario_admision #nuevo_admision').off('click').on('click', function(e){
 
   limpiarEmpresaAdmision();
   limpiarProductoAdmision('Seleccione Tipo Muestra primero');
-
   $('#formulario_admision #name').focus();
 });
 
 $('#formulario_admision_empresas #nuevo_admision_empresa').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#formulario_admision_empresas #empresa').val("");
   $('#formulario_admision_empresas #rtn').val(0);
   $('#formulario_admision_empresas #telefono1').val("");
@@ -1255,12 +1171,10 @@ $('#formulario_admision_empresas #nuevo_admision_empresa').off('click').on('clic
 
 $('#formulario_admision #nuevo_admision_muestra').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#formulario_admision #sitio_muestra').val("");
   $('#formulario_admision #diagnostico_clinico').val("");
   $('#formulario_admision #material_enviado').val("");
   $('#formulario_admision #datos_clinicos').val("");
-
   limpiarEmpresaAdmision();
   limpiarProductoAdmision('Seleccione Tipo Muestra primero');
 });
@@ -1271,7 +1185,6 @@ $('#formulario_admision #nuevo_admision_muestra').off('click').on('click', funct
 
 function anularRegistroMuestra(muestras_id, pacientes_id, comentario){
   var url = SERVERURL + 'php/admision/anularMuestras.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -1292,13 +1205,11 @@ function anularRegistroMuestra(muestras_id, pacientes_id, comentario){
       mostrarErrorSimple("Error", "Error al completar el registro");
     }
   });
-
   return false;
 }
 
 function eliminarRegistroMuestra(muestras_id, pacientes_id, comentario){
   var url = SERVERURL + 'php/admision/eliminarMuestras.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -1319,13 +1230,11 @@ function eliminarRegistroMuestra(muestras_id, pacientes_id, comentario){
       mostrarErrorSimple("Error", "Error al completar el registro");
     }
   });
-
   return false;
 }
 
 function eliminarRegistro(pacientes_id, comentario){
   var url = SERVERURL + 'php/admision/eliminar.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -1345,7 +1254,6 @@ function eliminarRegistro(pacientes_id, comentario){
       mostrarErrorSimple("Error", "Error al completar el registro");
     }
   });
-
   return false;
 }
 
@@ -1393,7 +1301,6 @@ function DisableRegister(pacientes_id){
       closeOnClickOutside: false
     }).then(function(value){
       if (value === null || $.trim(value) === "") return false;
-
       deshabilitarPaciente(pacientes_id, value, estado);
     });
   });
@@ -1401,7 +1308,6 @@ function DisableRegister(pacientes_id){
 
 function deshabilitarPaciente(pacientes_id, comentario, estado){
   var url = SERVERURL + 'php/admision/DeshabilitarPaciente.php';
-
   estado = (estado === null || estado === '') ? 1 : estado;
 
   $.ajax({
@@ -1469,7 +1375,6 @@ function modal_eliminar(pacientes_id){
         mostrarErrorSimple("Error", "¡Necesita escribir algo!");
         return false;
       }
-
       eliminarRegistro(pacientes_id, value);
     });
   });
@@ -1515,7 +1420,6 @@ function modal_eliminarMuestras(pacientes_id, muestras_id){
         mostrarErrorSimple("Error", "¡Necesita escribir algo!");
         return false;
       }
-
       eliminarRegistroMuestra(muestras_id, pacientes_id, value);
     });
   });
@@ -1561,7 +1465,6 @@ function modalAnularMuestras(pacientes_id, muestras_id){
         mostrarErrorSimple("Error", "¡Necesita escribir algo!");
         return false;
       }
-
       anularRegistroMuestra(muestras_id, pacientes_id, value);
     });
   });
@@ -1578,7 +1481,6 @@ function editarRegistro(pacientes_id){
   }
 
   var url = SERVERURL + 'php/admision/consultarClientes.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -1587,7 +1489,6 @@ function editarRegistro(pacientes_id){
     }
   }).done(function(valores){
     var datos = parseJsonSeguro(valores);
-
     if (!datos) {
       mostrarErrorSimple("Error", "No se pudo leer la información del cliente.");
       return false;
@@ -1612,7 +1513,6 @@ function editarRegistro(pacientes_id){
         minimumResultsForSearch: 0,
         dropdownParent: $('#modal_admision_clientes_editar')
       });
-
       $('#formulario_admision_clientes_editar #genero').val(datos[5]).trigger('change');
 
       $('#formulario_admision_clientes_editar #direccion').val(datos[6]);
@@ -1667,7 +1567,6 @@ function editarRegistro(pacientes_id){
         backdrop:'static'
       });
     }
-
     return false;
   });
 }
@@ -1677,14 +1576,11 @@ function modalEditar(pacientes_id){
     'data-form': 'update',
     'action': SERVERURL + 'php/admision/agregarRegistro.php'
   });
-
   $('#formulario_admision_clientes_editar')[0].reset();
   $('#formulario_admision_clientes_editar #pro_admision').val("Registro");
-
   $('#reg_admision').show();
   $('#edi_admision').hide();
   $('#delete_admision').hide();
-
   $('#formulario_admision_clientes_editar #paciente_tipo').val(1);
 
   aplicarSelect2($('#formulario_admision_clientes_editar #paciente_tipo'), {
@@ -1696,7 +1592,6 @@ function modalEditar(pacientes_id){
 
   getHospitalCodigo().done(function(data){
     $('#formulario_admision #hospital').val(data);
-
     aplicarSelect2($('#formulario_admision #hospital'), {
       width: '100%',
       placeholder: 'Hospital',
@@ -1717,7 +1612,6 @@ function showModalhistoriaMuestrasEmpresas(pacientes_id){
   }
 
   $('#form_main_historico_muestras #pacientes_id_muestras').val(pacientes_id);
-
   $('#modal_historico_muestras').modal({
     show: true,
     keyboard: false,
@@ -1726,7 +1620,6 @@ function showModalhistoriaMuestrasEmpresas(pacientes_id){
 
   getPacienteTipo(pacientes_id).done(function(data){
     var tipo = $.trim(valorAjax(data));
-
     if (tipo == 1) {
       historiaMuestrasPacientes(1);
     } else {
@@ -1737,10 +1630,8 @@ function showModalhistoriaMuestrasEmpresas(pacientes_id){
 
 $('#form_main_historico_muestras #bs_regis').off('keyup').on('keyup', function(){
   var pacientes_id = $('#form_main_historico_muestras #pacientes_id_muestras').val();
-
   getPacienteTipo(pacientes_id).done(function(data){
     var tipo = $.trim(valorAjax(data));
-
     if (tipo == 1) {
       historiaMuestrasPacientes(1);
     } else {
@@ -1767,7 +1658,6 @@ function historiaMuestrasEmpresas(partida){
     $('#detalles-historico-muestras').html(array[0]);
     $('#pagination-historico-muestras').html(array[1]);
   });
-
   return false;
 }
 
@@ -1789,12 +1679,11 @@ function historiaMuestrasPacientes(partida){
     $('#detalles-historico-muestras').html(array[0]);
     $('#pagination-historico-muestras').html(array[1]);
   });
-
   return false;
 }
 
 /****************************************************************************************************************************************************************/
-// MODAL CLIENTES
+// MODAL CLIENTES - CORREGIDO
 /****************************************************************************************************************************************************************/
 
 function modalClientes(){
@@ -1818,7 +1707,6 @@ function modalClientes(){
 
   getHospitalCodigo().done(function(data){
     $('#formulario_admision #hospital').val(data);
-
     aplicarSelect2($('#formulario_admision #hospital'), {
       width: '100%',
       placeholder: 'Hospital',
@@ -1829,7 +1717,6 @@ function modalClientes(){
 
   getRemitenteCodigo().done(function(data){
     $('#formulario_admision #remitente').val(data);
-
     aplicarSelect2($('#formulario_admision #remitente'), {
       width: '100%',
       placeholder: 'Remitente',
@@ -1859,13 +1746,12 @@ function modalClientes(){
   $('#formulario_admision #datos_clinicos').attr('readonly', false);
   $('#formulario_admision #mostrar_datos_clinicos').attr('disabled', false);
 
+  // Configurar Select2 para cliente_admision
   var $clienteAdmision = $('#formulario_admision #cliente_admision');
-
   if ($.fn.select2) {
     if ($clienteAdmision.data('select2')) {
       $clienteAdmision.select2('destroy');
     }
-
     $clienteAdmision.next('.select2').remove();
 
     $clienteAdmision.select2({
@@ -1879,14 +1765,10 @@ function modalClientes(){
         dataType: 'json',
         delay: 300,
         data: function(params) {
-          return {
-            term: params.term || ''
-          };
+          return { term: params.term || '' };
         },
         processResults: function(data) {
-          return {
-            results: data.results || []
-          };
+          return { results: data.results || [] };
         },
         cache: false
       },
@@ -1895,6 +1777,7 @@ function modalClientes(){
     });
   }
 
+  // Configurar genero
   aplicarSelect2($('#formulario_admision #genero'), {
     width: '100%',
     placeholder: 'Género',
@@ -1902,6 +1785,7 @@ function modalClientes(){
     dropdownParent: $('#modal_admision_clientes')
   });
 
+  // Configurar tipo_muestra
   aplicarSelect2($('#formulario_admision #tipo_muestra'), {
     width: '100%',
     placeholder: 'Tipo Muestra',
@@ -1909,8 +1793,10 @@ function modalClientes(){
     dropdownParent: $('#modal_admision_clientes')
   });
 
+  // Limpiar empresa
   limpiarEmpresaAdmision();
 
+  // Configurar categoria
   aplicarSelect2($('#formulario_admision #categoria'), {
     width: '100%',
     placeholder: 'Categoría',
@@ -1918,11 +1804,17 @@ function modalClientes(){
     dropdownParent: $('#modal_admision_clientes')
   });
 
-  limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+  // IMPORTANTE: Verificar si hay un valor en tipo_muestra y cargar productos
+  var valorTipo = getValorTipoMuestraAdmision();
+  if (valorTipo && valorTipo !== '') {
+    cargarProductosPorTipoMuestra(valorTipo);
+  } else {
+    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+  }
 
+  // Evento para cargar datos del cliente al seleccionar
   $('#formulario_admision #cliente_admision').off('change.admisionClienteSelect').on('change.admisionClienteSelect', function(){
     var pacientes_id = $(this).val();
-
     if (pacientes_id) {
       cargarDatosClienteAdmision(pacientes_id);
     } else {
@@ -1945,7 +1837,13 @@ function modalClientes(){
 
   setTimeout(function(){
     limpiarEmpresaAdmision();
-    limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    // Verificar nuevamente productos después de un pequeño delay
+    var valorTipo2 = getValorTipoMuestraAdmision();
+    if (valorTipo2 && valorTipo2 !== '') {
+      cargarProductosPorTipoMuestra(valorTipo2);
+    } else {
+      limpiarProductoAdmision('Seleccione Tipo Muestra primero');
+    }
   }, 200);
 }
 
@@ -1957,7 +1855,6 @@ function formatClienteResult(cliente) {
   if (cliente.loading) return 'Cargando...';
 
   var $container = $('<div>');
-
   $container.append(
     $('<strong>').text(cliente.nombre || (cliente.text ? cliente.text.split(' - ')[0] : ''))
   );
@@ -1970,14 +1867,12 @@ function formatClienteResult(cliente) {
         .text('RTN: ' + cliente.identidad)
     );
   }
-
   return $container;
 }
 
 function formatClienteSelection(cliente) {
   if (cliente.nombre) return cliente.nombre;
   if (cliente.text) return cliente.text.split(' - ')[0];
-
   return cliente.id;
 }
 
@@ -1985,7 +1880,6 @@ function cargarDatosClienteAdmision(pacientes_id){
   if (!pacientes_id) return;
 
   var url = SERVERURL + 'php/admision/consultarClientes.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -1994,7 +1888,6 @@ function cargarDatosClienteAdmision(pacientes_id){
     }
   }).done(function(data){
     var valores = parseJsonSeguro(data);
-
     if (!valores) {
       mostrarErrorSimple("Error", "No se pudieron cargar los datos del cliente.");
       return;
@@ -2013,12 +1906,10 @@ function cargarDatosClienteAdmision(pacientes_id){
       minimumResultsForSearch: 0,
       dropdownParent: $('#modal_admision_clientes')
     });
-
     $('#formulario_admision #genero').val(valores[5]).trigger('change');
 
     $('#formulario_admision #direccion').val(valores[6]);
     $('#formulario_admision #correo').val(valores[7]);
-
     limpiarEmpresaAdmision();
   });
 }
@@ -2074,9 +1965,7 @@ function convertDate(inputFormat) {
   function pad(s) {
     return (s < 10) ? '0' + s : s;
   }
-
   var d = new Date(inputFormat);
-
   return [
     d.getFullYear(),
     pad(d.getMonth() + 1),
@@ -2086,7 +1975,6 @@ function convertDate(inputFormat) {
 
 function formFactura(){
   $('#formulario_facturacion')[0].reset();
-
   $('#main_facturacion').hide();
   $('#facturacion').show();
 
@@ -2133,23 +2021,19 @@ function ModalVerMas(){
 
 $('#formulario_facturacion #validar').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#formulario_facturacion').attr({
     'data-form': 'save',
     'action': SERVERURL + 'php/facturacion/addPreFactura.php'
   });
-
   $("#formulario_facturacion").submit();
 });
 
 $('#formulario_facturacion #cobrar').off('click').on('click', function(e){
   e.preventDefault();
-
   $('#formulario_facturacion').attr({
     'data-form': 'save',
     'action': SERVERURL + 'php/facturacion/addFactura.php'
   });
-
   $("#formulario_facturacion").submit();
 });
 
@@ -2179,7 +2063,7 @@ function volver(){
 }
 
 /****************************************************************************************************************************************************************/
-// CREAR FACTURA DESDE MUESTRA - CORREGIDO DEFINITIVO
+// CREAR FACTURA DESDE MUESTRA
 /****************************************************************************************************************************************************************/
 
 function abrirPantallaFacturaDesdeMuestra(){
@@ -2243,11 +2127,9 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
   }
 
   var estadoVista = $('#form_main_admision_muestras select[name="estado"]').val();
-
   if (estadoVista === null || estadoVista === '' || typeof estadoVista === 'undefined') {
     estadoVista = $('#form_main_admision_muestras #estado').val();
   }
-
   if (estadoVista === null || estadoVista === '' || typeof estadoVista === 'undefined') {
     estadoVista = '0';
   }
@@ -2258,7 +2140,6 @@ function modalCreateBill(muestras_id, producto, nombre_producto, precio_venta, i
   }
 
   createBill(muestras_id, producto, nombre_producto, precio_venta, isv, muestra);
-
   return false;
 }
 
@@ -2282,13 +2163,11 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, m
 
   $('#formulario_facturacion')[0].reset();
   $("#formulario_facturacion #invoiceItem > tbody").empty();
-
   if (typeof limpiarTabla === 'function') {
     limpiarTabla();
   }
 
   var url = SERVERURL + 'php/muestras/editarFacturasMuestras.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -2303,7 +2182,6 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, m
     }
   }).done(function(valores){
     var datos = parseJsonSeguro(valores);
-
     if (!datos || !$.isArray(datos)) {
       console.error("Respuesta inválida de editarFacturasMuestras.php:", valores);
       mostrarErrorSimple("Error", "No se pudo leer la información de la muestra.");
@@ -2382,7 +2260,6 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, m
     }
 
     abrirPantallaFacturaDesdeMuestra();
-
     return false;
   }).fail(function(xhr){
     console.error("Error editarFacturasMuestras.php:", xhr.responseText);
@@ -2402,7 +2279,6 @@ function createBill(muestras_id, producto, nombre_producto, precio_venta, isv, m
 
 function pago(facturas_id){
   var url = SERVERURL + 'php/facturacion/editarPago.php';
-
   $.ajax({
     type: 'POST',
     url: url,
@@ -2411,7 +2287,6 @@ function pago(facturas_id){
     }
   }).done(function(valores){
     var datos = parseJsonSeguro(valores);
-
     if (!datos) {
       mostrarErrorSimple("Error", "No se pudo leer la información del pago.");
       return false;
@@ -2540,7 +2415,6 @@ $(document).on('keyup.admisionPagoMixto', '#formMixtoBill #efectivo_bill_mixto',
     $('#formMixtoBill #monto_tarjeta').attr('disabled', true);
   }else{
     var tarjeta = monto - efectivo;
-
     $('#formMixtoBill #monto_tarjeta').val(parseFloat(tarjeta).toFixed(2));
     $('#formMixtoBill #cambio_efectivo_mixto').val(parseFloat(0).toFixed(2));
     $('#formMixtoBill #pago_efectivo_mixto').attr('disabled', false);
