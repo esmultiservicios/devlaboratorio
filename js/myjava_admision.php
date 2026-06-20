@@ -2530,6 +2530,16 @@ $(document).on('keyup.admisionPagoMixto', '#formMixtoBill #efectivo_bill_mixto',
   }
 });
 
+$("#modal_admision_empesas").off('hidden.bs.modal.recargarEmpresaAdmision').on('hidden.bs.modal.recargarEmpresaAdmision', function(){
+  if ($('#modal_admision_clientes').hasClass('show')) {
+    $('body').addClass('modal-open');
+
+    getEmpresa().done(function(){
+      reforzarSelectsModalAdmision();
+    });
+  }
+});
+
 /****************************************************************************************************************************************************************/
 // IMPRESIÓN
 /****************************************************************************************************************************************************************/

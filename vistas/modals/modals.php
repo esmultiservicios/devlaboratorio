@@ -2968,16 +2968,21 @@
                             <div class="form-row">
                                 <div class="col-md-4 mb-3">
                                     <label for="empresa">Empresa</label>
-                                    <div class="input-group mb-3">
-                                        <select id="empresa" name="empresa" style="width: 100%;">
+
+                                    <div class="d-flex">
+                                        <select id="empresa" name="empresa" class="form-control">
+                                            <option value="">Sin selección</option>
                                         </select>
-                                        <div class="input-group-append" id="buscar_profesion_pacientes">
-                                            <a data-toggle="modal" href="#" class="btn btn-outline-success"
-                                                id="add_empresa" data-placement="top" title="Registrar Empresa">
-                                                <div class="sb-nav-link-icon"></div><i
-                                                    class="fas fa-building fa-lg"></i> Registrar
-                                            </a>
-                                        </div>
+
+                                        <button 
+                                            type="button"
+                                            class="btn btn-outline-success ml-2"
+                                            id="add_empresa"
+                                            data-toggle="modal"
+                                            title="Registrar Empresa"
+                                            style="white-space: nowrap;">
+                                            <i class="fas fa-building"></i> Registrar
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-3">
