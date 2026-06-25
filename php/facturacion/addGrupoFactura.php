@@ -129,9 +129,14 @@ try {
     $isv_neto    = 0.00;
 
     foreach ($detallesGrupales as $detalle) {
-        $total_valor += $detalle['importe'];
-        $descuentos  += $detalle['descuento'];
-        $isv_neto    += $detalle['isv_valor'];
+        $cantidadDetalle = isset($detalle['cantidad']) ? (int)$detalle['cantidad'] : 1;
+        if ($cantidadDetalle <= 0) {
+            $cantidadDetalle = 1;
+        }
+
+        $total_valor += ((float)$detalle['importe'] * $cantidadDetalle);
+        $descuentos  += (float)$detalle['descuento'];
+        $isv_neto    += (float)$detalle['isv_valor'];
     }
 
     $total_despues_isv = round(($total_valor + $isv_neto) - $descuentos, 2);
@@ -230,7 +235,10 @@ try {
         // Guardar estado original de la factura individual para restaurar si falla algo.
         $facturasIndividualesOriginales[$lineaFactura_id] = obtenerFacturaIndividualOriginal($mysqli, $lineaFactura_id);
 
-        $lineaTotal = round(($lineaImporte + $lineaISV) - $lineaDescuento, 2);
+        // En la grupal cada línea representa UNA factura individual completa.
+        // Si la factura individual tiene varios productos, esos productos ya vienen
+        // consolidados en $lineaImporte/$lineaISV/$lineaDescuento.
+        $lineaTotal = round((($lineaImporte * $lineaCantidad) + $lineaISV) - $lineaDescuento, 2);
 
         // Actualizar factura individual con la misma secuencia y número.
         // También se sincroniza importe con el total REAL del detalle individual.
@@ -296,7 +304,7 @@ try {
     // 12) VALIDACIÓN FINAL DEL DETALLE GRUPAL CONTRA CABECERA
     // =========================================================
     $query_total_grupal = "SELECT 
-                                ROUND(IFNULL(SUM(importe + isv_valor - descuento), 0), 2) AS total_detalle,
+                                ROUND(IFNULL(SUM((cantidad * importe) + isv_valor - descuento), 0), 2) AS total_detalle,
                                 COUNT(*) AS cantidad_lineas
                            FROM facturas_grupal_detalle
                            WHERE facturas_grupal_id = ?";
@@ -529,11 +537,9 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
     }
 
     $billGrupoIDArray = $post['billGrupoID'];
-    $pacienteIDArray = $post['pacienteIDBillGrupo'];
-    $muestraIDArray = isset($post['billGrupoMuestraID']) && is_array($post['billGrupoMuestraID']) ? $post['billGrupoMuestraID'] : array();
-    $cantidadArray = isset($post['quantyGrupoQuantity']) && is_array($post['quantyGrupoQuantity']) ? $post['quantyGrupoQuantity'] : array();
+    $pacienteIDArray  = $post['pacienteIDBillGrupo'];
 
-    $countFacturas = count($billGrupoIDArray);
+    $countFacturas  = count($billGrupoIDArray);
     $countPacientes = count($pacienteIDArray);
 
     if ($countFacturas <= 0) {
@@ -555,19 +561,13 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         $linea = $i + 1;
 
         $facturas_id = isset($billGrupoIDArray[$i]) ? (int)$billGrupoIDArray[$i] : 0;
-        $pacientes_id = isset($pacienteIDArray[$i]) ? (int)$pacienteIDArray[$i] : 0;
-        $muestras_id = isset($muestraIDArray[$i]) ? (int)$muestraIDArray[$i] : 0;
-        $cantidad = isset($cantidadArray[$i]) ? (int)$cantidadArray[$i] : 1;
-
-        if ($cantidad <= 0) {
-            $cantidad = 1;
-        }
+        $pacientes_id_post = isset($pacienteIDArray[$i]) ? (int)$pacienteIDArray[$i] : 0;
 
         if ($facturas_id <= 0) {
             throw new Exception("Hay una factura sin código interno en la línea " . $linea . ".");
         }
 
-        if ($pacientes_id <= 0) {
+        if ($pacientes_id_post <= 0) {
             throw new Exception("Hay un paciente sin código interno en la línea " . $linea . ".");
         }
 
@@ -577,13 +577,15 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
 
         $facturasUsadas[$facturas_id] = true;
 
-        // Validar que la factura individual exista.
+        // Validar que la factura individual exista y tomar paciente/muestra desde BD.
+        // No se confía en cantidad, paciente ni muestra enviados por JS para calcular la grupal.
         $query_factura = "SELECT 
                                 facturas_id,
                                 pacientes_id,
                                 muestras_id,
                                 importe,
-                                estado
+                                estado,
+                                empresa_id
                           FROM facturas
                           WHERE facturas_id = ?
                           LIMIT 1";
@@ -606,20 +608,29 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         $rowFactura = $resultFactura->fetch_assoc();
         $stmtFactura->close();
 
-        // Si no viene muestra en el POST, usamos la de la factura individual.
-        if ($muestras_id <= 0 && isset($rowFactura['muestras_id'])) {
-            $muestras_id = (int)$rowFactura['muestras_id'];
+        $pacientes_id = (int)$rowFactura['pacientes_id'];
+        $muestras_id  = (int)$rowFactura['muestras_id'];
+
+        if ($pacientes_id <= 0) {
+            throw new Exception("La factura individual ID " . $facturas_id . " no tiene paciente válido.");
         }
 
-        // Obtener total real desde facturas_detalle.
-        // IMPORTANTE:
-        // En factura individual el campo precio ya representa el importe/subtotal calculado de la línea.
-        // Por eso aquí NO se debe hacer cantidad * precio, porque en factura grupal eso vuelve a multiplicar
-        // un subtotal que ya venía calculado y genera montos inflados.
+        if ($muestras_id <= 0) {
+            throw new Exception("La factura individual ID " . $facturas_id . " no tiene muestra válida.");
+        }
+
+        // Cada línea de facturas_grupal_detalle representa UNA factura individual completa.
+        // Si la factura individual tiene 2 productos, NO se guarda cantidad 2 en la grupal.
+        // Se consolida así:
+        // cantidad = 1
+        // importe = SUM(cantidad * precio)
+        // descuento = SUM(descuento)
+        // isv_valor = SUM(isv_valor)
         $sql_sum = "SELECT
-                        ROUND(COALESCE(SUM(precio), 0), 2) AS importe_sum,
+                        ROUND(COALESCE(SUM(cantidad * precio), 0), 2) AS importe_sum,
                         ROUND(COALESCE(SUM(isv_valor), 0), 2) AS isv_sum,
                         ROUND(COALESCE(SUM(descuento), 0), 2) AS desc_sum,
+                        ROUND(COALESCE(SUM((cantidad * precio) + isv_valor - descuento), 0), 2) AS total_sum,
                         COUNT(*) AS cantidad_lineas
                     FROM facturas_detalle
                     WHERE facturas_id = ?";
@@ -646,25 +657,36 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
             throw new Exception("La factura individual ID " . $facturas_id . " no tiene detalle registrado.");
         }
 
-        $lineaImporte = round((float)$rowSum['importe_sum'], 2);
-        $lineaISV = round((float)$rowSum['isv_sum'], 2);
+        $lineaCantidad  = 1;
+        $lineaImporte   = round((float)$rowSum['importe_sum'], 2);
+        $lineaISV       = round((float)$rowSum['isv_sum'], 2);
         $lineaDescuento = round((float)$rowSum['desc_sum'], 2);
-
-        $lineaTotal = round(($lineaImporte + $lineaISV) - $lineaDescuento, 2);
+        $lineaTotal     = round((float)$rowSum['total_sum'], 2);
 
         if ($lineaTotal < 0) {
             throw new Exception("La factura individual ID " . $facturas_id . " tiene total negativo o inválido.");
+        }
+
+        $importeEncabezado = round((float)$rowFactura['importe'], 2);
+
+        if (abs($importeEncabezado - $lineaTotal) > 0.01) {
+            throw new Exception(
+                "La factura individual ID " . $facturas_id .
+                " no cuadra con su detalle. Encabezado: " . number_format($importeEncabezado, 2, '.', '') .
+                ", detalle: " . number_format($lineaTotal, 2, '.', '') . "."
+            );
         }
 
         $detalles[] = array(
             'facturas_id' => $facturas_id,
             'pacientes_id' => $pacientes_id,
             'muestras_id' => $muestras_id,
-            'cantidad' => $cantidad,
+            'cantidad' => $lineaCantidad,
             'importe' => $lineaImporte,
             'isv_valor' => $lineaISV,
             'descuento' => $lineaDescuento,
-            'total' => $lineaTotal
+            'total' => $lineaTotal,
+            'cantidad_lineas_individual' => $cantidad_lineas
         );
     }
 

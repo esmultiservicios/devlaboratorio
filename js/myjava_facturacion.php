@@ -803,7 +803,10 @@ function formFacturaGrupo(){
 		var muestraID = textoSeguroFacturaGrupo($('#muestraGrupo_' + idRegistro).attr('data-value'));
 		var pacienteID = textoSeguroFacturaGrupo($('#pacientesIDFacturaGrupo_' + idRegistro).attr('data-value'));
 		var profesionalID = textoSeguroFacturaGrupo($('#profesionalIDGrupo_' + idRegistro).attr('data-value'));
-		var cantidad = textoSeguroFacturaGrupo($('#quantyGrupoQuantityValor_' + idRegistro).attr('data-value'));
+		// En factura grupal, cada fila representa UNA factura individual completa.
+		// No se debe copiar la cantidad de productos de la factura individual,
+		// porque eso duplica el precio en el reporte/grupal.
+		var cantidad = '1';
 
 		var saldoLinea = dataValueSeguroFacturaGrupo('#precioFacturaGrupo_' + idRegistro);
 		var subtotalLinea = dataValueSeguroFacturaGrupo('#netoAntesISVFacturaGrupo_' + idRegistro);
@@ -814,9 +817,7 @@ function formFacturaGrupo(){
 			subtotalLinea = saldoLinea;
 		}
 
-		if (cantidad === '' || cantidad === '0') {
-			cantidad = '1';
-		}
+		cantidad = '1';
 
 		var totalLinea = (subtotalLinea + isvLinea) - descuentoLinea;
 
