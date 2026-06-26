@@ -536,6 +536,12 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         throw new Exception("El detalle de la factura grupal no fue recibido correctamente.");
     }
 
+    $pacientes_empresa_id_grupo = isset($post['clienteIDGrupo']) ? (int)$post['clienteIDGrupo'] : 0;
+
+    if ($pacientes_empresa_id_grupo <= 0) {
+        throw new Exception("No se recibió la empresa/cliente principal de la factura grupal.");
+    }
+
     $billGrupoIDArray = $post['billGrupoID'];
     $pacienteIDArray  = $post['pacienteIDBillGrupo'];
 
@@ -577,8 +583,12 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
 
         $facturasUsadas[$facturas_id] = true;
 
-        // Validar que la factura individual exista y tomar paciente/muestra desde BD.
-        // No se confía en cantidad, paciente ni muestra enviados por JS para calcular la grupal.
+        // Validar que la factura individual exista y tomar la muestra desde BD.
+        // IMPORTANTE:
+        // - facturas_grupal.pacientes_id = empresa seleccionada.
+        // - facturas_grupal_detalle.pacientes_id = cliente real de la muestra.
+        //   Ese cliente real NO se toma de facturas.pacientes_id para grupales,
+        //   se toma de muestras_hospitales.pacientes_id.
         $query_factura = "SELECT 
                                 facturas_id,
                                 pacientes_id,
@@ -608,15 +618,44 @@ function prepararDetallesFacturaGrupal($conexion, $post, $tamano) {
         $rowFactura = $resultFactura->fetch_assoc();
         $stmtFactura->close();
 
-        $pacientes_id = (int)$rowFactura['pacientes_id'];
-        $muestras_id  = (int)$rowFactura['muestras_id'];
-
-        if ($pacientes_id <= 0) {
-            throw new Exception("La factura individual ID " . $facturas_id . " no tiene paciente válido.");
-        }
+        $muestras_id = (int)$rowFactura['muestras_id'];
 
         if ($muestras_id <= 0) {
             throw new Exception("La factura individual ID " . $facturas_id . " no tiene muestra válida.");
+        }
+
+        // Paciente real de la muestra dentro de la empresa/hospital seleccionado.
+        // Este es el valor que debe guardarse en facturas_grupal_detalle.pacientes_id.
+        $query_muestra_hospital = "SELECT pacientes_id
+                                   FROM muestras_hospitales
+                                   WHERE muestras_id = ?
+                                     AND pacientes_empresa_id = ?
+                                   LIMIT 1";
+
+        $stmtMuestraHospital = $conexion->prepare($query_muestra_hospital);
+
+        if (!$stmtMuestraHospital) {
+            throw new Exception("Error al preparar validación de muestra/hospital: " . $conexion->error);
+        }
+
+        $stmtMuestraHospital->bind_param("ii", $muestras_id, $pacientes_empresa_id_grupo);
+        $stmtMuestraHospital->execute();
+        $resultMuestraHospital = $stmtMuestraHospital->get_result();
+        $rowMuestraHospital = $resultMuestraHospital ? $resultMuestraHospital->fetch_assoc() : null;
+        $stmtMuestraHospital->close();
+
+        if (!$rowMuestraHospital) {
+            throw new Exception(
+                "La muestra ID " . $muestras_id .
+                " de la factura individual ID " . $facturas_id .
+                " no pertenece a la empresa seleccionada o no tiene relación en muestras_hospitales."
+            );
+        }
+
+        $pacientes_id = (int)$rowMuestraHospital['pacientes_id'];
+
+        if ($pacientes_id <= 0) {
+            throw new Exception("La muestra ID " . $muestras_id . " no tiene paciente/cliente válido en muestras_hospitales.");
         }
 
         // Cada línea de facturas_grupal_detalle representa UNA factura individual completa.
