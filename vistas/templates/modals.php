@@ -1,3 +1,6 @@
+<?php
+$colaborador_id_modal = isset($_SESSION['colaborador_id']) ? intval($_SESSION['colaborador_id']) : 0;
+?>
  <!--INICIO MODAL CAMBIAR CONTRASEÑA -->
  <div class="modal fade" id="ModalContraseña">
 	<div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
@@ -57,7 +60,7 @@
 					  </ul>
 					</div>
 				</div>
-				<input type="hidden" name="id" class="form-control" id="id" value = "<?php echo $_SESSION['colaborador_id'];?>">
+				<input type="hidden" name="id" class="form-control" id="id" value = "<?php echo $colaborador_id_modal; ?>">
 				<div class="modal-footer">
 				<button class="btn btn-success ml-2" type="submit" id="Modalcambiarcontra_Edit"><div class="sb-nav-link-icon"></div><i class="far fa-save fa-lg"></i> Modificar</button>
 				</div>

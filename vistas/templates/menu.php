@@ -1,3 +1,20 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['type'])) {
+    $_SESSION['type'] = 0;
+}
+
+if (!isset($_SESSION['user_name'])) {
+    $_SESSION['user_name'] = '';
+}
+
+if (!defined('SISTEMA_PRUEBA')) {
+    define('SISTEMA_PRUEBA', 'NO');
+}
+?>
 <!-- Navigation -->
 <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
     <a class="navbar-brand" href="#">

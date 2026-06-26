@@ -5,19 +5,20 @@ include('../php/funtions.php');
 //CONEXION A DB
 $mysqli = connect_mysqli();
 
-if( isset($_SESSION['colaborador_id']) == false ){
-   header('Location: login.php'); 
+if (!isset($_SESSION['colaborador_id']) || intval($_SESSION['colaborador_id']) <= 0) {
+   header('Location: login.php');
+   exit;
 }
 
 $_SESSION['menu'] = "Dashboard";
 
 if(isset($_SESSION['colaborador_id'])){
- $colaborador_id = $_SESSION['colaborador_id'];  
+ $colaborador_id = intval($_SESSION['colaborador_id']);  
 }else{
    $colaborador_id = "";
 }
 
-$type = $_SESSION['type'];
+$type = isset($_SESSION['type']) ? intval($_SESSION['type']) : 0;
 
 $nombre_host = getRealIP();		
 $fecha = date("Y-m-d H:i:s"); 
@@ -28,7 +29,7 @@ if($colaborador_id != "" || $colaborador_id != null){
 }  
 
 //OBTENER NOMBRE DE EMPRESA
-$usuario = $_SESSION['colaborador_id'];
+$usuario = intval($_SESSION['colaborador_id']);
 
 $query_empresa = "SELECT e.nombre AS 'nombre'
 	FROM users AS u
